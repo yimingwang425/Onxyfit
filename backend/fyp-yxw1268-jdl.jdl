@@ -1,0 +1,65 @@
+application {
+  config {
+    baseName fyp,
+    packageName com.yxw1268.fyp,
+    applicationType monolith,
+    authenticationType jwt,
+    buildTool maven,
+    devDatabaseType h2Disk,
+    prodDatabaseType postgresql
+  }
+}
+
+enum ActivityLevel { SEDENTARY, LIGHT, MODERATE, ACTIVE, VERY_ACTIVE }
+enum Goal { LOSE, MAINTAIN, GAIN }
+enum DietPref { BALANCED, HIGH_PROTEIN, VEGETARIAN, NO_PREFERENCE }
+enum WorkoutType { FBW, PPL, UPPER_LOWER, CARDIO_MIX }
+enum MetabolicProfile { PROFILE_1, PROFILE_2 }
+
+entity UserProfile {
+  age Integer required min(10) max(100)
+  heightCm BigDecimal required min(80) max(380)
+  weightKg BigDecimal required
+  activityLevel ActivityLevel required
+  goal Goal required
+  dietPref DietPref required
+  metabolicProfile MetabolicProfile required
+  createdAt Instant required
+}
+
+entity Plan {
+  caloriesKcal Integer required min(100) max(6000)
+  proteinG BigDecimal required min(0) max(500)
+  carbsG BigDecimal required min(0) max(1000)
+  fatG BigDecimal required min(0) max(1000)
+  workoutType WorkoutType
+  workoutIntensity BigDecimal min(0.0) max(1.0)
+  source String required
+  createdAt Instant required
+}
+
+entity ProgressLog {
+  logDate LocalDate required                 
+  weightKg BigDecimal                        
+  completedWorkout Boolean required          
+  caloriesIntake Integer min(0) max(15000)   
+  steps Integer min(0) max(250000)           
+  notes String maxlength(1000)   
+  createdAt Instant required
+}
+
+relationship OneToOne {
+  UserProfile{user(login) required} to User with builtInEntity
+}
+
+relationship ManyToOne {
+  Plan{profile(id) required} to UserProfile
+
+  ProgressLog{profile(id) required} to UserProfile
+
+  ProgressLog{plan} to Plan
+}
+
+paginate UserProfile, Plan, ProgressLog with pagination
+service UserProfile, Plan, ProgressLog with serviceClass
+dto UserProfile, Plan, ProgressLog with mapstruct

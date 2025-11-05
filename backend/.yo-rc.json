@@ -1,0 +1,19 @@
+{
+  "generator-jhipster": {
+    "applicationType": "monolith",
+    "authenticationType": "jwt",
+    "baseName": "fyp",
+    "buildTool": "maven",
+    "devDatabaseType": "h2Disk",
+    "devServerPort": 4200,
+    "entities": [],
+    "jhipsterVersion": "8.7.3",
+    "jwtSecretKey": "***REMOVED***",
+    "languages": ["en"],
+    "monorepository": true,
+    "nativeLanguage": "en",
+    "packageName": "com.yxw1268.fyp",
+    "prodDatabaseType": "postgresql",
+    "skipCommitHook": true
+  }
+}

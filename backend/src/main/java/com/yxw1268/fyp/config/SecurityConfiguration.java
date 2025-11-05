@@ -25,6 +25,10 @@ import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 import tech.jhipster.config.JHipsterConstants;
 import tech.jhipster.config.JHipsterProperties;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.util.Arrays;
 
 @Configuration
 @EnableMethodSecurity(securedEnabled = true)
@@ -42,6 +46,29 @@ public class SecurityConfiguration {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(jHipsterProperties.getCors().getAllowedOrigins());
+        config.setAllowedMethods(jHipsterProperties.getCors().getAllowedMethods());
+        config.setAllowedHeaders(jHipsterProperties.getCors().getAllowedHeaders());
+        config.setExposedHeaders(jHipsterProperties.getCors().getExposedHeaders());
+        config.setAllowCredentials(jHipsterProperties.getCors().getAllowCredentials());
+        config.setMaxAge(jHipsterProperties.getCors().getMaxAge());
+
+        if (config.getAllowedOrigins() != null) {
+            config.addAllowedOrigin("http://localhost:8100");
+        }
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", config);
+        source.registerCorsConfiguration("/management/**", config);
+        source.registerCorsConfiguration("/v3/api-docs/**", config);
+        source.registerCorsConfiguration("/swagger-ui/**", config);
+
+        return source;
     }
 
     @Bean

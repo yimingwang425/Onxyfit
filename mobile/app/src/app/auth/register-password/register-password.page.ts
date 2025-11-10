@@ -1,20 +1,74 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
+import {
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonItem,
+  IonLabel,
+  IonInput,
+  IonButton,
+  IonText, IonSpinner } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { RegisterService } from '../../services/register';
 
 @Component({
   selector: 'app-register-password',
   templateUrl: './register-password.page.html',
-  styleUrls: ['./register-password.page.scss'],
   standalone: true,
-  imports: [IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
+  imports: [IonSpinner, 
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonItem,
+    IonLabel,
+    IonInput,
+    IonButton,
+    IonText,
+    CommonModule,
+    ReactiveFormsModule
+  ]
 })
-export class RegisterPasswordPage implements OnInit {
+export class RegisterPasswordPage {
+  form = this.fb.group({
+    password: ['', [Validators.required, Validators.minLength(8)]]
+  });
 
-  constructor() { }
+  loading = false;
+  error = '';
+  showPassword = false;
 
-  ngOnInit() {
+  constructor(
+    private fb: FormBuilder,
+    private reg: RegisterService,
+    private router: Router
+  ) {}
+
+  toggleShowPassword() {
+    this.showPassword = !this.showPassword;
   }
 
+  continue() {
+    this.error = '';
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.error = 'Please set a password of at least 8 characters.';
+      return;
+    }
+
+    const pwRaw = this.form.value.password ?? '';
+    const password = (typeof pwRaw === 'string' ? pwRaw : '').trim();
+
+    if (!password) {
+      this.error = 'Please set a password.';
+      return;
+    }
+
+    (this.reg as any).tempPassword = password;
+
+    this.router.navigateByUrl('/auth/register-password-confirm');
+  }
 }

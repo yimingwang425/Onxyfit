@@ -1,13 +1,31 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
-    <ion-title>register-email</ion-title>
+    <ion-title>Register — Enter your email address</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">register-email</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="ion-padding">
+  <p>Please enter your email, we shall send a verification code to that address.</p>
+
+  <form [formGroup]="form" (ngSubmit)="sendOtp()">
+    <ion-item>
+      <ion-label position="stacked">Email</ion-label>
+      <ion-input formControlName="email" type="email" inputmode="email" autocomplete="email"></ion-input>
+    </ion-item>
+
+    <div *ngIf="form.controls['email']?.invalid && form.controls['email']?.touched" style="color: var(--ion-color-danger); margin:8px 0">
+      <ion-text *ngIf="form.controls['email']?.errors?.['required']">Email address is required.</ion-text>
+      <ion-text *ngIf="form.controls['email']?.errors?.['email']">Please enter a valid email address.</ion-text>
+    </div>
+
+    <div *ngIf="error" style="color: var(--ion-color-danger); margin:8px 0">
+      <ion-text>{{ error }}</ion-text>
+    </div>
+
+    <ion-button expand="block" type="submit" [disabled]="loading">Send verification code</ion-button>
+
+    <div *ngIf="loading" style="text-align:center; margin-top:12px">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  </form>
 </ion-content>

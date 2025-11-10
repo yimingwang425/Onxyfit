@@ -63,7 +63,7 @@ export class RegisterPasswordConfirmPage {
         if (res.success) {
           const jwt = res.jwt ?? ('mock-jwt-' + Date.now());
           this.auth.setToken(jwt);
-          this.router.navigateByUrl('/tabs/tab1', { replaceUrl: true });
+          this.router.navigateByUrl('/auth/user-profile-setup', { replaceUrl: true });
         } else {
           this.error = 'Registration failed. Please try again later.';
         }

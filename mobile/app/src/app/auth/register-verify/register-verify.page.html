@@ -1,13 +1,36 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
-    <ion-title>register-verify</ion-title>
+    <ion-title>Register — Enter verification code</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">register-verify</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="ion-padding">
+  <p *ngIf="currentEmail">The verification code will be sent to: <strong>{{ currentEmail }}</strong></p>
+  <p *ngIf="!currentEmail">If you do not see the email address field, please return to the previous page and enter your email address.</p>
+
+  <form [formGroup]="form" (ngSubmit)="verifyOtp()">
+    <ion-item>
+      <ion-label position="stacked">Verification code</ion-label>
+      <ion-input formControlName="otp" inputmode="numeric" autocomplete="one-time-code"></ion-input>
+    </ion-item>
+
+    <div *ngIf="form.controls['otp']?.invalid && form.controls['otp']?.touched" style="color: var(--ion-color-danger); margin:8px 0">
+      <ion-text *ngIf="form.controls['otp']?.errors?.['required']">The verification code is required.</ion-text>
+      <ion-text *ngIf="form.controls['otp']?.errors?.['minlength']">The verification code is short.</ion-text>
+    </div>
+
+    <div *ngIf="error" style="color: var(--ion-color-danger); margin:8px 0">
+      <ion-text>{{ error }}</ion-text>
+    </div>
+
+    <ion-button expand="block" type="submit" [disabled]="loading">Verify and proceed</ion-button>
+
+    <div *ngIf="loading" style="text-align:center; margin-top:12px">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  </form>
+
+  <div style="margin-top: 16px;">
+    <ion-button fill="clear" (click)="editEmail()">Change email address</ion-button>
+  </div>
 </ion-content>

@@ -5,9 +5,41 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  <ion-item>
-    <ion-label>User Information Placeholder</ion-label>
-  </ion-item>
+  <div class="center">
+    <div class="avatar" aria-hidden="true">{{ avatar }}</div>
+    <div class="username">{{ displayName }}</div>
+    <div class="email" *ngIf="email">{{ email }}</div>
+  </div>
 
-  <ion-button color="danger" expand="block" (click)="logout()">Log out</ion-button>
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Personal information</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <div>
+        <div class="field-label">Age</div>
+        <div class="field-value">{{ profile.age ?? 'Not set' }}</div>
+      </div>
+
+      <div>
+        <div class="field-label">Height (cm)</div>
+        <div class="field-value">{{ profile.height_cm ?? profile.height ?? 'Not set' }}</div>
+      </div>
+
+      <div>
+        <div class="field-label">Weight (kg)</div>
+        <div class="field-value">{{ profile.weight_kg ?? profile.weight ?? 'Not set' }}</div>
+      </div>
+
+      <div>
+        <div class="field-label">Preference</div>
+        <div class="field-value">{{ profile.preference ?? profile.dietPref ?? 'Not set' }}</div>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <div class="buttons">
+    <ion-button expand="block" (click)="goToSettings()">Settings</ion-button>
+    <ion-button color="danger" expand="block" (click)="logout()">Log out</ion-button>
+  </div>
 </ion-content>

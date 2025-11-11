@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   IonHeader,
   IonToolbar,
@@ -15,9 +15,9 @@ import {
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
-import { UserProfileService, UserProfileDto } from '../../services/user-profile';
+import { UserProfileService } from '../../services/user-profile';
 
 @Component({
   selector: 'app-user-profile-setup',
@@ -40,7 +40,7 @@ import { UserProfileService, UserProfileDto } from '../../services/user-profile'
     ReactiveFormsModule
   ]
 })
-export class UserProfileSetupPage {
+export class UserProfileSetupPage implements OnInit {
   form = this.fb.group({
     age: [null, [Validators.required, Validators.min(10), Validators.max(100)]],
     heightCm: [null, [Validators.required, Validators.min(80), Validators.max(380)]],
@@ -80,53 +80,69 @@ export class UserProfileSetupPage {
     { value: 'PROFILE_2', label: 'Profile 2' }
   ];
 
+  private returnFrom: string | null = null;
+
   constructor(
     private fb: FormBuilder,
     private userProfileService: UserProfileService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
-  async submit() {
-    this.error = '';
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.error = 'Please complete all mandatory fields and ensure values fall within the permitted range.';
-      return;
+  ngOnInit(): void {
+    this.returnFrom = this.route.snapshot.queryParamMap.get('from');
+
+    if (this.returnFrom === 'settings') {
+    const raw = localStorage.getItem('user_profile');
+    if (raw) {
+      try {
+        const obj = JSON.parse(raw);
+        this.form.patchValue({
+          age: obj.age ?? null,
+          heightCm: obj.height_cm ?? null,
+          weightKg: obj.weight_kg ?? null,
+          activityLevel: obj.activityLevel ?? 'MODERATE',
+          goal: obj.goal ?? 'MAINTAIN',
+          dietPref: obj.preference ?? 'NO_PREFERENCE',
+          metabolicProfile: obj.metabolicProfile ?? 'PROFILE_1'
+        });
+      } catch {}
     }
+  }
+  }
 
-    const ageVal = this.form.get('age')!.value;
-    const heightVal = this.form.get('heightCm')!.value;
-    const weightVal = this.form.get('weightKg')!.value;
-
-    const activityLevel = this.form.get('activityLevel')!.value as UserProfileDto['activityLevel'];
-    const goal = this.form.get('goal')!.value as UserProfileDto['goal'];
-    const dietPref = this.form.get('dietPref')!.value as UserProfileDto['dietPref'];
-    const metabolicProfile = this.form.get('metabolicProfile')!.value as UserProfileDto['metabolicProfile'];
-
-    const dto: UserProfileDto = {
-      age: Number(ageVal),
-      heightCm: Number(heightVal),
-      weightKg: Number(weightVal),
-      activityLevel,
-      goal,
-      dietPref,
-      metabolicProfile,
-      createdAt: new Date().toISOString()
-    };
+  async submit() {
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
 
     this.loading = true;
+    this.error = '';
+
+    const payload: any = {
+      age: this.form.value.age,
+      height_cm: this.form.value.heightCm,
+      weight_kg: this.form.value.weightKg,
+      preference: this.form.value.dietPref,
+      activityLevel: this.form.value.activityLevel,
+      goal: this.form.value.goal
+    };
+
     try {
-      const resp = await lastValueFrom(this.userProfileService.saveProfile(dto));
-      this.loading = false;
-      if (resp && resp.success) {
-        await this.router.navigateByUrl('/tabs/tab1', { replaceUrl: true });
+      // local save for profile page to read
+      localStorage.setItem('user_profile', JSON.stringify(payload));
+
+      // backend later
+      // try { await lastValueFrom(this.userProfileService.saveProfile(payload)); } catch(e) { console.warn(e); }
+
+      if (this.returnFrom === 'settings') {
+        await this.router.navigateByUrl('/tabs/tab4', { replaceUrl: true });
       } else {
-        this.error = 'Failed to save user data. Please try again later.';
+        await this.router.navigateByUrl('/tabs/tab1', { replaceUrl: true });
       }
-    } catch (err: any) {
-      console.error('saveProfile error', err);
+
+    } catch (e: any) {
+      this.error = e?.message ?? 'Failed to save profile';
+    } finally {
       this.loading = false;
-      this.error = (err && err.message) ? err.message : 'Failed to save. Please try again later.';
     }
   }
 }

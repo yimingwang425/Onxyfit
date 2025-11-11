@@ -1,0 +1,28 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Settings</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-list>
+    <ion-item>
+      <ion-label>Notifications</ion-label>
+      <ion-toggle slot="end" [checked]="notifications" (ionChange)="toggleNotifications()"></ion-toggle>
+    </ion-item>
+
+    <ion-item button (click)="changeEmail()">
+      <ion-label>Change email</ion-label>
+    </ion-item>
+
+    <ion-item button (click)="editPersonalInfo()">
+      <ion-label>Change personal information</ion-label>
+    </ion-item>
+
+    <ion-item button>
+      <ion-label>Other</ion-label>
+    </ion-item>
+  </ion-list>
+
+  <ion-button color="danger" expand="block" class="logout" (click)="logout()">Log out</ion-button>
+</ion-content>

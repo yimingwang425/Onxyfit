@@ -42,4 +42,12 @@ export const routes: Routes = [
       }
     ]
   },
+  {
+    path: 'profile',
+    loadComponent: () => import('./auth/profile/profile.page').then( m => m.ProfilePage)
+  },
+  {
+    path: 'settings',
+    loadComponent: () => import('./auth/settings/settings.page').then( m => m.SettingsPage)
+  },
 ];

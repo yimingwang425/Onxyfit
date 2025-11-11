@@ -1,0 +1,34 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Profile</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="center">
+    <div class="avatar" aria-hidden="true">{{ avatar }}</div>
+    <div style="font-weight:600; margin-top:8px">{{ displayName || 'User' }}</div>
+    <div style="color:#666; font-size:13px">{{ email || '' }}</div>
+  </div>
+
+  <ion-card style="margin-top:16px">
+    <ion-card-header><ion-card-title>Personal info</ion-card-title></ion-card-header>
+    <ion-card-content>
+      <div class="field-label">Age</div>
+      <div class="field-value">{{ profile.age ?? 'Not set' }}</div>
+
+      <div class="field-label" style="margin-top:10px">Height (cm)</div>
+      <div class="field-value">{{ profile.height_cm ?? 'Not set' }}</div>
+
+      <div class="field-label" style="margin-top:10px">Weight (kg)</div>
+      <div class="field-value">{{ profile.weight_kg ?? 'Not set' }}</div>
+
+      <div class="field-label" style="margin-top:10px">Preference</div>
+      <div class="field-value">{{ profile.preference ?? 'Not set' }}</div>
+    </ion-card-content>
+  </ion-card>
+
+  <div class="buttons">
+    <ion-button expand="block" (click)="goSettings()">Settings</ion-button>
+  </div>
+</ion-content>

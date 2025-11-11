@@ -11,8 +11,8 @@ import {
   IonSelectOption,
   IonButton,
   IonSpinner,
-  IonText
-} from '@ionic/angular/standalone';
+  IonText, IonIcon } from '@ionic/angular/standalone';
+import { AlertController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -24,6 +24,7 @@ import { UserProfileService } from '../../services/user-profile';
   templateUrl: './user-profile-setup.page.html',
   standalone: true,
   imports: [
+    IonIcon, 
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -79,36 +80,53 @@ export class UserProfileSetupPage implements OnInit {
     { value: 'PROFILE_1', label: 'Profile 1' },
     { value: 'PROFILE_2', label: 'Profile 2' }
   ];
-
+  
   private returnFrom: string | null = null;
 
   constructor(
     private fb: FormBuilder,
     private userProfileService: UserProfileService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private alertCtrl: AlertController
   ) {}
 
   ngOnInit(): void {
     this.returnFrom = this.route.snapshot.queryParamMap.get('from');
 
     if (this.returnFrom === 'settings') {
-    const raw = localStorage.getItem('user_profile');
-    if (raw) {
-      try {
-        const obj = JSON.parse(raw);
-        this.form.patchValue({
-          age: obj.age ?? null,
-          heightCm: obj.height_cm ?? null,
-          weightKg: obj.weight_kg ?? null,
-          activityLevel: obj.activityLevel ?? 'MODERATE',
-          goal: obj.goal ?? 'MAINTAIN',
-          dietPref: obj.preference ?? 'NO_PREFERENCE',
-          metabolicProfile: obj.metabolicProfile ?? 'PROFILE_1'
-        });
-      } catch {}
+      const raw = localStorage.getItem('user_profile');
+      if (raw) {
+        try {
+          const obj = JSON.parse(raw);
+          this.form.patchValue({
+            age: obj.age ?? obj.ageYears ?? null,
+            heightCm: obj.height_cm ?? obj.height ?? null,
+            weightKg: obj.weight_kg ?? obj.weight ?? null,
+            activityLevel: obj.activityLevel ?? 'MODERATE',
+            goal: obj.goal ?? 'MAINTAIN',
+            dietPref: obj.preference ?? obj.dietPref ?? obj.diet ?? 'NO_PREFERENCE',
+            metabolicProfile: obj.metabolicProfile ?? 'PROFILE_1'
+          });
+        } catch (e) {
+        }
+      }
     }
   }
+
+  async openMetabolicInfo() {
+    const msg = `
+      <p>Our app uses standard formulas (Mifflin-St Jeor) to calculate your calorie needs. These formulas use two different statistical models.</p>
+      <p><strong>Profile 1:</strong> Select this to use the formula developed for male physiology (e.g., +5 in the equation).</p>
+      <p><strong>Profile 2:</strong> Select this to use the formula developed for female physiology (e.g., -161 in the equation).</p>
+      <p>Please choose the profile you feel is most appropriate for calculating your personal metabolic rate. This selection is only used for this mathematical calculation.</p>
+    `;
+    const alert = await this.alertCtrl.create({
+      header: 'Metabolic profile',
+      message: msg,
+      buttons: ['OK']
+    });
+    await alert.present();
   }
 
   async submit() {
@@ -123,11 +141,11 @@ export class UserProfileSetupPage implements OnInit {
       weight_kg: this.form.value.weightKg,
       preference: this.form.value.dietPref,
       activityLevel: this.form.value.activityLevel,
-      goal: this.form.value.goal
+      goal: this.form.value.goal,
+      metabolicProfile: this.form.value.metabolicProfile
     };
 
     try {
-      // local save for profile page to read
       localStorage.setItem('user_profile', JSON.stringify(payload));
 
       // backend later

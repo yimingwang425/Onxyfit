@@ -1,78 +1,72 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Set up your profile</ion-title>
+    <ion-title>User profile</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <p>Please complete the following information to finalise your personal details (which can be amended in settings).</p>
-
   <form [formGroup]="form" (ngSubmit)="submit()">
+
     <ion-item>
       <ion-label position="stacked">Age</ion-label>
-      <ion-input formControlName="age" type="number" inputmode="numeric"></ion-input>
+      <ion-input type="number" formControlName="age"></ion-input>
     </ion-item>
-    <div *ngIf="form.controls['age']?.invalid && form.controls['age']?.touched" style="color:var(--ion-color-danger); margin:8px 0">
-      <ion-text *ngIf="form.controls['age']?.errors?.['required']">Age is required</ion-text>
-      <ion-text *ngIf="form.controls['age']?.errors?.['min']">Age must be at least 10</ion-text>
-      <ion-text *ngIf="form.controls['age']?.errors?.['max']">Age must not exceed 100</ion-text>
-    </div>
 
     <ion-item>
       <ion-label position="stacked">Height (cm)</ion-label>
-      <ion-input formControlName="heightCm" type="number" inputmode="numeric"></ion-input>
+      <ion-input type="number" formControlName="heightCm"></ion-input>
     </ion-item>
-    <div *ngIf="form.controls['heightCm']?.invalid && form.controls['heightCm']?.touched" style="color:var(--ion-color-danger); margin:8px 0">
-      <ion-text *ngIf="form.controls['heightCm']?.errors?.['required']">Height is required.</ion-text>
-      <ion-text *ngIf="form.controls['heightCm']?.errors?.['min']">Height must not be less than 80 cm</ion-text>
-      <ion-text *ngIf="form.controls['heightCm']?.errors?.['max']">Height must not exceed 380 cm</ion-text>
-    </div>
 
     <ion-item>
       <ion-label position="stacked">Weight (kg)</ion-label>
-      <ion-input formControlName="weightKg" type="number" inputmode="numeric"></ion-input>
+      <ion-input type="number" formControlName="weightKg"></ion-input>
     </ion-item>
-    <div *ngIf="form.controls['weightKg']?.invalid && form.controls['weightKg']?.touched" style="color:var(--ion-color-danger); margin:8px 0">
-      <ion-text *ngIf="form.controls['weightKg']?.errors?.['required']">Weight is required.</ion-text>
-      <ion-text *ngIf="form.controls['weightKg']?.errors?.['min']">Please enter a valid weight.</ion-text>
-    </div>
 
     <ion-item>
-      <ion-label position="stacked">Activity intensity</ion-label>
+      <ion-label>Activity level</ion-label>
       <ion-select formControlName="activityLevel">
         <ion-select-option *ngFor="let o of activityOptions" [value]="o.value">{{ o.label }}</ion-select-option>
       </ion-select>
     </ion-item>
 
     <ion-item>
-      <ion-label position="stacked">Objective</ion-label>
+      <ion-label>Goal</ion-label>
       <ion-select formControlName="goal">
         <ion-select-option *ngFor="let o of goalOptions" [value]="o.value">{{ o.label }}</ion-select-option>
       </ion-select>
     </ion-item>
 
     <ion-item>
-      <ion-label position="stacked">Dietary preferences</ion-label>
+      <ion-label>Diet preference</ion-label>
       <ion-select formControlName="dietPref">
         <ion-select-option *ngFor="let o of dietOptions" [value]="o.value">{{ o.label }}</ion-select-option>
       </ion-select>
     </ion-item>
 
     <ion-item>
-      <ion-label position="stacked">Metabolic type</ion-label>
+      <ion-label>
+        Metabolic profile
+        <ion-button fill="clear" size="small" (click)="openMetabolicInfo()" style="margin-left:4px;">
+          i
+        </ion-button>
+      </ion-label>
+
       <ion-select formControlName="metabolicProfile">
-        <ion-select-option *ngFor="let o of metabolicOptions" [value]="o.value">{{ o.label }}</ion-select-option>
+        <ion-select-option *ngFor="let o of metabolicOptions" [value]="o.value">
+          {{ o.label }}
+        </ion-select-option>
       </ion-select>
     </ion-item>
 
-    <div *ngIf="error" style="color:var(--ion-color-danger); margin:8px 0">
-      <ion-text>{{ error }}</ion-text>
+    <div style="margin-top: 16px;">
+      <ion-button expand="block" type="submit" [disabled]="loading">
+        <span *ngIf="!loading">Save</span>
+        <ion-spinner *ngIf="loading" slot="end"></ion-spinner>
+      </ion-button>
     </div>
 
-    <ion-button expand="block" type="submit" [disabled]="loading">Save</ion-button>
-
-    <div *ngIf="loading" style="text-align:center; margin-top:12px">
-      <ion-spinner name="crescent"></ion-spinner>
+    <div *ngIf="error" style="margin-top:12px">
+      <ion-text color="danger">{{ error }}</ion-text>
     </div>
   </form>
 </ion-content>

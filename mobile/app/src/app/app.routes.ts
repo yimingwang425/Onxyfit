@@ -39,15 +39,19 @@ export const routes: Routes = [
       {
         path: 'login-password',
         loadComponent: () => import('./auth/login-password/login-password.page').then(m => m.LoginPasswordPage)
-      }
+      },
+      {
+        path: 'change-email',
+        loadComponent: () => import('./auth/change-email/change-email.page').then(m => m.ChangeEmailPage)
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./auth/profile/profile.page').then( m => m.ProfilePage)
+      },
+      {
+        path: 'settings',
+        loadComponent: () => import('./auth/settings/settings.page').then( m => m.SettingsPage)
+      },
     ]
-  },
-  {
-    path: 'profile',
-    loadComponent: () => import('./auth/profile/profile.page').then( m => m.ProfilePage)
-  },
-  {
-    path: 'settings',
-    loadComponent: () => import('./auth/settings/settings.page').then( m => m.SettingsPage)
   },
 ];

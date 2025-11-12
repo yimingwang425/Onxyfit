@@ -1,36 +1,22 @@
 import { Component } from '@angular/core';
-import {
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonItem,
-  IonLabel,
-  IonInput,
-  IonButton,
-  IonText, IonSpinner } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
+import {
+  IonHeader, IonToolbar, IonTitle, IonContent,
+  IonItem, IonLabel, IonInput, IonButton, IonIcon, IonText } from '@ionic/angular/standalone';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RegisterService } from '../../services/register';
 
 @Component({
   selector: 'app-register-password',
-  templateUrl: './register-password.page.html',
   standalone: true,
-  imports: [IonSpinner, 
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonContent,
-    IonItem,
-    IonLabel,
-    IonInput,
-    IonButton,
-    IonText,
+  imports: [IonText, 
     CommonModule,
+    IonHeader, IonToolbar, IonTitle, IonContent,
+    IonItem, IonLabel, IonInput, IonButton, IonIcon,
     ReactiveFormsModule
-  ]
+  ],
+  templateUrl: './register-password.page.html'
 })
 export class RegisterPasswordPage {
   form = this.fb.group({
@@ -38,37 +24,31 @@ export class RegisterPasswordPage {
   });
 
   loading = false;
-  error = '';
   showPassword = false;
+  error = '';
 
   constructor(
     private fb: FormBuilder,
-    private reg: RegisterService,
+    private registerService: RegisterService,
     private router: Router
   ) {}
 
-  toggleShowPassword() {
-    this.showPassword = !this.showPassword;
-  }
-
-  continue() {
+  next() {
     this.error = '';
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.error = 'Please set a password of at least 8 characters.';
+      this.error = 'Please enter a password with at least 8 characters';
       return;
     }
 
-    const pwRaw = this.form.value.password ?? '';
-    const password = (typeof pwRaw === 'string' ? pwRaw : '').trim();
-
-    if (!password) {
-      this.error = 'Please set a password.';
-      return;
-    }
-
-    (this.reg as any).tempPassword = password;
+    const pw = this.form.value.password as string;
+    try {
+      (this.registerService as any).tempPassword = pw;
+      localStorage.setItem('temp_register_password', pw);
+    } catch (e) { console.warn(e); }
 
     this.router.navigateByUrl('/auth/register-password-confirm');
   }
+
+  toggleShow() { this.showPassword = !this.showPassword; }
 }

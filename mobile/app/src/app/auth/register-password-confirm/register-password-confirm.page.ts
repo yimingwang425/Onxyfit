@@ -1,77 +1,103 @@
 import { Component } from '@angular/core';
-import {
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonItem,
-  IonLabel,
-  IonInput,
-  IonButton,
-  IonSpinner,
-  IonText
-} from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
+import {
+  IonHeader, IonToolbar, IonTitle, IonContent,
+  IonItem, IonLabel, IonInput, IonButton, IonText, IonSpinner } from '@ionic/angular/standalone';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RegisterService } from '../../services/register';
 import { AuthService } from '../../services/auth';
+import { lastValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-register-password-confirm',
-  templateUrl: './register-password-confirm.page.html',
   standalone: true,
-  imports: [
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonContent,
-    IonItem,
-    IonLabel,
-    IonInput,
-    IonButton,
-    IonSpinner,
-    IonText,
+  imports: [IonSpinner, 
     CommonModule,
+    IonHeader, IonToolbar, IonTitle, IonContent,
+    IonItem, IonLabel, IonInput, IonButton, IonText,
     ReactiveFormsModule
-  ]
+  ],
+  templateUrl: './register-password-confirm.page.html'
 })
 export class RegisterPasswordConfirmPage {
-  form = this.fb.group({ password2: ['', [Validators.required]] });
+  form = this.fb.group({
+    confirmPassword: ['', [Validators.required]]
+  });
+
   loading = false;
+  showPassword = false;
   error = '';
 
   constructor(
     private fb: FormBuilder,
-    private reg: RegisterService,
+    private registerService: RegisterService,
     private auth: AuthService,
     private router: Router
   ) {}
 
   complete() {
+    return this.submit();
+  }
+
+  async submit() {
     this.error = '';
-    const pw1 = (this.reg as any).tempPassword;
-    const pw2 = this.form.value.password2;
-    if (!pw1) { this.error = 'Please set a password first'; return; }
-    if (pw1 !== pw2) { this.error = 'The two passwords do not match'; return; }
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.error = 'Please confirm your password';
+      return;
+    }
+
+    const savedPw = (this.registerService as any).tempPassword
+      || localStorage.getItem('temp_register_password') || '';
+
+    const confirm = this.form.value.confirmPassword as string || '';
+
+    if (!savedPw) {
+      this.error = 'Original password missing. Please re-enter password.';
+      return;
+    }
+
+    if (savedPw !== confirm) {
+      this.error = 'Passwords do not match';
+      return;
+    }
 
     this.loading = true;
-    const token = this.reg.tempToken$.value || 'mock-temp-token';
-    this.reg.completeRegistration(token, pw1).subscribe({
-      next: (res: any) => {
-        this.loading = false;
-        if (res.success) {
-          const jwt = res.jwt ?? ('mock-jwt-' + Date.now());
-          this.auth.setToken(jwt);
-          this.router.navigateByUrl('/auth/user-profile-setup', { replaceUrl: true });
-        } else {
-          this.error = 'Registration failed. Please try again later.';
-        }
-      },
-      error: () => {
-        this.loading = false;
-        this.error = 'Registration failed. Please try again later.';
+
+    const tempToken = (this.registerService as any).tempToken
+      || (this.registerService as any).tempToken$?.getValue?.() || localStorage.getItem('temp_register_token') || '';
+
+    try {
+      const completeFn = (this.registerService as any).completeRegistration;
+      if (typeof completeFn === 'function') {
+        const maybeObs = completeFn.call(this.registerService, tempToken || '', savedPw);
+        const res: any = await lastValueFrom(maybeObs);
+        const jwt = res?.jwt ?? res?.id_token ?? ('mock-jwt-' + Date.now());
+        this.auth.setToken(jwt);
+        const regEmail = (this.registerService as any).email
+          || (this.registerService as any).email$?.getValue?.()
+          || localStorage.getItem('temp_register_email') || '';
+        if (regEmail) localStorage.setItem('registered_email', regEmail);
+
+      } else {
+        const jwt = 'mock-jwt-' + Date.now();
+        this.auth.setToken(jwt);
+        const regEmail = (this.registerService as any).email || localStorage.getItem('temp_register_email') || '';
+        if (regEmail) localStorage.setItem('registered_email', regEmail);
       }
-    });
+
+      try { window.dispatchEvent(new CustomEvent('profile-updated', { detail: { email: localStorage.getItem('registered_email') } })); } catch {}
+
+      await this.router.navigateByUrl('/auth/user-profile-setup', { replaceUrl: true });
+
+    } catch (err: any) {
+      console.error(err);
+      this.error = err?.message ?? 'Registration failed. Please try again.';
+    } finally {
+      this.loading = false;
+    }
   }
+
+  toggleShow() { this.showPassword = !this.showPassword; }
 }

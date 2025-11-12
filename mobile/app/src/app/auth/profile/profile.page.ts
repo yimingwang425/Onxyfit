@@ -53,6 +53,6 @@ export class ProfilePage implements OnInit {
   }
 
   goSettings() {
-    this.router.navigateByUrl('/settings');
+    this.router.navigateByUrl('/auth/settings');
   }
 }

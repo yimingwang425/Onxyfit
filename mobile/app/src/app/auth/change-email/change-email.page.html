@@ -1,0 +1,54 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Change email</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <form *ngIf="step === 1" [formGroup]="formEmail" (ngSubmit)="sendOtp()">
+    <ion-item>
+      <ion-label position="stacked">New email</ion-label>
+      <ion-input type="email" formControlName="newEmail"></ion-input>
+    </ion-item>
+    <div class="note">We will send a one-time code to this email for verification.</div>
+
+    <div style="margin-top:16px;">
+      <ion-button expand="block" type="submit" [disabled]="loading">
+        <span *ngIf="!loading">Send code</span>
+        <ion-spinner *ngIf="loading" slot="end"></ion-spinner>
+      </ion-button>
+    </div>
+    <div *ngIf="error" style="margin-top:12px;">
+      <ion-text color="danger">{{ error }}</ion-text>
+    </div>
+  </form>
+
+  <form *ngIf="step === 2" [formGroup]="formOtp" (ngSubmit)="verifyOtp()">
+    <ion-item>
+      <ion-label position="stacked">New email</ion-label>
+      <ion-input type="email" formControlName="newEmail"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">One-time code (OTP)</ion-label>
+      <ion-input type="text" formControlName="otp" maxlength="6"></ion-input>
+    </ion-item>
+
+    <div class="note">
+      <span *ngIf="resendSeconds > 0">You can resend after {{ resendSeconds }}s</span>
+      <span *ngIf="resendSeconds === 0"><a (click)="resend()">Resend code</a></span>
+    </div>
+
+    <div style="margin-top:16px;">
+      <ion-button expand="block" type="submit" [disabled]="loading">
+        <span *ngIf="!loading">Verify & save</span>
+        <ion-spinner *ngIf="loading" slot="end"></ion-spinner>
+      </ion-button>
+      <ion-button expand="block" fill="clear" (click)="cancel()">Cancel</ion-button>
+    </div>
+
+    <div *ngIf="error" style="margin-top:12px;">
+      <ion-text color="danger">{{ error }}</ion-text>
+    </div>
+  </form>
+</ion-content>

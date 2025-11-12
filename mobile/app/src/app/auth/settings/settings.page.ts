@@ -21,8 +21,7 @@ export class SettingsPage {
   }
 
   changeEmail() {
-    // Placeholder: Can jump to an email modification page, not yet implemented
-    this.router.navigateByUrl('/auth/change-email').catch(()=>{});
+    this.router.navigate(['/auth/change-email']).catch(()=>{});
   }
 
   editPersonalInfo() {

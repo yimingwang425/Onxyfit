@@ -20,7 +20,14 @@ export class AuthService {
   }
 
   logout() {
-    localStorage.removeItem(TOKEN_KEY);
+    try {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem('registered_email');
+      localStorage.removeItem('user_profile');
+      localStorage.removeItem('user_avatar');
+      localStorage.removeItem('_mock_change_email');
+    } catch (e) {
+      console.warn('logout cleanup failed', e);
+    }
   }
 }
-

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { Router } from '@angular/router';
@@ -40,17 +40,41 @@ export class Tab4Page implements OnInit {
 
   constructor(private auth: AuthService, private router: Router) {}
 
+  private profileUpdatedHandler = (ev: any) => {
+    this.loadProfile();
+  };
+
   ngOnInit(): void {
     this.pickAvatar();
     this.loadProfile();
+    window.addEventListener('profile-updated', this.profileUpdatedHandler as EventListener);
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('profile-updated', this.profileUpdatedHandler as EventListener);
   }
 
   private pickAvatar() {
-    const saved = localStorage.getItem('user_avatar');
-    if (saved) {
-      this.avatar = saved;
+    const email = localStorage.getItem('registered_email') || localStorage.getItem('auth_email') || '';
+    if (email) {
+      const key = `user_avatar_${email}`;
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        this.avatar = saved;
+        return;
+      }
+      const idx = this.emailHashIndex(email, this.animalEmojis.length);
+      this.avatar = this.animalEmojis[idx];
+      try { localStorage.setItem(key, this.avatar); } catch (e) {}
       return;
     }
+
+    const savedGlobal = localStorage.getItem('user_avatar');
+    if (savedGlobal) {
+      this.avatar = savedGlobal;
+      return;
+    }
+
     const idx = Math.floor(Math.random() * this.animalEmojis.length);
     this.avatar = this.animalEmojis[idx];
     try { localStorage.setItem('user_avatar', this.avatar); } catch (e) {}
@@ -64,18 +88,26 @@ export class Tab4Page implements OnInit {
       this.profile = {};
     }
 
-    const nameFromLS = localStorage.getItem('user_name');
     const regEmail = localStorage.getItem('registered_email') || localStorage.getItem('auth_email') || '';
-    this.displayName = nameFromLS || this.profile.username || (regEmail ? this.shortenEmail(regEmail) : 'User');
-    this.email = this.profile.email || regEmail;
+    this.email = regEmail || this.profile.email || '';
+
+    this.displayName = '';
   }
 
   private shortenEmail(e: string) {
     return e;
   }
 
+  private emailHashIndex(email: string, modulo: number): number {
+    let h = 0;
+    for (let i = 0; i < email.length; i++) {
+      h = (h * 31 + email.charCodeAt(i)) >>> 0;
+    }
+    return h % modulo;
+  }
+
   goToSettings() {
-    this.router.navigateByUrl('/settings');
+    this.router.navigateByUrl('/auth/settings');
   }
 
   logout() {

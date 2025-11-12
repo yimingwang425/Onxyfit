@@ -8,7 +8,8 @@ import {
   IonLabel,
   IonInput,
   IonButton,
-  IonSpinner
+  IonSpinner,
+  IonText
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -17,33 +18,32 @@ import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-login-password',
-  templateUrl: './login-password.page.html',
   standalone: true,
   imports: [
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonContent,
-    IonItem,
-    IonLabel,
-    IonInput,
-    IonButton,
-    IonSpinner,
-    CommonModule,
-    ReactiveFormsModule
-  ]
+    IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonLabel,
+    IonInput, IonButton, IonSpinner, IonText, CommonModule, ReactiveFormsModule
+  ],
+  templateUrl: './login-password.page.html',
+  styles: [`
+    ion-item { margin-top: 10px; }
+  `]
 })
 export class LoginPasswordPage {
   form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required]]
   });
+
   loading = false;
   error = '';
 
-  constructor(private fb: FormBuilder, private router: Router, private auth: AuthService) {}
+  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {}
 
   login() {
+    this.submit();
+  }
+
+  submit() {
     this.error = '';
     if (this.form.invalid) {
       this.error = 'Please enter valid Email and Password';
@@ -51,11 +51,20 @@ export class LoginPasswordPage {
     }
     this.loading = true;
 
-    //Mock
+    //MOCK login 
+    const email = this.form.value.email as string;
+
     setTimeout(() => {
       this.loading = false;
       const fakeJwt = 'mock-jwt-' + Date.now();
       this.auth.setToken(fakeJwt);
+
+      try {
+        localStorage.setItem('registered_email', email);
+      } catch (e) {
+        console.warn('failed to set registered_email on login', e);
+      }
+
       this.router.navigateByUrl('/tabs/tab1', { replaceUrl: true });
     }, 600);
   }

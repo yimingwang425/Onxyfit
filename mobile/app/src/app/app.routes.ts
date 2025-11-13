@@ -52,6 +52,22 @@ export const routes: Routes = [
         path: 'settings',
         loadComponent: () => import('./auth/settings/settings.page').then( m => m.SettingsPage)
       },
+      {
+        path: 'login-email',
+        loadComponent: () => import('./auth/login-email/login-email.page').then( m => m.LoginEmailPage)
+      },
+      {
+        path: 'password-reset-email',
+        loadComponent: () => import('./auth/password-reset-email/password-reset-email.page').then( m => m.PasswordResetEmailPage)
+      },
+      {
+        path: 'password-reset-verify',
+        loadComponent: () => import('./auth/password-reset-verify/password-reset-verify.page').then( m => m.PasswordResetVerifyPage)
+      },
+      {
+        path: 'password-reset-set',
+        loadComponent: () => import('./auth/password-reset-set/password-reset-set.page').then( m => m.PasswordResetSetPage)
+      },
     ]
   },
 ];

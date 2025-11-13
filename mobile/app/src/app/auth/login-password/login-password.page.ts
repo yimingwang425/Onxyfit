@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   IonHeader,
   IonToolbar,
@@ -9,63 +9,154 @@ import {
   IonInput,
   IonButton,
   IonSpinner,
-  IonText
+  IonText,
+  IonBackButton,
+  IonButtons,
+  IonChip, 
+  IonList,
+  IonIcon,
+  IonAlert
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
+import { addIcons } from 'ionicons';
+import { eyeOutline, eyeOffOutline } from 'ionicons/icons';
+import { NavController, LoadingController, AlertController } from '@ionic/angular';
+
+import { PasswordResetService } from '../../services/password-reset'; 
 
 @Component({
   selector: 'app-login-password',
   standalone: true,
-  imports: [
+  imports: [IonList, 
     IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonLabel,
-    IonInput, IonButton, IonSpinner, IonText, CommonModule, ReactiveFormsModule
+    IonInput, IonButton, IonSpinner, IonText, CommonModule, ReactiveFormsModule,
+    IonBackButton, IonButtons, IonChip,
+    IonIcon,
+    IonAlert
   ],
   templateUrl: './login-password.page.html',
   styles: [`
     ion-item { margin-top: 10px; }
+    ion-chip { margin-bottom: 10px; }
   `]
 })
-export class LoginPasswordPage {
-  form = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required]]
-  });
-
+export class LoginPasswordPage implements OnInit {
+  
+  form: FormGroup; 
   loading = false;
-  error = '';
+  error: string | null = null;
+  email: string | null = null;
+  showPassword = false;
 
-  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {}
+  constructor(
+    private fb: FormBuilder, 
+    private auth: AuthService, 
+    private router: Router,
+    private navCtrl: NavController,
+    private alertController: AlertController,
+    private loadingCtrl: LoadingController,
+    private passwordResetService: PasswordResetService
+  ) {
+    addIcons({ eyeOutline, eyeOffOutline });
+    
+    this.form = this.fb.group({
+      password: ['', [Validators.required]]
+    });
+  }
+
+  ngOnInit() {
+    this.email = this.auth.tempLoginEmail;
+
+    if (!this.email) {
+      this.router.navigate(['/auth/login-email'], { replaceUrl: true });
+    }
+  }
+
+  ionViewWillEnter() {
+    this.form.reset();
+    this.error = null;
+    this.loading = false;
+
+    this.email = this.auth.tempLoginEmail;
+    if (!this.email) {
+      this.router.navigate(['/auth/login-email'], { replaceUrl: true });
+    }
+  }
 
   login() {
     this.submit();
   }
 
   submit() {
-    this.error = '';
+    this.error = null;
     if (this.form.invalid) {
-      this.error = 'Please enter valid Email and Password';
+      return; 
+    }
+    if (!this.email) {
+      this.router.navigate(['/auth/login-email'], { replaceUrl: true });
       return;
     }
+
     this.loading = true;
+    const { password } = this.form.getRawValue();
 
-    //MOCK login 
-    const email = this.form.value.email as string;
-
-    setTimeout(() => {
-      this.loading = false;
-      const fakeJwt = 'mock-jwt-' + Date.now();
-      this.auth.setToken(fakeJwt);
-
-      try {
-        localStorage.setItem('registered_email', email);
-      } catch (e) {
-        console.warn('failed to set registered_email on login', e);
+    this.auth.login(this.email, password).subscribe({
+      next: (response: any) => {
+        this.loading = false;
+        localStorage.setItem('registered_email', this.email as string);
+        this.auth.tempLoginEmail = null; 
+        this.navCtrl.navigateRoot('/tabs/tab1', { replaceUrl: true });
+      },
+      error: (err: any) => {
+        this.loading = false;
+        this.error = 'Incorrect password. Please try again.';
+        console.error('Login failed:', err);
       }
+    });
+  }
 
-      this.router.navigateByUrl('/tabs/tab1', { replaceUrl: true });
-    }, 600);
+  changeEmail() {
+    this.router.navigate(['/auth/login-email']);
+  }
+
+  toggleShowPassword() {
+    this.showPassword = !this.showPassword;
+  }
+
+  async forgotPassword() {
+    if (!this.email) {
+      this.router.navigate(['/auth/password-reset-email']);
+      return;
+    }
+
+    const loading = await this.loadingCtrl.create({
+      message: 'Sending verification code...',
+      spinner: 'crescent',
+    });
+    await loading.present();
+
+    this.passwordResetService.sendOtp(this.email).subscribe({
+      next: () => {
+        loading.dismiss();
+        this.router.navigate(['/auth/password-reset-verify']);
+      },
+      error: (err: any) => {
+        loading.dismiss();
+        console.error('Failed to send reset OTP:', err);
+        this.showAlert('Failed to send', 'We are unable to send the verification code to your email address. Please try again later.');
+      }
+    });
+  }
+
+  async showAlert(header: string, message: string) {
+    const alert = await this.alertController.create({
+      header,
+      message,
+      buttons: ['OK'],
+    });
+    await alert.present();
   }
 }

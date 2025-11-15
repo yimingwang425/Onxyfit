@@ -1,12 +1,38 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
 import { RouterModule, Router } from '@angular/router';
+import {
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonToggle,
+  IonButton,
+  IonButtons,
+  IonBackButton
+} from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, IonicModule, RouterModule],
+  imports: [
+    CommonModule, 
+    RouterModule,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonToggle,
+    IonButton,
+    IonButtons,
+    IonBackButton
+  ],
   templateUrl: './settings.page.html',
   styles: [`.logout { margin-top:18px }`]
 })

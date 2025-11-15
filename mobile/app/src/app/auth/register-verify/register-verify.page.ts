@@ -9,7 +9,9 @@ import {
   IonInput,
   IonButton,
   IonSpinner,
-  IonText
+  IonText,
+  IonBackButton,
+  IonButtons
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -32,6 +34,8 @@ import { RegisterService } from '../../services/register';
     IonButton,
     IonSpinner,
     IonText,
+    IonBackButton,
+    IonButtons,
     CommonModule,
     ReactiveFormsModule
   ]

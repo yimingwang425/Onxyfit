@@ -11,7 +11,12 @@ import {
   IonSelectOption,
   IonButton,
   IonSpinner,
-  IonText, IonIcon } from '@ionic/angular/standalone';
+  IonText, 
+  IonIcon,
+  IonBackButton,
+  IonButtons,
+  IonNote
+} from '@ionic/angular/standalone';
 import { AlertController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -38,7 +43,10 @@ import { UserProfileService } from '../../services/user-profile';
     IonSpinner,
     IonText,
     CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    IonBackButton,
+    IonButtons,
+    IonNote
   ]
 })
 export class UserProfileSetupPage implements OnInit {
@@ -81,7 +89,7 @@ export class UserProfileSetupPage implements OnInit {
     { value: 'PROFILE_2', label: 'Profile 2' }
   ];
   
-  private returnFrom: string | null = null;
+  public returnFrom: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -90,6 +98,10 @@ export class UserProfileSetupPage implements OnInit {
     private route: ActivatedRoute,
     private alertCtrl: AlertController
   ) {}
+
+  get f() {
+    return this.form.controls;
+  }
 
   ngOnInit(): void {
     this.returnFrom = this.route.snapshot.queryParamMap.get('from');
@@ -130,7 +142,10 @@ export class UserProfileSetupPage implements OnInit {
   }
 
   async submit() {
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    if (this.form.invalid) { 
+      this.form.markAllAsTouched();
+      return; 
+    }
 
     this.loading = true;
     this.error = '';
@@ -147,9 +162,6 @@ export class UserProfileSetupPage implements OnInit {
 
     try {
       localStorage.setItem('user_profile', JSON.stringify(payload));
-
-      // backend later
-      // try { await lastValueFrom(this.userProfileService.saveProfile(payload)); } catch(e) { console.warn(e); }
 
       if (this.returnFrom === 'settings') {
         await this.router.navigateByUrl('/tabs/tab4', { replaceUrl: true });

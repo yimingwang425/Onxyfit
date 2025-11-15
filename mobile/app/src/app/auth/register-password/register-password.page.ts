@@ -2,7 +2,10 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent,
-  IonItem, IonLabel, IonInput, IonButton, IonIcon, IonText } from '@ionic/angular/standalone';
+  IonItem, IonLabel, IonInput, IonButton, IonIcon, IonText,
+  IonBackButton,
+  IonButtons
+} from '@ionic/angular/standalone';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RegisterService } from '../../services/register';
@@ -14,6 +17,8 @@ import { RegisterService } from '../../services/register';
     CommonModule,
     IonHeader, IonToolbar, IonTitle, IonContent,
     IonItem, IonLabel, IonInput, IonButton, IonIcon,
+    IonBackButton,
+    IonButtons,
     ReactiveFormsModule
   ],
   templateUrl: './register-password.page.html'

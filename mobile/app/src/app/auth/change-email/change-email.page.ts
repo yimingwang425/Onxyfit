@@ -1,7 +1,9 @@
 import { Component } from '@angular/core';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonLabel,
-  IonInput, IonButton, IonText, IonSpinner
+  IonInput, IonButton, IonText, IonSpinner,
+  IonBackButton,
+  IonButtons
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -14,7 +16,9 @@ import { lastValueFrom } from 'rxjs';
   standalone: true,
   imports: [
     IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonLabel,
-    IonInput, IonButton, IonText, IonSpinner, CommonModule, ReactiveFormsModule
+    IonInput, IonButton, IonText, IonSpinner, CommonModule, ReactiveFormsModule,
+    IonBackButton,
+    IonButtons
   ],
   templateUrl: './change-email.page.html',
   styles: [`

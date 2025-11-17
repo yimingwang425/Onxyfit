@@ -1,0 +1,52 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ meal?.name || 'Recipe Details' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()">
+        <ion-icon slot="icon-only" name="close-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-list-header>
+    <ion-label>Nutritional Summary ({{ meal?.calories }} Kcal)</ion-label>
+  </ion-list-header>
+  <ion-item lines="none">
+    <ion-label>
+      <p>protein: {{ meal?.macros?.p }}g</p>
+      <p>carbohydrates: {{ meal?.macros?.c }}g</p>
+      <p>fat: {{ meal?.macros?.f }}g</p>
+    </ion-label>
+  </ion-item>
+
+  <ion-list-header>
+    <ion-label>Required ingredients</ion-label>
+  </ion-list-header>
+  <ion-list>
+    <ion-item *ngFor="let item of meal?.ingredients">
+      <ion-label>{{ item }}</ion-label>
+    </ion-item>
+  </ion-list>
+
+  <ion-list-header>
+    <ion-label>Cooking steps</ion-label>
+  </ion-list-header>
+  <ion-list>
+    <ion-item *ngFor="let step of meal?.recipe" class="recipe-step">
+      <ion-text>{{ step }}</ion-text>
+    </ion-item>
+  </ion-list>
+
+  <ion-button
+    *ngIf="meal?.amazonLink"
+    (click)="openLink()"
+    expand="block"
+    fill="outline"
+    class="ion-margin-top"
+  >
+    Go to Amazon Fresh to buy
+    <ion-icon slot="end" name="open-outline"></ion-icon>
+  </ion-button>
+</ion-content>

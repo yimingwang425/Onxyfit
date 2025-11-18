@@ -1,0 +1,49 @@
+ion-content {
+  --background: var(--ion-background-color, #fff);
+  position: relative;
+}
+
+.wizard-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.prompt-area {
+  text-align: center;
+  width: 100%;
+  padding: 0 32px;
+}
+
+.prompt-area h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.prompt-area ion-item {
+  --background: #f4f5f8;
+  --border-radius: 8px;
+  margin-top: 16px;
+}
+
+.error-text {
+  text-align: left;
+  margin-top: 8px;
+}
+
+.button-area {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 16px;
+  
+  position: absolute;
+  bottom: 40px; 
+  width: 100%;
+}
+
+.button-area ion-button {
+  flex: 1;
+  margin: 0 8px;
+}

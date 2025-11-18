@@ -53,10 +53,6 @@ export const routes: Routes = [
         loadComponent: () => import('./auth/settings/settings.page').then( m => m.SettingsPage)
       },
       {
-        path: 'login-email',
-        loadComponent: () => import('./auth/login-email/login-email.page').then( m => m.LoginEmailPage)
-      },
-      {
         path: 'password-reset-email',
         loadComponent: () => import('./auth/password-reset-email/password-reset-email.page').then( m => m.PasswordResetEmailPage)
       },
@@ -67,6 +63,37 @@ export const routes: Routes = [
       {
         path: 'password-reset-set',
         loadComponent: () => import('./auth/password-reset-set/password-reset-set.page').then( m => m.PasswordResetSetPage)
+      },
+
+      // **** (修改点) 路由路径 ****
+      // (从 .page 改为 .component)
+      {
+        path: 'setup-age',
+        loadComponent: () => import('./auth/setup-age/setup-age.component').then( m => m.SetupAgePage)
+      },
+      {
+        path: 'setup-height',
+        loadComponent: () => import('./auth/setup-height/setup-height.component').then( m => m.SetupHeightPage)
+      },
+      {
+        path: 'setup-weight',
+        loadComponent: () => import('./auth/setup-weight/setup-weight.component').then( m => m.SetupWeightPage)
+      },
+      {
+        path: 'setup-activity',
+        loadComponent: () => import('./auth/setup-activity/setup-activity.component').then( m => m.SetupActivityPage)
+      },
+      {
+        path: 'setup-goal',
+        loadComponent: () => import('./auth/setup-goal/setup-goal.component').then( m => m.SetupGoalPage)
+      },
+      {
+        path: 'setup-diet',
+        loadComponent: () => import('./auth/setup-diet/setup-diet.component').then( m => m.SetupDietPage)
+      },
+      {
+        path: 'setup-metabolic',
+        loadComponent: () => import('./auth/setup-metabolic/setup-metabolic.component').then( m => m.SetupMetabolicPage)
       },
     ]
   },

@@ -21,7 +21,6 @@ import { AlertController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { lastValueFrom } from 'rxjs';
 import { UserProfileService } from '../../services/user-profile';
 
 @Component({
@@ -140,6 +139,7 @@ export class UserProfileSetupPage implements OnInit {
     });
     await alert.present();
   }
+  // **** (干净的版本 结束) ****
 
   async submit() {
     if (this.form.invalid) { 
@@ -162,6 +162,8 @@ export class UserProfileSetupPage implements OnInit {
 
     try {
       localStorage.setItem('user_profile', JSON.stringify(payload));
+
+      window.dispatchEvent(new CustomEvent('profile-updated'));
 
       if (this.returnFrom === 'settings') {
         await this.router.navigateByUrl('/tabs/tab4', { replaceUrl: true });

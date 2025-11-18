@@ -94,7 +94,7 @@ export class RegisterPasswordConfirmPage {
 
       try { window.dispatchEvent(new CustomEvent('profile-updated', { detail: { email: localStorage.getItem('registered_email') } })); } catch {}
 
-      await this.router.navigateByUrl('/auth/user-profile-setup', { replaceUrl: true });
+      await this.router.navigateByUrl('/auth/setup-age', { replaceUrl: true });
 
     } catch (err: any) {
       console.error(err);

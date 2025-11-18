@@ -64,6 +64,8 @@ export class Tab1Page {
   hasProfile = false;
   username = 'User';
   
+  greeting = 'Hello'; 
+
   aiTip = '';
   private mockTips = [
     'Mood and stress levels directly impact recovery. Today, listen to your body first, and the plan second.',
@@ -109,6 +111,8 @@ export class Tab1Page {
     const email = localStorage.getItem('registered_email');
     this.username = email ? email.split('@')[0] : 'User';
 
+    this.setGreeting(); 
+
     this.aiTip = this.getMockAiTip();
     this.progressData = this.getMockProgress();
     
@@ -116,6 +120,18 @@ export class Tab1Page {
     this.currentWater = parseInt(localStorage.getItem('today_water') || '0', 10);
     
     this.createChart();
+  }
+
+  private setGreeting() {
+    const currentHour = new Date().getHours();
+    
+    if (currentHour < 12) {
+      this.greeting = 'Good Morning';
+    } else if (currentHour < 18) {
+      this.greeting = 'Good Afternoon';
+    } else {
+      this.greeting = 'Good Evening';
+    }
   }
 
   private getMockAiTip(): string {

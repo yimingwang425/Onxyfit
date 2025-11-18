@@ -1,0 +1,35 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Profile Setup (1/7)</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="wizard-container">
+    <div class="prompt-area">
+      <ion-label>
+        <h2>Please enter your Age</h2>
+      </ion-label>
+
+      <form [formGroup]="form" (ngSubmit)="next()">
+        <ion-item>
+          <ion-input
+            type="number"
+            formControlName="age"
+            placeholder="e.g., 25"
+          ></ion-input>
+        </ion-item>
+        <div *ngIf="form.controls.age.invalid && form.controls.age.touched" class="error-text">
+          <ion-text color="danger">
+            <small>Please enter a valid age (10-100).</small>
+          </ion-text>
+        </div>
+      </form>
+    </div>
+
+    <div class="button-area">
+      <ion-button fill="clear" (click)="skip()">Skip</ion-button>
+      <ion-button [disabled]="form.invalid" (click)="next()">Next</ion-button>
+    </div>
+  </div>
+</ion-content>

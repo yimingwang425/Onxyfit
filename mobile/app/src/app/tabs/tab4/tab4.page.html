@@ -15,28 +15,31 @@
     <ion-card-header>
       <ion-card-title>Personal information</ion-card-title>
     </ion-card-header>
+    
     <ion-card-content>
-      <div>
-        <div class="field-label">Age</div>
-        <div class="field-value">{{ profile.age ?? 'Not set' }}</div>
-      </div>
+      <ion-list [inset]="false">
+        <ion-item lines="full">
+          <ion-label>Age</ion-label>
+          <ion-label slot="end" color="medium">{{ profile.age ?? 'Not set' }}</ion-label>
+        </ion-item>
 
-      <div>
-        <div class="field-label">Height (cm)</div>
-        <div class="field-value">{{ profile.height_cm ?? profile.height ?? 'Not set' }}</div>
-      </div>
+        <ion-item lines="full">
+          <ion-label>Height (cm)</ion-label>
+          <ion-label slot="end" color="medium">{{ profile.height_cm ?? profile.height ?? 'Not set' }}</ion-label>
+        </ion-item>
 
-      <div>
-        <div class="field-label">Weight (kg)</div>
-        <div class="field-value">{{ profile.weight_kg ?? profile.weight ?? 'Not set' }}</div>
-      </div>
+        <ion-item lines="full">
+          <ion-label>Weight (kg)</ion-label>
+          <ion-label slot="end" color="medium">{{ profile.weight_kg ?? profile.weight ?? 'Not set' }}</ion-label>
+        </ion-item>
 
-      <div>
-        <div class="field-label">Preference</div>
-        <div class="field-value">{{ profile.preference ?? profile.dietPref ?? 'Not set' }}</div>
-      </div>
+        <ion-item lines="none">
+          <ion-label>Preference</ion-label>
+          <ion-label slot="end" color="medium">{{ profile.preference ?? profile.dietPref ?? 'Not set' }}</ion-label>
+        </ion-item>
+      </ion-list>
     </ion-card-content>
-  </ion-card>
+    </ion-card>
 
   <div class="buttons">
     <ion-button expand="block" (click)="goToSettings()">Settings</ion-button>

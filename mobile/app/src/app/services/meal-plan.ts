@@ -91,11 +91,11 @@ export class MealPlanService {
   // Simulating a user who registered on Wednesday, it only returns data from today (Wednesday) through to Sunday
   getWeeklyPlan(): Observable<WeeklyPlan[]> {
     const week: WeeklyPlan[] = [
-      // { day: 'Mon', dayShort: '1', plan: null },
-      // { day: 'Tue', dayShort: '2', plan: null },
+      // { day: 'Mon', dayShort: 'Mon', plan: null },
+      // { day: 'Tue', dayShort: 'Tue', plan: null },
       {
         day: 'Wed',
-        dayShort: '3',
+        dayShort: 'Wed',
         plan: {
           breakfast: this.mockMeals.oats,
           lunch: this.mockMeals.salmonRice,
@@ -103,10 +103,10 @@ export class MealPlanService {
           snack: this.mockMeals.proteinShake,
         },
       },
-      { day: 'Thu', dayShort: '4', plan: null },
+      { day: 'Thu', dayShort: 'Thu', plan: null },
       {
         day: 'Fri',
-        dayShort: '5',
+        dayShort: 'Fri',
         plan: {
           breakfast: this.mockMeals.oats,
           lunch: this.mockMeals.chickenSalad,
@@ -114,8 +114,8 @@ export class MealPlanService {
           snack: this.mockMeals.proteinShake,
         },
       },
-      { day: 'Sat', dayShort: '6', plan: null },
-      { day: 'Sun', dayShort: '7', plan: null },
+      { day: 'Sat', dayShort: 'Sat', plan: null },
+      { day: 'Sun', dayShort: 'Sun', plan: null },
     ];
 
     return of(week).pipe(delay(500));

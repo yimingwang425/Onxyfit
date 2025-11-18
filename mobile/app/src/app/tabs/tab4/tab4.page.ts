@@ -9,26 +9,7 @@ import { AuthService } from '../../services/auth';
   standalone: true,
   imports: [CommonModule, IonicModule],
   templateUrl: './tab4.page.html',
-  styles: [`
-    .avatar {
-      width: 96px;
-      height: 96px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 48px;
-      margin: 8px auto;
-      background: var(--ion-color-light);
-    }
-    .center { text-align: center; }
-    .username { font-weight: 600; margin-top: 8px; }
-    .email { color: var(--ion-color-medium); font-size: 13px; }
-    .field-label { color: var(--ion-color-medium); font-size: 13px; margin-top: 12px; }
-    .field-value { font-size: 16px; margin-top: 6px; }
-    ion-card { margin-top: 14px; }
-    .buttons { margin-top: 16px; }
-  `]
+  styleUrls: ['./tab4.page.scss'],
 })
 export class Tab4Page implements OnInit {
   avatar = '🐶';
@@ -52,6 +33,11 @@ export class Tab4Page implements OnInit {
 
   ngOnDestroy(): void {
     window.removeEventListener('profile-updated', this.profileUpdatedHandler as EventListener);
+  }
+  
+  ionViewWillEnter() {
+    this.pickAvatar();
+    this.loadProfile();
   }
 
   private pickAvatar() {
@@ -91,11 +77,7 @@ export class Tab4Page implements OnInit {
     const regEmail = localStorage.getItem('registered_email') || localStorage.getItem('auth_email') || '';
     this.email = regEmail || this.profile.email || '';
 
-    this.displayName = '';
-  }
-
-  private shortenEmail(e: string) {
-    return e;
+    this.displayName = this.profile.name || 'User'; 
   }
 
   private emailHashIndex(email: string, modulo: number): number {

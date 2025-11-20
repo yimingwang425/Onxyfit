@@ -61,7 +61,6 @@ export class Tab1Page {
   @ViewChild('progressChartCanvas') private progressChartCanvas: ElementRef | undefined;
   private progressChart: Chart | undefined;
 
-  hasProfile = false;
   username = 'User';
   
   greeting = 'Hello'; 
@@ -100,14 +99,7 @@ export class Tab1Page {
   }
 
   loadDashboardData() {
-    const profile = localStorage.getItem('user_profile');
-    this.hasProfile = !!profile;
-
-    if (!this.hasProfile) {
-      this.destroyChart();
-      return; 
-    }
-
+    
     const email = localStorage.getItem('registered_email');
     this.username = email ? email.split('@')[0] : 'User';
 
@@ -116,10 +108,31 @@ export class Tab1Page {
     this.aiTip = this.getMockAiTip();
     this.progressData = this.getMockProgress();
     
-    this.currentMood = localStorage.getItem('today_mood');
-    this.currentWater = parseInt(localStorage.getItem('today_water') || '0', 10);
+    this.checkAndResetDailyData();
     
-    this.createChart();
+    setTimeout(() => {
+      this.createChart();
+    }, 0);
+  }
+
+  private checkAndResetDailyData() {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const lastLogDate = localStorage.getItem('last_log_date');
+
+    if (lastLogDate !== todayStr) {
+      console.log('New day detected, resetting daily logs.');
+      
+      localStorage.removeItem('today_mood');
+      localStorage.removeItem('today_water');
+      
+      localStorage.setItem('last_log_date', todayStr);
+      
+      this.currentMood = null;
+      this.currentWater = 0;
+    } else {
+      this.currentMood = localStorage.getItem('today_mood');
+      this.currentWater = parseInt(localStorage.getItem('today_water') || '0', 10);
+    }
   }
 
   private setGreeting() {
@@ -144,7 +157,7 @@ export class Tab1Page {
   }
 
   createChart() {
-    if (!this.hasProfile || !this.progressChartCanvas || this.progressData.total === 0) {
+    if (!this.progressChartCanvas || this.progressData.total === 0) {
       return;
     }
     
@@ -205,9 +218,12 @@ export class Tab1Page {
         {
           text: 'Save',
           handler: (data: string) => {
-            this.currentMood = data;
-            localStorage.setItem('today_mood', data);
-            this.saveMoodToBackend(data);
+            if (data) {
+              this.currentMood = data;
+              localStorage.setItem('today_mood', data);
+              localStorage.setItem('last_log_date', new Date().toISOString().split('T')[0]);
+              this.saveMoodToBackend(data);
+            }
           },
         },
       ],
@@ -236,6 +252,7 @@ export class Tab1Page {
             if (glasses > 0) {
               this.currentWater += glasses;
               localStorage.setItem('today_water', this.currentWater.toString());
+              localStorage.setItem('last_log_date', new Date().toISOString().split('T')[0]);
               this.saveWaterToBackend(this.currentWater);
             }
           },

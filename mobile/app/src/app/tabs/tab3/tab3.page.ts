@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ProfileCheckModalComponent } from '../../components/profile-check-modal/profile-check-modal.component';
 import {
   IonHeader,
   IonToolbar,
@@ -20,6 +21,8 @@ import {
   IonItem,
   IonList,
   IonListHeader,
+  AlertController,
+  NavController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { barbellOutline, moonOutline } from 'ionicons/icons';
@@ -31,6 +34,7 @@ import {
   Exercise,
 } from '../../services/workout-plan';
 import { WorkoutDetailComponent } from '../../components/workout-detail/workout-detail.component';
+import { UserProfileService } from '../../services/user-profile';
 
 @Component({
   selector: 'app-tab3',
@@ -73,13 +77,77 @@ export class Tab3Page implements OnInit {
 
   constructor(
     private workoutPlanService: WorkoutPlanService,
-    private modalCtrl: ModalController
+    private modalCtrl: ModalController,
+    private alertCtrl: AlertController,
+    private navCtrl: NavController,
+    private profileService: UserProfileService
   ) {
     addIcons({ barbellOutline, moonOutline });
   }
 
   ngOnInit() {
-    this.loadTodaysPlan();
+  }
+
+  ionViewWillEnter() {
+    this.checkProfileAndLoad();
+  }
+
+  async checkProfileAndLoad() {
+    const missingFields = this.profileService.getMissingFields();
+    
+    if (missingFields.length > 0) {
+      const modal = await this.modalCtrl.create({
+        component: ProfileCheckModalComponent,
+        componentProps: {
+          mode: 'missing',
+          missingFields: missingFields
+        },
+        backdropDismiss: false,
+      });
+
+      await modal.present();
+      const { role } = await modal.onWillDismiss();
+
+      if (role === 'complete') {
+        this.navCtrl.navigateForward('/auth/user-profile-setup?from=missing');
+      }
+      return;
+    }
+
+    const hasConfirmed = localStorage.getItem('has_confirmed_plan_start');
+
+    if (!hasConfirmed) {
+      const summary = this.profileService.getSummaryString();
+      
+      const modal = await this.modalCtrl.create({
+        component: ProfileCheckModalComponent,
+        componentProps: {
+          mode: 'confirm',
+          summary: summary
+        },
+        backdropDismiss: false
+      });
+
+      await modal.present();
+      const { role } = await modal.onWillDismiss();
+
+      if (role === 'edit') {
+        this.navCtrl.navigateForward('/auth/user-profile-setup?from=review');
+      } else if (role === 'confirm') {
+        localStorage.setItem('has_confirmed_plan_start', 'true');
+        this.loadData();
+      }
+    } else {
+      this.loadData();
+    }
+  }
+
+  loadData() {
+    if (this.currentSegment === 'today' && !this.todaysPlan) {
+      this.loadTodaysPlan();
+    } else if (this.currentSegment === 'week' && this.weeklyPlan.length === 0) {
+      this.loadWeeklyPlan();
+    }
   }
 
   segmentChanged(event: any) {
@@ -102,7 +170,18 @@ export class Tab3Page implements OnInit {
     this.isLoadingWeek = true;
     this.workoutPlanService.getWeeklyPlan().subscribe((data) => {
       this.weeklyPlan = data;
-      this.selectedDayIndex = 0;
+      
+      const daysMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const todayStr = daysMap[new Date().getDay()]; 
+
+      const foundIndex = data.findIndex(d => d.day === todayStr);
+      
+      if (foundIndex !== -1) {
+        this.selectedDayIndex = foundIndex;
+      } else {
+        this.selectedDayIndex = 0;
+      }
+
       this.isLoadingWeek = false;
     });
   }

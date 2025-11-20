@@ -17,7 +17,7 @@ export class ChangeEmailService {
 
   sendChangeEmailOtp(newEmail: string): Observable<{ message: string; expiresIn: number }> {
     if (this.useMock) {
-      const otp = (Math.floor(Math.random() * 900000) + 100000).toString();
+      const otp = '123456';
       const expiresIn = 5 * 60;
       const payload = {
         email: newEmail,

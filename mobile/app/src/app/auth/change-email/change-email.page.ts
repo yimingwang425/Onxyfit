@@ -21,10 +21,7 @@ import { lastValueFrom } from 'rxjs';
     IonButtons
   ],
   templateUrl: './change-email.page.html',
-  styles: [`
-    ion-item { margin-top: 10px; }
-    .note { font-size: 13px; color: var(--ion-color-medium); margin-top: 6px; }
-  `]
+  styleUrls: ['./change-email.page.scss']
 })
 export class ChangeEmailPage {
   step: 1 | 2 = 1;
@@ -101,9 +98,6 @@ export class ChangeEmailPage {
       } catch (e) {}
 
       window.dispatchEvent(new CustomEvent('profile-updated', { detail: { email: newEmail } }));
-
-      // backend
-      // if (res.token) { localStorage.setItem('auth_token', res.token); }
 
       await this.router.navigateByUrl('/tabs/tab4', { replaceUrl: true });
     } catch (e: any) {

@@ -1,3 +1,7 @@
+ion-content {
+  --padding-top: calc(var(--ion-safe-area-top) + 20px);
+}
+
 ion-card-title {
   font-weight: 600;
   font-size: 1.1rem;
@@ -6,6 +10,17 @@ ion-card-title {
 ion-list-header {
   font-size: 1.1rem;
   font-weight: 600;
+}
+
+.chart-container {
+  position: relative;
+  height: 200px;
+  width: 100%;
+  max-width: 220px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .progress-text {
@@ -18,7 +33,7 @@ ion-list-header {
 
 h2 {
   font-weight: 700;
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   color: var(--ion-color-dark);
   margin-top: 8px;
 }

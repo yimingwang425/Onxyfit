@@ -38,10 +38,7 @@ import { PasswordResetService } from '../../services/password-reset';
     IonAlert
   ],
   templateUrl: './login-password.page.html',
-  styles: [`
-    ion-item { margin-top: 10px; }
-    ion-chip { margin-bottom: 10px; }
-  `]
+  styleUrls: ['./login-password.page.scss']
 })
 export class LoginPasswordPage implements OnInit {
   

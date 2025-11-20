@@ -4,26 +4,28 @@ import {
   IonHeader, IonToolbar, IonTitle, IonContent,
   IonItem, IonLabel, IonInput, IonButton, IonText, IonSpinner,
   IonBackButton,
-  IonButtons
+  IonButtons, IonIcon 
 } from '@ionic/angular/standalone';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RegisterService } from '../../services/register';
 import { AuthService } from '../../services/auth';
 import { lastValueFrom } from 'rxjs';
+import { addIcons } from 'ionicons';
+import { eyeOutline, eyeOffOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-register-password-confirm',
+  templateUrl: './register-password-confirm.page.html',
   standalone: true,
-  imports: [IonSpinner, 
+  imports: [
     CommonModule,
     IonHeader, IonToolbar, IonTitle, IonContent,
     IonItem, IonLabel, IonInput, IonButton, IonText,
-    ReactiveFormsModule,
-    IonBackButton,
-    IonButtons
+    IonBackButton, IonButtons, IonIcon, IonSpinner,
+    ReactiveFormsModule
   ],
-  templateUrl: './register-password-confirm.page.html'
+  styleUrls: ['../auth-shared.scss']
 })
 export class RegisterPasswordConfirmPage {
   form = this.fb.group({
@@ -39,7 +41,9 @@ export class RegisterPasswordConfirmPage {
     private registerService: RegisterService,
     private auth: AuthService,
     private router: Router
-  ) {}
+  ) {
+    addIcons({ eyeOutline, eyeOffOutline });
+  }
 
   complete() {
     return this.submit();

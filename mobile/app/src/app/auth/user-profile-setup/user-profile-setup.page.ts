@@ -15,17 +15,21 @@ import {
   IonIcon,
   IonBackButton,
   IonButtons,
-  IonNote
+  IonNote,
+  NavController
 } from '@ionic/angular/standalone';
-import { AlertController } from '@ionic/angular';
+import { AlertController } from '@ionic/angular'; // 移除了 IonicSafeString
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { UserProfileService } from '../../services/user-profile';
+import { addIcons } from 'ionicons';
+import { informationCircleOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-user-profile-setup',
   templateUrl: './user-profile-setup.page.html',
+  styleUrls: ['./user-profile-setup.page.scss'],
   standalone: true,
   imports: [
     IonIcon, 
@@ -50,17 +54,18 @@ import { UserProfileService } from '../../services/user-profile';
 })
 export class UserProfileSetupPage implements OnInit {
   form = this.fb.group({
-    age: [null, [Validators.required, Validators.min(10), Validators.max(100)]],
-    heightCm: [null, [Validators.required, Validators.min(80), Validators.max(380)]],
-    weightKg: [null, [Validators.required, Validators.min(10)]],
-    activityLevel: ['MODERATE', [Validators.required]],
-    goal: ['MAINTAIN', [Validators.required]],
-    dietPref: ['NO_PREFERENCE', [Validators.required]],
-    metabolicProfile: ['PROFILE_1', [Validators.required]]
+    age: [null as number | null, [Validators.required, Validators.min(10), Validators.max(100)]],
+    heightCm: [null as number | null, [Validators.required, Validators.min(80), Validators.max(380)]],
+    weightKg: [null as number | null, [Validators.required, Validators.min(10)]],
+    activityLevel: [null as string | null, [Validators.required]],
+    goal: [null as string | null, [Validators.required]],
+    dietPref: [null as string | null, [Validators.required]],
+    metabolicProfile: [null as string | null, [Validators.required]] 
   });
 
   loading = false;
   error = '';
+  public returnFrom: string | null = null;
 
   activityOptions = [
     { value: 'SEDENTARY', label: 'Sedentary' },
@@ -84,19 +89,20 @@ export class UserProfileSetupPage implements OnInit {
   ];
 
   metabolicOptions = [
-    { value: 'PROFILE_1', label: 'Profile 1' },
-    { value: 'PROFILE_2', label: 'Profile 2' }
+    { value: 'PROFILE_1', label: 'Male' },
+    { value: 'PROFILE_2', label: 'Female' }
   ];
-  
-  public returnFrom: string | null = null;
 
   constructor(
     private fb: FormBuilder,
     private userProfileService: UserProfileService,
     private router: Router,
     private route: ActivatedRoute,
-    private alertCtrl: AlertController
-  ) {}
+    private alertCtrl: AlertController,
+    private navCtrl: NavController
+  ) {
+    addIcons({ informationCircleOutline });
+  }
 
   get f() {
     return this.form.controls;
@@ -104,42 +110,42 @@ export class UserProfileSetupPage implements OnInit {
 
   ngOnInit(): void {
     this.returnFrom = this.route.snapshot.queryParamMap.get('from');
+    this.loadExistingData();
+  }
 
-    if (this.returnFrom === 'settings') {
-      const raw = localStorage.getItem('user_profile');
-      if (raw) {
-        try {
-          const obj = JSON.parse(raw);
-          this.form.patchValue({
-            age: obj.age ?? obj.ageYears ?? null,
-            heightCm: obj.height_cm ?? obj.height ?? null,
-            weightKg: obj.weight_kg ?? obj.weight ?? null,
-            activityLevel: obj.activityLevel ?? 'MODERATE',
-            goal: obj.goal ?? 'MAINTAIN',
-            dietPref: obj.preference ?? obj.dietPref ?? obj.diet ?? 'NO_PREFERENCE',
-            metabolicProfile: obj.metabolicProfile ?? 'PROFILE_1'
-          });
-        } catch (e) {
-        }
+  loadExistingData() {
+    const raw = localStorage.getItem('user_profile');
+    if (raw) {
+      try {
+        const obj = JSON.parse(raw);
+        this.form.patchValue({
+          age: obj.age ?? obj.ageYears ?? null,
+          heightCm: obj.heightCm ?? obj.height_cm ?? obj.height ?? null,
+          weightKg: obj.weightKg ?? obj.weight_kg ?? obj.weight ?? null,
+          activityLevel: obj.activityLevel ?? null,
+          goal: obj.goal ?? null,
+          dietPref: obj.dietPref ?? obj.preference ?? obj.diet ?? null,
+          metabolicProfile: obj.metabolicProfile ?? null
+        });
+      } catch (e) {
+        console.error('Error parsing profile', e);
       }
     }
   }
 
   async openMetabolicInfo() {
-    const msg = `
-      <p>Our app uses standard formulas (Mifflin-St Jeor) to calculate your calorie needs. These formulas use two different statistical models.</p>
-      <p><strong>Profile 1:</strong> Select this to use the formula developed for male physiology (e.g., +5 in the equation).</p>
-      <p><strong>Profile 2:</strong> Select this to use the formula developed for female physiology (e.g., -161 in the equation).</p>
-      <p>Please choose the profile you feel is most appropriate for calculating your personal metabolic rate. This selection is only used for this mathematical calculation.</p>
-    `;
+    const msg = `We use the Mifflin-St Jeor equation to calculate your metabolic rate.\n\n` +
+      `• Male (Profile 1):\nApplies the +5 constant.\n\n` +
+      `• Female (Profile 2):\nApplies the -161 constant.\n\n` +
+      `(Stored as 'Profile 1/2' for standardization)`;
+
     const alert = await this.alertCtrl.create({
-      header: 'Metabolic profile',
+      header: 'Biological Sex & Calculation',
       message: msg,
       buttons: ['OK']
     });
     await alert.present();
   }
-  // **** (干净的版本 结束) ****
 
   async submit() {
     if (this.form.invalid) { 
@@ -152,29 +158,32 @@ export class UserProfileSetupPage implements OnInit {
 
     const payload: any = {
       age: this.form.value.age,
-      height_cm: this.form.value.heightCm,
-      weight_kg: this.form.value.weightKg,
-      preference: this.form.value.dietPref,
+      heightCm: this.form.value.heightCm,
+      weightKg: this.form.value.weightKg,
       activityLevel: this.form.value.activityLevel,
       goal: this.form.value.goal,
-      metabolicProfile: this.form.value.metabolicProfile
+      dietPref: this.form.value.dietPref,
+      metabolicProfile: this.form.value.metabolicProfile,
+      updatedAt: new Date().toISOString()
     };
 
-    try {
-      localStorage.setItem('user_profile', JSON.stringify(payload));
+    this.userProfileService.saveProfile(payload).subscribe({
+      next: async () => {
+        window.dispatchEvent(new CustomEvent('profile-updated'));
 
-      window.dispatchEvent(new CustomEvent('profile-updated'));
-
-      if (this.returnFrom === 'settings') {
-        await this.router.navigateByUrl('/tabs/tab4', { replaceUrl: true });
-      } else {
-        await this.router.navigateByUrl('/tabs/tab1', { replaceUrl: true });
+        if (this.returnFrom === 'settings') {
+          await this.navCtrl.navigateBack('/tabs/tab4');
+        } else if (this.returnFrom === 'missing' || this.returnFrom === 'review') {
+          this.navCtrl.back();
+        } else {
+          await this.navCtrl.navigateRoot('/tabs/tab1');
+        }
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = 'Failed to save profile';
+        this.loading = false;
       }
-
-    } catch (e: any) {
-      this.error = e?.message ?? 'Failed to save profile';
-    } finally {
-      this.loading = false;
-    }
+    });
   }
 }

@@ -4,7 +4,8 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar, IonItem,
-  IonLabel, IonInput, IonButton, IonText
+  IonLabel, IonInput, IonButton, IonText,
+  IonBackButton, IonButtons
 } from '@ionic/angular/standalone';
 
 @Component({
@@ -14,7 +15,8 @@ import {
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, IonContent, IonHeader, IonTitle,
-    IonToolbar, IonItem, IonLabel, IonInput, IonButton, IonText
+    IonToolbar, IonItem, IonLabel, IonInput, IonButton, IonText,
+    IonBackButton, IonButtons
   ]
 })
 export class SetupWeightPage {
@@ -43,7 +45,7 @@ export class SetupWeightPage {
       this.form.markAllAsTouched();
       return;
     }
-    this.saveProfileData({ weight_kg: this.form.value.weightKg });
+    this.saveProfileData({ weightKg: this.form.value.weightKg });
     this.router.navigateByUrl('/auth/setup-activity');
   }
 }

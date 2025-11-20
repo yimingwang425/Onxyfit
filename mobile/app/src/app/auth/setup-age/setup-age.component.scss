@@ -14,18 +14,26 @@ ion-content {
   text-align: center;
   width: 100%;
   padding: 0 32px;
+  padding-bottom: 35vh;
 }
 
 .prompt-area h2 {
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 24px;
+  color: #000;
 }
 
 .prompt-area ion-item {
   --background: #f4f5f8;
   --border-radius: 8px;
   margin-top: 16px;
+  --color: #000;
+}
+
+.prompt-area ion-input {
+  color: #000; 
+  --color: #000;
 }
 
 .error-text {
@@ -37,7 +45,6 @@ ion-content {
   display: flex;
   justify-content: space-between;
   padding: 0 16px;
-  
   position: absolute;
   bottom: 40px; 
   width: 100%;

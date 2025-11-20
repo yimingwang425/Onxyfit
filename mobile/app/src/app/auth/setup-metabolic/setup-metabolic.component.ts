@@ -3,31 +3,32 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
-  IonContent, IonHeader, IonTitle, IonToolbar, IonItem,
-  IonLabel, IonButton, IonSelect, IonSelectOption, IonIcon
-} from '@ionic/angular/standalone';
+  IonContent, IonHeader, IonTitle, IonToolbar, 
+  IonButton, IonIcon,
+  IonBackButton, IonButtons, IonLabel } from '@ionic/angular/standalone';
 import { AlertController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { informationCircleOutline } from 'ionicons/icons';
+import { checkmarkCircle, informationCircleOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-setup-metabolic',
   templateUrl: './setup-metabolic.component.html',
   styleUrls: ['./setup-metabolic.component.scss'],
   standalone: true,
-  imports: [
+  imports: [IonLabel, 
     CommonModule, ReactiveFormsModule, IonContent, IonHeader, IonTitle,
-    IonToolbar, IonItem, IonLabel, IonButton, IonSelect, IonSelectOption, IonIcon
+    IonToolbar, IonButton, IonIcon,
+    IonBackButton, IonButtons
   ]
 })
 export class SetupMetabolicPage {
   form = this.fb.group({
-    metabolicProfile: ['PROFILE_1', [Validators.required]]
+    metabolicProfile: [null as string | null, [Validators.required]]
   });
   
   metabolicOptions = [
-    { value: 'PROFILE_1', label: 'Profile 1' },
-    { value: 'PROFILE_2', label: 'Profile 2' }
+    { value: 'PROFILE_1', label: 'Male' },
+    { value: 'PROFILE_2', label: 'Female' }
   ];
 
   constructor(
@@ -35,7 +36,11 @@ export class SetupMetabolicPage {
     private router: Router,
     private alertCtrl: AlertController
   ) {
-    addIcons({ informationCircleOutline });
+    addIcons({ checkmarkCircle, informationCircleOutline });
+  }
+
+  selectOption(value: string) {
+    this.form.patchValue({ metabolicProfile: value });
   }
 
   private saveProfileData(data: any) {
@@ -48,23 +53,22 @@ export class SetupMetabolicPage {
     localStorage.setItem('user_profile', JSON.stringify(updatedProfile));
   }
 
-  // (复制自 user-profile-setup.page.ts)
   async openMetabolicInfo() {
     const msg = `
-      <p>Our app uses standard formulas (Mifflin-St Jeor) to calculate your calorie needs. These formulas use two different statistical models.</p>
-      <p><strong>Profile 1:</strong> Select this to use the formula developed for male physiology (e.g., +5 in the equation).</p>
-      <p><strong>Profile 2:</strong> Select this to use the formula developed for female physiology (e.g., -161 in the equation).</p>
-      <p>Please choose the profile you feel is most appropriate for calculating your personal metabolic rate. This selection is only used for this mathematical calculation.</p>
+      <p>We use the Mifflin-St Jeor equation to calculate your metabolic rate.</p>
+      <p><strong>Male:</strong> Uses standard male BMR constant (+5).</p>
+      <p><strong>Female:</strong> Uses standard female BMR constant (-161).</p>
+      <br/>
+      <small>Stored as Profile 1/2 in our database.</small>
     `;
     const alert = await this.alertCtrl.create({
-      header: 'Metabolic profile',
+      header: 'Biological Sex',
       message: msg,
       buttons: ['OK']
     });
     await alert.present();
   }
 
-  // 这是最后一步，所以都跳转到 Tab 1
   skip() {
     this.router.navigateByUrl('/tabs/tab1', { replaceUrl: true });
   }

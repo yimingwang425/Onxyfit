@@ -1,107 +1,104 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button *ngIf="returnFrom === 'settings'" defaultHref="/auth/settings"></ion-back-button>
+      <ion-back-button *ngIf="returnFrom" defaultHref="/tabs/tab4"></ion-back-button>
     </ion-buttons>
-    <ion-title>User profile</ion-title>
+    <ion-title>Edit Profile</ion-title> 
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
   <form [formGroup]="form" (ngSubmit)="submit()">
 
-    <ion-item>
+    <ion-item lines="full">
       <ion-label position="stacked">Age</ion-label>
-      <ion-input type="number" formControlName="age"></ion-input>
+      <ion-input type="number" formControlName="age" placeholder="e.g. 25"></ion-input>
     </ion-item>
-    <div *ngIf="f.age.invalid && f.age.touched" class="manual-error">
-      <ion-text color="danger" *ngIf="f.age.errors?.['required']">Age is required.</ion-text>
-      <ion-text color="danger" *ngIf="f.age.errors?.['min']">Age must be at least 10.</ion-text>
-      <ion-text color="danger" *ngIf="f.age.errors?.['max']">Age must be 100 or less.</ion-text>
+    <div *ngIf="f['age'].invalid && f['age'].touched" class="manual-error">
+      <ion-text *ngIf="f['age'].errors?.['required']">Age is required.</ion-text>
+      <ion-text *ngIf="f['age'].errors?.['min']">Age must be at least 10.</ion-text>
+      <ion-text *ngIf="f['age'].errors?.['max']">Age must be 100 or less.</ion-text>
     </div>
-    <ion-item>
+
+    <ion-item lines="full">
       <ion-label position="stacked">Height (cm)</ion-label>
-      <ion-input type="number" formControlName="heightCm"></ion-input>
+      <ion-input type="number" formControlName="heightCm" placeholder="e.g. 175"></ion-input>
     </ion-item>
-    <div *ngIf="f.heightCm.invalid && f.heightCm.touched" class="manual-error">
-      <ion-text color="danger" *ngIf="f.heightCm.errors?.['required']">Height is required.</ion-text>
-      <ion-text color="danger" *ngIf="f.heightCm.errors?.['min']">Height must be at least 80 cm.</ion-text>
-      <ion-text color="danger" *ngIf="f.heightCm.errors?.['max']">Height must be 380 cm or less.</ion-text>
+    <div *ngIf="f['heightCm'].invalid && f['heightCm'].touched" class="manual-error">
+      <ion-text *ngIf="f['heightCm'].errors?.['required']">Height is required.</ion-text>
+      <ion-text *ngIf="f['heightCm'].errors?.['min']">Height must be at least 80 cm.</ion-text>
+      <ion-text *ngIf="f['heightCm'].errors?.['max']">Height must be 380 cm or less.</ion-text>
     </div>
-    <ion-item>
+
+    <ion-item lines="full">
       <ion-label position="stacked">Weight (kg)</ion-label>
-      <ion-input type="number" formControlName="weightKg"></ion-input>
+      <ion-input type="number" formControlName="weightKg" placeholder="e.g. 70"></ion-input>
     </ion-item>
-    <div *ngIf="f.weightKg.invalid && f.weightKg.touched" class="manual-error">
-      <ion-text color="danger" *ngIf="f.weightKg.errors?.['required']">Weight is required.</ion-text>
-      <ion-text color="danger" *ngIf="f.weightKg.errors?.['min']">Weight must be at least 10 kg.</ion-text>
+    <div *ngIf="f['weightKg'].invalid && f['weightKg'].touched" class="manual-error">
+      <ion-text *ngIf="f['weightKg'].errors?.['required']">Weight is required.</ion-text>
+      <ion-text *ngIf="f['weightKg'].errors?.['min']">Weight must be at least 10 kg.</ion-text>
     </div>
-    <ion-item>
-      <ion-label>Activity level</ion-label>
-      <ion-select formControlName="activityLevel">
+
+    <ion-item lines="full">
+      <ion-label position="stacked">Activity level</ion-label>
+      <ion-select formControlName="activityLevel" placeholder="Select">
         <ion-select-option *ngFor="let o of activityOptions" [value]="o.value">{{ o.label }}</ion-select-option>
       </ion-select>
     </ion-item>
-    <div *ngIf="f.activityLevel.invalid && f.activityLevel.touched" class="manual-error">
-      <ion-text color="danger">Please select an activity level.</ion-text>
+    <div *ngIf="f['activityLevel'].invalid && f['activityLevel'].touched" class="manual-error">
+      <ion-text>Please select an activity level.</ion-text>
     </div>
-    <ion-item>
-      <ion-label>Goal</ion-label>
-      <ion-select formControlName="goal">
+
+    <ion-item lines="full">
+      <ion-label position="stacked">Goal</ion-label>
+      <ion-select formControlName="goal" placeholder="Select">
         <ion-select-option *ngFor="let o of goalOptions" [value]="o.value">{{ o.label }}</ion-select-option>
       </ion-select>
     </ion-item>
-    <div *ngIf="f.goal.invalid && f.goal.touched" class="manual-error">
-      <ion-text color="danger">Please select a goal.</ion-text>
+    <div *ngIf="f['goal'].invalid && f['goal'].touched" class="manual-error">
+      <ion-text>Please select a goal.</ion-text>
     </div>
-    <ion-item>
-      <ion-label>Diet preference</ion-label>
-      <ion-select formControlName="dietPref">
+
+    <ion-item lines="full">
+      <ion-label position="stacked">Diet preference</ion-label>
+      <ion-select formControlName="dietPref" placeholder="Select">
         <ion-select-option *ngFor="let o of dietOptions" [value]="o.value">{{ o.label }}</ion-select-option>
       </ion-select>
     </ion-item>
-    <div *ngIf="f.dietPref.invalid && f.dietPref.touched" class="manual-error">
-      <ion-text color="danger">Please select a diet preference.</ion-text>
+    <div *ngIf="f['dietPref'].invalid && f['dietPref'].touched" class="manual-error">
+      <ion-text>Please select a diet preference.</ion-text>
     </div>
-    <ion-item>
-      <div slot="label" style="display: flex; align-items: center; margin: 10px 0;">
-        <span>Metabolic profile</span>
+
+    <ion-item lines="none">
+      <ion-label position="stacked">
+        Biological Sex
         <ion-button 
           fill="clear" 
           size="small" 
           (click)="openMetabolicInfo()" 
-          style="--padding-start: 4px; --padding-end: 4px; margin-left: 0; height: 20px; vertical-align: middle;">
-          i
+          class="ion-no-margin ion-no-padding" 
+          style="height: 1.2em; vertical-align: middle; margin-left: 4px;">
+          <ion-icon name="information-circle-outline" style="font-size: 1.1em;"></ion-icon>
         </ion-button>
-      </div>
-      <ion-select formControlName="metabolicProfile">
+      </ion-label>
+      
+      <ion-select formControlName="metabolicProfile" placeholder="Select">
         <ion-select-option *ngFor="let o of metabolicOptions" [value]="o.value">
           {{ o.label }}
         </ion-select-option>
       </ion-select>
     </ion-item>
-    <div *ngIf="f.metabolicProfile.invalid && f.metabolicProfile.touched" class="manual-error">
-      <ion-text color="danger">Please select a profile.</ion-text>
-    </div>
-    <style>
-      .manual-error {
-        padding-left: 16px;
-        padding-top: 4px;
-        font-size: 12px;
-      }
-      .manual-error ion-text {
-        display: block;
-      }
-    </style>
-
-    <div style="margin-top: 16px;">
-      <ion-button expand="block" type="submit" [disabled]="loading">
-        <span *ngIf="!loading">Save</span>
-        <ion-spinner *ngIf="loading" slot="end"></ion-spinner>
-      </ion-button>
+    
+    <div *ngIf="f['metabolicProfile'].invalid && f['metabolicProfile'].touched" class="manual-error">
+      <ion-text>Please select a profile.</ion-text>
     </div>
 
-    <div *ngIf="error" style="margin-top:12px">
+    <ion-button expand="block" type="submit" [disabled]="loading">
+      <span *ngIf="!loading">Save Changes</span>
+      <ion-spinner *ngIf="loading" slot="end"></ion-spinner>
+    </ion-button>
+
+    <div *ngIf="error" style="margin-top:12px; text-align: center;">
       <ion-text color="danger">{{ error }}</ion-text>
     </div>
   </form>

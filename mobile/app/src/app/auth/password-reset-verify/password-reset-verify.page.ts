@@ -40,6 +40,7 @@ import { PasswordResetService } from '../../services/password-reset';
     IonBackButton,
     IonButtons,
   ],
+  styleUrls: ['./password-reset-verify.page.scss']
 })
 export class PasswordResetVerifyPage {
   otp: string = '';

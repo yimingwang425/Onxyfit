@@ -4,21 +4,18 @@ import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angula
 import { Router } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonLabel,
-  IonInput, IonButton, IonBackButton, IonButtons
-} from '@ionic/angular/standalone';
+  IonInput, IonButton, IonBackButton, IonButtons, IonText } from '@ionic/angular/standalone';
 import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-login-email',
   templateUrl: './login-email.page.html',
   standalone: true,
-  imports: [
+  imports: [IonText, 
     CommonModule, ReactiveFormsModule, IonHeader, IonToolbar, IonTitle,
     IonContent, IonItem, IonLabel, IonInput, IonButton, IonBackButton, IonButtons
   ],
-  styles: [`
-    ion-item { margin-top: 10px; }
-  `]
+  styleUrls: ['./login-email.page.scss']
 })
 export class LoginEmailPage {
   form: FormGroup;
@@ -29,7 +26,13 @@ export class LoginEmailPage {
     private router: Router
   ) {
     this.form = this.fb.group({
-      email: [this.auth.tempLoginEmail || '', [Validators.required, Validators.email]]
+      email: [
+        this.auth.tempLoginEmail || '', 
+        [
+          Validators.required, 
+          Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
+        ]
+      ]
     });
   }
 

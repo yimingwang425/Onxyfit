@@ -38,11 +38,15 @@ import { RegisterService } from '../../services/register';
     IonButtons,
     CommonModule,
     ReactiveFormsModule
-  ]
+  ],
+  styleUrls: ['../auth-shared.scss']
 })
 export class RegisterEmailPage {
   form = this.fb.group({
-    email: ['', [Validators.required, Validators.email]]
+    email: ['', [
+      Validators.required, 
+      Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
+    ]]
   });
 
   loading = false;

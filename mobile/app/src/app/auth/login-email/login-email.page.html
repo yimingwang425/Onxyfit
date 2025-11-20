@@ -7,13 +7,27 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <form [formGroup]="form" (ngSubmit)="next()">
-    <ion-item>
-      <ion-label position="stacked">Email</ion-label>
-      <ion-input formControlName="email" type="email" inputmode="email" autocapitalize="off"></ion-input>
-    </ion-item>
+<ion-content>
+  <div class="wizard-container">
+    <div class="prompt-area">
+      
+      <h2>Please Enter Your Email</h2>
 
-    <ion-button expand="block" type="submit" [disabled]="form.invalid">Next</ion-button>
-  </form>
+      <form [formGroup]="form" (ngSubmit)="next()">
+        <ion-item>
+          <ion-input 
+            formControlName="email" 
+            type="email" 
+            inputmode="email" 
+            autocapitalize="off"
+            placeholder="name@example.com"
+          ></ion-input>
+        </ion-item>
+      </form>
+    </div>
+
+    <div class="button-area">
+      <ion-button expand="block" (click)="next()" [disabled]="form.invalid">Next</ion-button>
+    </div>
+  </div>
 </ion-content>

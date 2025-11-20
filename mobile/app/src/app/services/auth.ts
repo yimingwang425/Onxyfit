@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
+import { Router } from '@angular/router';
 
 const TOKEN_KEY = 'auth_token';
 
@@ -10,6 +11,8 @@ const TOKEN_KEY = 'auth_token';
 export class AuthService {
 
   public tempLoginEmail: string | null = null;
+
+  constructor(private router: Router) {}
 
   setToken(token: string) {
     localStorage.setItem(TOKEN_KEY, token);
@@ -38,7 +41,6 @@ export class AuthService {
     return of({ token: fakeJwt }).pipe(delay(500));
   }
 
-
   logout() {
     try {
       localStorage.removeItem(TOKEN_KEY);
@@ -47,7 +49,11 @@ export class AuthService {
       localStorage.removeItem('user_avatar');
       localStorage.removeItem('_mock_change_email');
       
+      localStorage.removeItem('has_confirmed_plan_start');
+      
       this.tempLoginEmail = null;
+      
+      this.router.navigateByUrl('/auth/welcome', { replaceUrl: true });
 
     } catch (e) {
       console.warn('logout cleanup failed', e);

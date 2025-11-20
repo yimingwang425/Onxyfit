@@ -3,32 +3,41 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
-  IonContent, IonHeader, IonTitle, IonToolbar, IonItem,
-  IonLabel, IonButton, IonSelect, IonSelectOption
-} from '@ionic/angular/standalone';
+  IonContent, IonHeader, IonTitle, IonToolbar, 
+  IonButton, IonIcon, 
+  IonBackButton, IonButtons, IonLabel } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { checkmarkCircle } from 'ionicons/icons';
 
 @Component({
   selector: 'app-setup-goal',
   templateUrl: './setup-goal.component.html',
   styleUrls: ['./setup-goal.component.scss'],
   standalone: true,
-  imports: [
+  imports: [IonLabel, 
     CommonModule, ReactiveFormsModule, IonContent, IonHeader, IonTitle,
-    IonToolbar, IonItem, IonLabel, IonButton, IonSelect, IonSelectOption
+    IonToolbar, IonButton, IonIcon,
+    IonBackButton, IonButtons
   ]
 })
 export class SetupGoalPage {
   form = this.fb.group({
-    goal: ['MAINTAIN', [Validators.required]]
+    goal: [null as string | null, [Validators.required]]
   });
   
   goalOptions = [
-    { value: 'LOSE', label: 'Lose' },
-    { value: 'MAINTAIN', label: 'Maintain' },
-    { value: 'GAIN', label: 'Gain' }
+    { value: 'LOSE', label: 'Lose Weight' },
+    { value: 'MAINTAIN', label: 'Maintain Weight' },
+    { value: 'GAIN', label: 'Gain Muscle' }
   ];
 
-  constructor(private fb: FormBuilder, private router: Router) {}
+  constructor(private fb: FormBuilder, private router: Router) {
+    addIcons({ checkmarkCircle });
+  }
+
+  selectOption(value: string) {
+    this.form.patchValue({ goal: value });
+  }
 
   private saveProfileData(data: any) {
     let profile: any = {};

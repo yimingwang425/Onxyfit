@@ -1,5 +1,8 @@
 <ion-header>
   <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/auth/setup-weight"></ion-back-button>
+    </ion-buttons>
     <ion-title>Profile Setup (4/7)</ion-title>
   </ion-toolbar>
 </ion-header>
@@ -11,15 +14,23 @@
         <h2>What is your Activity Level?</h2>
       </ion-label>
 
-      <form [formGroup]="form" (ngSubmit)="next()">
-        <ion-item>
-          <ion-select formControlName="activityLevel" placeholder="Select one">
-            <ion-select-option *ngFor="let o of activityOptions" [value]="o.value">
-              {{ o.label }}
-            </ion-select-option>
-          </ion-select>
-        </ion-item>
+      <div class="options-list">
+        <div 
+          *ngFor="let o of activityOptions" 
+          class="option-card" 
+          [class.selected]="form.value.activityLevel === o.value"
+          (click)="selectOption(o.value)"
+        >
+          {{ o.label }}
+          
+          <ion-icon *ngIf="form.value.activityLevel === o.value" name="checkmark-circle" slot="end"></ion-icon>
+        </div>
+      </div>
+      
+      <form [formGroup]="form" style="display: none;">
+        <input formControlName="activityLevel">
       </form>
+      
     </div>
 
     <div class="button-area">

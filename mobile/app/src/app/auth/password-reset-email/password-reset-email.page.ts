@@ -45,6 +45,7 @@ import { PasswordResetService } from '../../services/password-reset';
     IonButtons,
     IonAlert,
   ],
+  styleUrls: ['./password-reset-email.page.scss']
 })
 export class PasswordResetEmailPage {
   resetForm: FormGroup;

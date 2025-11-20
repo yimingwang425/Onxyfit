@@ -1,0 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+ion-content {
+  --background: #ffffff;
+}
+
+.safe-area-wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  
+  justify-content: space-between; 
+  
+  padding-top: calc(var(--ion-safe-area-top) + 20px); 
+  padding-bottom: calc(var(--ion-safe-area-bottom) + 30px);
+  
+  padding-left: 32px;
+  padding-right: 32px;
+}
+
+.brand-header {
+  display: flex;
+  justify-content: flex-start; 
+}
+
+.brand-header ion-icon {
+  font-size: 48px;
+  color: #000;
+}
+
+.bottom-container {
+  display: flex;
+  flex-direction: column;
+  gap: 40px; 
+}
+
+.hero-text h1 {
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 3.2rem;
+  font-weight: 800;
+  line-height: 1.05;
+  color: #000;
+  margin: 0 0 16px 0;
+  letter-spacing: -0.03em;
+}
+
+.hero-text p {
+  font-size: 1.1rem;
+  color: #666;
+  line-height: 1.5;
+  max-width: 300px;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+}
+
+.btn-primary {
+  --background: #000000;
+  --color: #ffffff;
+  --border-radius: 16px;
+  --padding-top: 18px;
+  --padding-bottom: 18px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  height: 56px;
+  margin-bottom: 12px;
+  --box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
+
+.btn-secondary {
+  --color: #000000;
+  font-weight: 600;
+  text-transform: none;
+}

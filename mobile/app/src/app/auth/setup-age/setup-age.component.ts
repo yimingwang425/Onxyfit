@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -17,12 +17,18 @@ import {
     IonToolbar, IonItem, IonLabel, IonInput, IonButton, IonText
   ]
 })
-export class SetupAgePage {
+export class SetupAgePage implements OnInit {
   form = this.fb.group({
     age: [null, [Validators.required, Validators.min(10), Validators.max(100)]]
   });
 
   constructor(private fb: FormBuilder, private router: Router) {}
+
+  ngOnInit() {
+    localStorage.removeItem('user_profile');
+    localStorage.removeItem('has_confirmed_plan_start'); 
+    console.log('Cleared stale profile data and confirmation flags.');
+  }
 
   private saveProfileData(data: any) {
     let profile: any = {};

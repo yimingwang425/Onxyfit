@@ -1,14 +1,26 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Welcome</ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content [fullscreen]="true">
+  <div class="safe-area-wrapper">
+    
+    <div class="brand-header">
+      <ion-icon name="fitness-outline"></ion-icon>
+    </div>
 
-<ion-content class="ion-padding">
-  <h2>Welcome to the this application</h2>
-  <p>Please log in or register to continue.</p>
+    <div class="bottom-container">
+      <div class="hero-text">
+        <h1>Shape<br>Your<br>Future</h1>
+        <p>Personalized workouts & meal plans driven by AI.</p>
+      </div>
 
-  <ion-button expand="block" routerLink="/auth/login-email">Already have an account? — Log in</ion-button>
-  
-  <ion-button expand="block" fill="outline" routerLink="/auth/register-email">New Users — Register</ion-button>
+      <div class="actions">
+        <ion-button expand="block" class="btn-primary" [routerLink]="['/auth/register-email']">
+          Get Started
+        </ion-button>
+        
+        <ion-button expand="block" fill="clear" class="btn-secondary" [routerLink]="['/auth/login-email']">
+          I have an account
+        </ion-button>
+      </div>
+    </div>
+
+  </div>
 </ion-content>

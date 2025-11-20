@@ -38,7 +38,8 @@ import { RegisterService } from '../../services/register';
     IonButtons,
     CommonModule,
     ReactiveFormsModule
-  ]
+  ],
+  styleUrls: ['../auth-shared.scss']
 })
 export class RegisterVerifyPage {
   form = this.fb.group({

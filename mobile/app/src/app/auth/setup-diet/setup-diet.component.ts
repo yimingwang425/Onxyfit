@@ -3,33 +3,42 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
-  IonContent, IonHeader, IonTitle, IonToolbar, IonItem,
-  IonLabel, IonButton, IonSelect, IonSelectOption
-} from '@ionic/angular/standalone';
+  IonContent, IonHeader, IonTitle, IonToolbar, 
+  IonButton, IonIcon,
+  IonBackButton, IonButtons, IonLabel, IonItem } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { checkmarkCircle } from 'ionicons/icons';
 
 @Component({
   selector: 'app-setup-diet',
   templateUrl: './setup-diet.component.html',
   styleUrls: ['./setup-diet.component.scss'],
   standalone: true,
-  imports: [
+  imports: [IonItem, IonLabel, 
     CommonModule, ReactiveFormsModule, IonContent, IonHeader, IonTitle,
-    IonToolbar, IonItem, IonLabel, IonButton, IonSelect, IonSelectOption
+    IonToolbar, IonButton, IonIcon,
+    IonBackButton, IonButtons
   ]
 })
 export class SetupDietPage {
   form = this.fb.group({
-    dietPref: ['NO_PREFERENCE', [Validators.required]]
+    dietPref: [null as string | null, [Validators.required]]
   });
   
   dietOptions = [
     { value: 'BALANCED', label: 'Balanced' },
-    { value: 'HIGH_PROTEIN', label: 'High protein' },
+    { value: 'HIGH_PROTEIN', label: 'High Protein' },
     { value: 'VEGETARIAN', label: 'Vegetarian' },
-    { value: 'NO_PREFERENCE', label: 'No preference' }
+    { value: 'NO_PREFERENCE', label: 'No Preference' }
   ];
 
-  constructor(private fb: FormBuilder, private router: Router) {}
+  constructor(private fb: FormBuilder, private router: Router) {
+    addIcons({ checkmarkCircle });
+  }
+
+  selectOption(value: string) {
+    this.form.patchValue({ dietPref: value });
+  }
 
   private saveProfileData(data: any) {
     let profile: any = {};
@@ -47,7 +56,7 @@ export class SetupDietPage {
 
   next() {
     if (this.form.invalid) { return; }
-    this.saveProfileData({ preference: this.form.value.dietPref });
+    this.saveProfileData({ dietPref: this.form.value.dietPref });
     this.router.navigateByUrl('/auth/setup-metabolic');
   }
 }

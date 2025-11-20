@@ -4,8 +4,11 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar, IonItem,
-  IonLabel, IonButton, IonSelect, IonSelectOption
+  IonLabel, IonButton, IonIcon,
+  IonBackButton, IonButtons
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { checkmarkCircle } from 'ionicons/icons';
 
 @Component({
   selector: 'app-setup-activity',
@@ -14,15 +17,15 @@ import {
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, IonContent, IonHeader, IonTitle,
-    IonToolbar, IonItem, IonLabel, IonButton, IonSelect, IonSelectOption
+    IonToolbar, IonItem, IonLabel, IonButton, IonIcon,
+    IonBackButton, IonButtons
   ]
 })
 export class SetupActivityPage {
   form = this.fb.group({
-    activityLevel: ['MODERATE', [Validators.required]]
+    activityLevel: [null as string | null, [Validators.required]]
   });
   
-  // (选项从 user-profile-setup.page.ts 复制而来)
   activityOptions = [
     { value: 'SEDENTARY', label: 'Sedentary' },
     { value: 'LIGHT', label: 'Light' },
@@ -31,7 +34,13 @@ export class SetupActivityPage {
     { value: 'VERY_ACTIVE', label: 'Very active' }
   ];
 
-  constructor(private fb: FormBuilder, private router: Router) {}
+  constructor(private fb: FormBuilder, private router: Router) {
+    addIcons({ checkmarkCircle });
+  }
+
+  selectOption(value: string) {
+    this.form.patchValue({ activityLevel: value });
+  }
 
   private saveProfileData(data: any) {
     let profile: any = {};

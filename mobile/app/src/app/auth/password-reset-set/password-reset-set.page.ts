@@ -53,6 +53,7 @@ function passwordsMatchValidator(form: FormGroup) {
     IonIcon,
     IonAlert,
   ],
+  styleUrls: ['./password-reset-set.page.scss']
 })
 export class PasswordResetSetPage {
   setPasswordForm: FormGroup;

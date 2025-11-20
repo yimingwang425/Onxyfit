@@ -1,37 +1,87 @@
-/*
- * App Global CSS
- * ----------------------------------------------------------------------------
- * Put style rules here that you want to apply globally. These styles are for
- * the entire app and not just one component. Additionally, this file can be
- * used as an entry point to import other CSS/Sass files to be included in the
- * output CSS.
- * For more information on global stylesheets, visit the documentation:
- * https://ionicframework.com/docs/layout/global-stylesheets
- */
-
-/* Core CSS required for Ionic components to work properly */
 @import "@ionic/angular/css/core.css";
-
-/* Basic CSS for apps built with Ionic */
 @import "@ionic/angular/css/normalize.css";
 @import "@ionic/angular/css/structure.css";
 @import "@ionic/angular/css/typography.css";
 @import "@ionic/angular/css/display.css";
-
-/* Optional CSS utils that can be commented out */
 @import "@ionic/angular/css/padding.css";
-@import "@ionic/angular/css/float-elements.css";
 @import "@ionic/angular/css/text-alignment.css";
 @import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
 
-/**
- * Ionic Dark Mode
- * -----------------------------------------------------
- * For more info, please see:
- * https://ionicframework.com/docs/theming/dark-mode
- */
+:root {
+  --ion-color-primary: #000000;
+  --ion-color-primary-rgb: 0, 0, 0;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #000000;
+  --ion-color-primary-tint: #1a1a1a;
 
-/* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import '@ionic/angular/css/palettes/dark.system.css';
+  --ion-background-color: #ffffff;
+  --ion-item-background: #ffffff;
+
+  --button-radius: 16px;
+  --card-radius: 20px;
+  --input-radius: 12px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Roboto", sans-serif;
+  letter-spacing: 0.02em; 
+}
+
+ion-content {
+  --background: #f8f9fa;
+}
+
+ion-card {
+  --background: #ffffff;
+  border-radius: var(--card-radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  margin: 16px 20px;
+  border: 1px solid rgba(0,0,0,0.03);
+}
+
+ion-card-header {
+  padding-bottom: 8px;
+}
+
+ion-card-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #111;
+}
+
+ion-card-subtitle {
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #888;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+ion-button {
+  --border-radius: var(--button-radius);
+  --box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: none;
+}
+
+.prompt-area ion-item {
+  --background: #f3f4f6 !important;
+  --border-radius: var(--input-radius);
+  --border-width: 0;
+  --inner-border-width: 0;
+  --padding-start: 16px;
+  margin-top: 20px;
+  box-shadow: none;
+}
+
+.prompt-area ion-label {
+  font-weight: 500;
+  color: #666;
+}
+
+.prompt-area ion-input {
+  --color: #000;
+}

@@ -1,0 +1,49 @@
+<ion-content class="modal-content">
+  <div class="wrapper">
+    
+    <div *ngIf="mode === 'missing'" class="container">
+      <div class="icon-area warning">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+      </div>
+      <h2>Profile Incomplete</h2>
+      <p class="desc">
+        To generate an accurate plan, our AI needs the following information:
+      </p>
+      
+      <div class="info-box warning-box">
+        <p *ngFor="let field of missingFields">• {{ field }}</p>
+      </div>
+
+      <div class="button-area">
+        <ion-button expand="block" class="btn-primary" (click)="action('complete')">
+          Complete Profile
+        </ion-button>
+      </div>
+    </div>
+
+    <div *ngIf="mode === 'confirm'" class="container">
+      <div class="icon-area success">
+        <ion-icon name="checkmark-circle-outline"></ion-icon>
+      </div>
+      <h2>Confirm Your Profile</h2>
+      <p class="desc">
+        Our AI Coach updates your plan every Sunday night. Please confirm your details are correct:
+      </p>
+
+      <div class="info-box">
+        <pre>{{ summary }}</pre>
+      </div>
+
+      <div class="button-area vertical">
+        <ion-button expand="block" class="btn-primary" (click)="action('confirm')">
+          Confirm & Start
+        </ion-button>
+        <ion-button expand="block" fill="clear" class="btn-secondary" (click)="action('edit')">
+          <ion-icon slot="start" name="create-outline"></ion-icon>
+          Edit Profile
+        </ion-button>
+      </div>
+    </div>
+
+  </div>
+</ion-content>

@@ -13,7 +13,7 @@ import { checkmarkCircle } from 'ionicons/icons';
 @Component({
   selector: 'app-setup-activity',
   templateUrl: './setup-activity.component.html',
-  styleUrls: ['./setup-activity.component.scss'],
+  styleUrls: ['../auth-shared.scss'],
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, IonContent, IonHeader, IonTitle,

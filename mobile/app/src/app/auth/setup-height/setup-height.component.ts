@@ -11,7 +11,7 @@ import {
 @Component({
   selector: 'app-setup-height',
   templateUrl: './setup-height.component.html',
-  styleUrls: ['./setup-height.component.scss'],
+  styleUrls: ['../auth-shared.scss'],
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, IonContent, IonHeader, IonTitle,

@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import "@ionic/angular/css/core.css";
 @import "@ionic/angular/css/normalize.css";
 @import "@ionic/angular/css/structure.css";
@@ -9,6 +10,8 @@
 @import "@ionic/angular/css/flex-utils.css";
 
 :root {
+  --ion-font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Helvetica Neue", Roboto, sans-serif;
+
   --ion-color-primary: #000000;
   --ion-color-primary-rgb: 0, 0, 0;
   --ion-color-primary-contrast: #ffffff;
@@ -17,71 +20,41 @@
   --ion-color-primary-tint: #1a1a1a;
 
   --ion-background-color: #ffffff;
-  --ion-item-background: #ffffff;
+  --ion-item-background: transparent;
 
-  --button-radius: 16px;
+  --button-radius: 32px;
   --card-radius: 20px;
   --input-radius: 12px;
+  --shadow-premium: 0 12px 24px rgba(0, 0, 0, 0.08);
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Roboto", sans-serif;
-  letter-spacing: 0.02em; 
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.02em;
 }
 
-ion-content {
-  --background: #f8f9fa;
+ion-header {
+  box-shadow: none !important;
+  border-bottom: none !important;
 }
 
-ion-card {
-  --background: #ffffff;
-  border-radius: var(--card-radius);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
-  margin: 16px 20px;
-  border: 1px solid rgba(0,0,0,0.03);
+ion-header::after {
+  display: none !important;
 }
 
-ion-card-header {
-  padding-bottom: 8px;
-}
-
-ion-card-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #111;
-}
-
-ion-card-subtitle {
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  color: #888;
-  text-transform: uppercase;
-  font-size: 0.75rem;
+ion-toolbar {
+  --background: transparent !important;
+  --border-width: 0 !important;
 }
 
 ion-button {
-  --border-radius: var(--button-radius);
-  --box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  font-weight: 600;
-  letter-spacing: 0.5px;
   text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
 }
 
-.prompt-area ion-item {
-  --background: #f3f4f6 !important;
-  --border-radius: var(--input-radius);
-  --border-width: 0;
-  --inner-border-width: 0;
-  --padding-start: 16px;
-  margin-top: 20px;
-  box-shadow: none;
-}
-
-.prompt-area ion-label {
-  font-weight: 500;
-  color: #666;
-}
-
-.prompt-area ion-input {
-  --color: #000;
+ion-modal {
+  --border-radius: 20px;
+  --box-shadow: 0 20px 40px rgba(0,0,0,0.2);
 }

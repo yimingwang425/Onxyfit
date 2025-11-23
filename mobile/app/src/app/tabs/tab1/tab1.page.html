@@ -1,84 +1,53 @@
 <ion-content [fullscreen]="true">
-  
-  <div>
+  <div class="dashboard-container">
     
-    <h2 class="ion-padding-start">{{ greeting }}, {{ username }}!</h2>
+    <div class="header-section">
+      <h2>{{ greeting }},</h2>
+      <h1>{{ username }}</h1>
+    </div>
 
-    <ion-card>
-      <ion-card-header>
-        <ion-card-title>
-          <ion-icon name="sparkles-outline" slot="start" color="primary"></ion-icon>
-          AI Coach Tip
-        </ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        {{ aiTip }}
-      </ion-card-content>
-    </ion-card>
+    <div class="widget-card dark">
+      <div class="widget-header">
+        <ion-icon name="sparkles"></ion-icon>
+        <span>AI Insight</span>
+      </div>
+      <p class="widget-content">{{ aiTip }}</p>
+    </div>
 
-    <ion-card>
-      <ion-card-header>
-        <ion-card-title>
-          <ion-icon name="bar-chart-outline" slot="start" color="tertiary"></ion-icon>
-          Weekly Progress
-        </ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        
-        <div class="chart-container">
-          <canvas #progressChartCanvas></canvas>
+    <div class="widget-card light">
+      <div class="widget-header">
+        <ion-icon name="trending-up-outline"></ion-icon>
+        <span>Weekly Goal</span>
+      </div>
+      
+      <div class="chart-wrapper">
+        <canvas #progressChartCanvas></canvas>
+      </div>
+      <div class="progress-stat">
+        <strong>{{ progressData.completed }}</strong>
+        <span>of {{ progressData.total }} workouts</span>
+      </div>
+    </div>
+
+    <div class="section-title">Track Today</div>
+    
+    <div class="action-grid">
+      <button class="action-tile" (click)="logMood()">
+        <div class="icon-circle mood">
+          <ion-icon name="sparkles-outline"></ion-icon>
         </div>
-        
-        <div class="progress-text">
-          Workouts Completed: {{ progressData.completed }} / {{ progressData.total }}
+        <span class="label">Mood</span>
+        <span class="value" *ngIf="currentMood">{{ currentMood }}</span>
+      </button>
+
+      <button class="action-tile" (click)="logWater()">
+        <div class="icon-circle water">
+          <ion-icon name="water-outline"></ion-icon>
         </div>
-      </ion-card-content>
-    </ion-card>
-
-    <ion-list-header>
-      <ion-label>Quick Actions</ion-label>
-    </ion-list-header>
-
-    <ion-list [inset]="true">
-      <ion-item [button]="true" (click)="logMood()">
-        <ion-icon name="sparkles-outline" slot="start" color="secondary"></ion-icon>
-        <ion-label>Log Today's Mood</ion-label>
-        <ion-text slot="end" color="medium" *ngIf="currentMood">{{ currentMood }}</ion-text>
-        <ion-button 
-          fill="clear" 
-          slot="end" 
-          (click)="showMoodInfo(); $event.stopPropagation();">
-          <ion-icon name="information-circle-outline" color="medium"></ion-icon>
-        </ion-button>
-      </ion-item>
-
-      <ion-item [button]="true" (click)="logWater()">
-        <ion-icon name="water-outline" slot="start" color="primary"></ion-icon>
-        <ion-label>Log Water Intake</ion-label>
-        <ion-text slot="end" color="medium" *ngIf="currentWater > 0">{{ currentWater }} glasses</ion-text>
-        <ion-button 
-          fill="clear" 
-          slot="end" 
-          (click)="showWaterInfo(); $event.stopPropagation();">
-          <ion-icon name="information-circle-outline" color="medium"></ion-icon>
-        </ion-button>
-      </ion-item>
-    </ion-list>
-
-    <ion-list-header>
-      <ion-label>More Features</ion-label>
-    </ion-list-header>
-    <ion-list [inset]="true">
-      <ion-item [button]="true" [disabled]="true">
-        <ion-label color="medium">X_X</ion-label>
-      </ion-item>
-      <ion-item [button]="true" [disabled]="true">
-        <ion-label color="medium">^_^</ion-label>
-      </ion-item>
-    </ion-list>
+        <span class="label">Water</span>
+        <span class="value" *ngIf="currentWater > 0">{{ currentWater }} cups</span>
+      </button>
+    </div>
 
   </div>
-  
-  <div style="height: 32px;"></div>
-
 </ion-content>

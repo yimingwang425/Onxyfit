@@ -11,7 +11,7 @@ import {
 @Component({
   selector: 'app-setup-weight',
   templateUrl: './setup-weight.component.html',
-  styleUrls: ['./setup-weight.component.scss'],
+  styleUrls: ['../auth-shared.scss'],
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, IonContent, IonHeader, IonTitle,

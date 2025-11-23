@@ -44,9 +44,9 @@
     </div>
 
     <div class="button-area">
-      <ion-button expand="block" (click)="verifyOtp()" [disabled]="loading || form.invalid">Verify and proceed</ion-button>
+      <ion-button fill="clear" expand="block" (click)="editEmail()" class="ion-margin-bottom">Change email address</ion-button>
       
-      <ion-button fill="clear" expand="block" (click)="editEmail()" class="ion-margin-top">Change email address</ion-button>
+      <ion-button expand="block" (click)="verifyOtp()" [disabled]="loading || form.invalid">Verify and proceed</ion-button>
     </div>
   </div>
 </ion-content>

@@ -12,7 +12,7 @@ import { checkmarkCircle } from 'ionicons/icons';
 @Component({
   selector: 'app-setup-diet',
   templateUrl: './setup-diet.component.html',
-  styleUrls: ['./setup-diet.component.scss'],
+  styleUrls: ['../auth-shared.scss'],
   standalone: true,
   imports: [IonItem, IonLabel, 
     CommonModule, ReactiveFormsModule, IonContent, IonHeader, IonTitle,

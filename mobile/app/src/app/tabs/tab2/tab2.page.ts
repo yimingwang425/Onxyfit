@@ -11,20 +11,22 @@ import {
   IonSegmentButton,
   IonLabel,
   IonList,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardSubtitle,
-  IonCardContent,
-  IonChip,
-  IonSpinner,
+  IonItem,
   IonIcon,
+  IonSpinner,
   ModalController,
-  AlertController,
   NavController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { restaurantOutline } from 'ionicons/icons';
+import { 
+  restaurantOutline, 
+  sunnyOutline,
+  moonOutline,
+  cafeOutline,
+  chevronForward,
+  cartOutline,
+  restaurant
+} from 'ionicons/icons';
 
 import {
   MealPlanService,
@@ -51,14 +53,9 @@ import { UserProfileService } from '../../services/user-profile';
     IonSegmentButton,
     IonLabel,
     IonList,
-    IonCard,
-    IonCardHeader,
-    IonCardTitle,
-    IonCardSubtitle,
-    IonCardContent,
-    IonChip,
-    IonSpinner,
+    IonItem,
     IonIcon,
+    IonSpinner,
     MealDetailComponent,
   ],
 })
@@ -76,11 +73,18 @@ export class Tab2Page implements OnInit {
   constructor(
     private mealPlanService: MealPlanService,
     private modalCtrl: ModalController,
-    private alertCtrl: AlertController,
     private navCtrl: NavController,
     private profileService: UserProfileService
   ) {
-    addIcons({ restaurantOutline });
+    addIcons({ 
+      restaurantOutline, 
+      sunnyOutline, 
+      moonOutline, 
+      cafeOutline, 
+      chevronForward, 
+      cartOutline,
+      restaurant 
+    });
   }
 
   ngOnInit() {
@@ -93,7 +97,6 @@ export class Tab2Page implements OnInit {
   async checkProfileAndLoad() {
     const missingFields = this.profileService.getMissingFields();
     
-    // 场景 1: 缺信息 (Profile Incomplete)
     if (missingFields.length > 0) {
       const modal = await this.modalCtrl.create({
         component: ProfileCheckModalComponent,
@@ -101,8 +104,7 @@ export class Tab2Page implements OnInit {
           mode: 'missing',
           missingFields: missingFields
         },
-        backdropDismiss: false, // 强制用户操作
-        // 可以设置成全屏或者是这种居中的 Card 样式，这里我们用默认的全屏 Modal 体验更好
+        backdropDismiss: false,
       });
 
       await modal.present();
@@ -111,10 +113,9 @@ export class Tab2Page implements OnInit {
       if (role === 'complete') {
         this.navCtrl.navigateForward('/auth/user-profile-setup?from=missing');
       }
-      return; // 阻止加载数据
+      return; 
     }
 
-    // 场景 2: 首次确认 (Confirm Profile)
     const hasConfirmed = localStorage.getItem('has_confirmed_plan_start');
 
     if (!hasConfirmed) {

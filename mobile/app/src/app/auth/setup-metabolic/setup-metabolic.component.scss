@@ -1,85 +1,30 @@
-ion-content {
-  --background: var(--ion-background-color, #fff);
-  position: relative;
-}
-
-.wizard-container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.prompt-area {
-  width: 100%;
-  padding: 0 24px;
-  padding-bottom: 35vh; 
-}
-
-.prompt-area h2 {
-  text-align: center;
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 8px;
-  margin-top: 0;
-  color: #000;
-}
+@import '../auth-shared.scss';
 
 .info-link {
-  text-align: center;
-  color: var(--ion-color-medium);
-  font-size: 0.9rem;
-  margin-bottom: 24px;
-  display: flex;
+  margin-bottom: 32px; 
+  margin-top: -16px;
+  
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 4px;
+  gap: 6px;
+
+  padding: 8px 16px;
+  background: #f8f9fa; 
+  border-radius: 20px;
+  
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
   cursor: pointer;
   
-  &:active { opacity: 0.7; }
+  transition: opacity 0.2s;
 }
 
-.options-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.info-link:active {
+  opacity: 0.6;
 }
 
-.option-card {
-  background: #f4f5f8;
-  color: #000;
-  padding: 18px 20px;
-  border-radius: 16px;
-  font-weight: 600;
-  font-size: 1rem;
-  transition: all 0.2s ease-in-out;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.option-card.selected {
-  background: #000000;
-  color: #ffffff;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-  transform: scale(1.02);
-}
-
-.option-card ion-icon {
-  font-size: 1.2rem;
-}
-
-.button-area {
-  display: flex;
-  justify-content: space-between;
-  padding: 0 16px;
-  position: absolute;
-  bottom: 40px; 
-  width: 100%;
-}
-
-.button-area ion-button {
-  flex: 1;
-  margin: 0 8px;
+.info-link ion-icon {
+  font-size: 1.1rem;
+  color: #999;
 }

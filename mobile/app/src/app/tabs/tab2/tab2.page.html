@@ -1,11 +1,10 @@
-<ion-header [translucent]="true">
+<ion-header class="ion-no-border">
   <ion-toolbar>
-    <ion-title>
-      Meal Plan
-    </ion-title>
+    <ion-title class="page-title">Nutrition</ion-title>
   </ion-toolbar>
+  
   <ion-toolbar>
-    <ion-segment [(ngModel)]="currentSegment" (ionChange)="segmentChanged($event)">
+    <ion-segment [(ngModel)]="currentSegment" (ionChange)="segmentChanged($event)" class="custom-segment">
       <ion-segment-button value="today">
         <ion-label>Today</ion-label>
       </ion-segment-button>
@@ -17,104 +16,143 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <div *ngIf="(currentSegment === 'today' && isLoadingToday) || (currentSegment === 'week' && isLoadingWeek)" class="loading-container">
+  
+  <div *ngIf="(currentSegment === 'today' && isLoadingToday) || (currentSegment === 'week' && isLoadingWeek)" class="loading-wrapper">
     <ion-spinner name="crescent"></ion-spinner>
   </div>
 
-  <div [ngSwitch]="currentSegment">
+  <div [ngSwitch]="currentSegment" class="content-container">
 
     <div *ngSwitchCase="'today'">
-      <div *ngIf="!isLoadingToday && todaysPlan">
-        <ion-card (click)="openMealDetails(todaysPlan!.breakfast)">
-          <ion-card-header>
-            <ion-card-subtitle>Breakfast</ion-card-subtitle>
-            <ion-card-title>{{ todaysPlan!.breakfast.name }}</ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            {{ todaysPlan!.breakfast.calories }} Kcal
-          </ion-card-content>
-        </ion-card>
+      <div *ngIf="!isLoadingToday && todaysPlan" class="plan-list fade-in">
+        
+        <div class="date-header">
+          <span class="sub-label">Today's Menu</span>
+        </div>
 
-        <ion-card (click)="openMealDetails(todaysPlan!.lunch)">
-          <ion-card-header>
-            <ion-card-subtitle>Lunch</ion-card-subtitle>
-            <ion-card-title>{{ todaysPlan!.lunch.name }}</ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            {{ todaysPlan!.lunch.calories }} Kcal
-          </ion-card-content>
-        </ion-card>
+        <div class="meal-card" (click)="openMealDetails(todaysPlan!.breakfast)">
+          <div class="meal-icon-box">
+            <ion-icon name="sunny-outline"></ion-icon>
+          </div>
+          <div class="meal-info">
+            <span class="meal-type">Breakfast</span>
+            <span class="meal-name">{{ todaysPlan!.breakfast.name }}</span>
+            <span class="meal-cal">{{ todaysPlan!.breakfast.calories }} kcal</span>
+          </div>
+          <ion-icon name="chevron-forward" class="arrow-icon"></ion-icon>
+        </div>
 
-        <ion-card (click)="openMealDetails(todaysPlan!.dinner)">
-          <ion-card-header>
-            <ion-card-subtitle>Dinner</ion-card-subtitle>
-            <ion-card-title>{{ todaysPlan!.dinner.name }}</ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            {{ todaysPlan!.dinner.calories }} Kcal
-          </ion-card-content>
-        </ion-card>
+        <div class="meal-card" (click)="openMealDetails(todaysPlan!.lunch)">
+          <div class="meal-icon-box">
+            <ion-icon name="restaurant-outline"></ion-icon>
+          </div>
+          <div class="meal-info">
+            <span class="meal-type">Lunch</span>
+            <span class="meal-name">{{ todaysPlan!.lunch.name }}</span>
+            <span class="meal-cal">{{ todaysPlan!.lunch.calories }} kcal</span>
+          </div>
+          <ion-icon name="chevron-forward" class="arrow-icon"></ion-icon>
+        </div>
 
-         <ion-card (click)="openMealDetails(todaysPlan!.snack)">
-          <ion-card-header>
-            <ion-card-subtitle>Snack</ion-card-subtitle>
-            <ion-card-title>{{ todaysPlan!.snack.name }}</ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            {{ todaysPlan!.snack.calories }} Kcal
-          </ion-card-content>
-        </ion-card>
+        <div class="meal-card" (click)="openMealDetails(todaysPlan!.dinner)">
+          <div class="meal-icon-box">
+            <ion-icon name="moon-outline"></ion-icon>
+          </div>
+          <div class="meal-info">
+            <span class="meal-type">Dinner</span>
+            <span class="meal-name">{{ todaysPlan!.dinner.name }}</span>
+            <span class="meal-cal">{{ todaysPlan!.dinner.calories }} kcal</span>
+          </div>
+          <ion-icon name="chevron-forward" class="arrow-icon"></ion-icon>
+        </div>
+
+        <div class="meal-card" (click)="openMealDetails(todaysPlan!.snack)">
+          <div class="meal-icon-box">
+            <ion-icon name="cafe-outline"></ion-icon>
+          </div>
+          <div class="meal-info">
+            <span class="meal-type">Snack</span>
+            <span class="meal-name">{{ todaysPlan!.snack.name }}</span>
+            <span class="meal-cal">{{ todaysPlan!.snack.calories }} kcal</span>
+          </div>
+          <ion-icon name="chevron-forward" class="arrow-icon"></ion-icon>
+        </div>
+
       </div>
     </div>
 
     <div *ngSwitchCase="'week'">
-      <div *ngIf="!isLoadingWeek && weeklyPlan.length > 0">
+      <div *ngIf="!isLoadingWeek && weeklyPlan.length > 0" class="fade-in">
         
         <div class="day-selector">
-          <ion-chip
+          <div 
+            class="day-pill" 
             *ngFor="let day of weeklyPlan; let i = index"
-            [outline]="selectedDayIndex !== i"
-            [color]="selectedDayIndex === i ? 'primary' : 'medium'"
+            [class.active]="selectedDayIndex === i"
             (click)="selectDay(i)"
           >
-            <ion-label>{{ day.dayShort }}</ion-label> 
-          </ion-chip>
+            <span class="day-text">{{ day.dayShort }}</span>
+          </div>
         </div>
 
-        <div *ngIf="!selectedDayPlan" class="rest-day-container">
-          <ion-icon name="restaurant-outline" size="large"></ion-icon>
-          <h3>Free Eating Day</h3>
-          <p>There is no specific dietary plan for today; please maintain a healthy diet.</p>
+        <div *ngIf="!selectedDayPlan" class="empty-state">
+          <ion-icon name="restaurant"></ion-icon>
+          <h3>Free Day</h3>
+          <p>Eat intuitively and stay hydrated.</p>
         </div>
         
-        <div *ngIf="selectedDayPlan">
-          <ion-card (click)="openMealDetails(selectedDayPlan.breakfast)">
-            <ion-card-header>
-              <ion-card-subtitle>Breakfast</ion-card-subtitle>
-              <ion-card-title>{{ selectedDayPlan.breakfast.name }}</ion-card-title>
-            </ion-card-header>
-          </ion-card>
+        <div *ngIf="selectedDayPlan" class="plan-list">
+          <div class="date-header">
+            <span class="sub-label">Plan for {{ weeklyPlan[selectedDayIndex].day }}</span>
+          </div>
 
-          <ion-card (click)="openMealDetails(selectedDayPlan.lunch)">
-            <ion-card-header>
-              <ion-card-subtitle>Lunch</ion-card-subtitle>
-              <ion-card-title>{{ selectedDayPlan.lunch.name }}</ion-card-title>
-            </ion-card-header>
-          </ion-card>
+          <div class="meal-card" (click)="openMealDetails(selectedDayPlan.breakfast)">
+            <div class="meal-icon-box">
+              <ion-icon name="sunny-outline"></ion-icon>
+            </div>
+            <div class="meal-info">
+              <span class="meal-type">Breakfast</span>
+              <span class="meal-name">{{ selectedDayPlan.breakfast.name }}</span>
+            </div>
+            <ion-icon name="cart-outline" class="shop-icon" *ngIf="selectedDayPlan.breakfast.amazonLink"></ion-icon>
+            <ion-icon name="chevron-forward" class="arrow-icon" *ngIf="!selectedDayPlan.breakfast.amazonLink"></ion-icon>
+          </div>
 
-          <ion-card (click)="openMealDetails(selectedDayPlan.dinner)">
-            <ion-card-header>
-              <ion-card-subtitle>Dinner</ion-card-subtitle>
-              <ion-card-title>{{ selectedDayPlan.dinner.name }}</ion-card-title>
-            </ion-card-header>
-          </ion-card>
+          <div class="meal-card" (click)="openMealDetails(selectedDayPlan.lunch)">
+             <div class="meal-icon-box">
+              <ion-icon name="restaurant-outline"></ion-icon>
+            </div>
+            <div class="meal-info">
+              <span class="meal-type">Lunch</span>
+              <span class="meal-name">{{ selectedDayPlan.lunch.name }}</span>
+            </div>
+            <ion-icon name="cart-outline" class="shop-icon" *ngIf="selectedDayPlan.lunch.amazonLink"></ion-icon>
+            <ion-icon name="chevron-forward" class="arrow-icon" *ngIf="!selectedDayPlan.lunch.amazonLink"></ion-icon>
+          </div>
 
-          <ion-card (click)="openMealDetails(selectedDayPlan.snack)">
-            <ion-card-header>
-              <ion-card-subtitle>Snack</ion-card-subtitle>
-              <ion-card-title>{{ selectedDayPlan.snack.name }}</ion-card-title>
-            </ion-card-header>
-          </ion-card>
+          <div class="meal-card" (click)="openMealDetails(selectedDayPlan.dinner)">
+             <div class="meal-icon-box">
+              <ion-icon name="moon-outline"></ion-icon>
+            </div>
+            <div class="meal-info">
+              <span class="meal-type">Dinner</span>
+              <span class="meal-name">{{ selectedDayPlan.dinner.name }}</span>
+            </div>
+            <ion-icon name="cart-outline" class="shop-icon" *ngIf="selectedDayPlan.dinner.amazonLink"></ion-icon>
+            <ion-icon name="chevron-forward" class="arrow-icon" *ngIf="!selectedDayPlan.dinner.amazonLink"></ion-icon>
+          </div>
+
+          <div class="meal-card" (click)="openMealDetails(selectedDayPlan.snack)">
+             <div class="meal-icon-box">
+              <ion-icon name="cafe-outline"></ion-icon>
+            </div>
+            <div class="meal-info">
+              <span class="meal-type">Snack</span>
+              <span class="meal-name">{{ selectedDayPlan.snack.name }}</span>
+            </div>
+            <ion-icon name="cart-outline" class="shop-icon" *ngIf="selectedDayPlan.snack.amazonLink"></ion-icon>
+            <ion-icon name="chevron-forward" class="arrow-icon" *ngIf="!selectedDayPlan.snack.amazonLink"></ion-icon>
+          </div>
         </div>
       </div>
     </div>

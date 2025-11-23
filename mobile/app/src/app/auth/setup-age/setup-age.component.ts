@@ -10,7 +10,7 @@ import {
 @Component({
   selector: 'app-setup-age',
   templateUrl: './setup-age.component.html',
-  styleUrls: ['./setup-age.component.scss'],
+  styleUrls: ['../auth-shared.scss'],
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, IonContent, IonHeader, IonTitle,

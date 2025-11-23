@@ -21,7 +21,7 @@ import { lastValueFrom } from 'rxjs';
     IonButtons
   ],
   templateUrl: './change-email.page.html',
-  styleUrls: ['./change-email.page.scss']
+  styleUrls: ['../auth-shared.scss']
 })
 export class ChangeEmailPage {
   step: 1 | 2 = 1;

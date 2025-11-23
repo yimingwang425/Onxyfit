@@ -1,11 +1,10 @@
-<ion-header [translucent]="true">
+<ion-header class="ion-no-border">
   <ion-toolbar>
-    <ion-title>
-      workout
-    </ion-title>
+    <ion-title class="page-title">Workout</ion-title>
   </ion-toolbar>
+  
   <ion-toolbar>
-    <ion-segment [(ngModel)]="currentSegment" (ionChange)="segmentChanged($event)">
+    <ion-segment [(ngModel)]="currentSegment" (ionChange)="segmentChanged($event)" class="custom-segment">
       <ion-segment-button value="today">
         <ion-label>Today</ion-label>
       </ion-segment-button>
@@ -17,88 +16,132 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <div *ngIf="(currentSegment === 'today' && isLoadingToday) || (currentSegment === 'week' && isLoadingWeek)" class="loading-container">
+  
+  <div *ngIf="(currentSegment === 'today' && isLoadingToday) || (currentSegment === 'week' && isLoadingWeek)" class="loading-wrapper">
     <ion-spinner name="crescent"></ion-spinner>
   </div>
 
-  <div [ngSwitch]="currentSegment">
+  <div [ngSwitch]="currentSegment" class="content-container">
 
-    <div *ngSwitchCase="'today'">
+    <div *ngSwitchCase="'today'" class="fade-in">
       <div *ngIf="!isLoadingToday && todaysPlan">
-        <div *ngIf="todaysPlan.isRestDay" class="rest-day-container">
-          <ion-icon name="moon-outline" size="large"></ion-icon>
-          <h3>Day off</h3>
-          <p>Today is a rest and recovery day.</p>
+        
+        <div *ngIf="todaysPlan.isRestDay" class="rest-day-state">
+          <div class="rest-icon-circle">
+            <ion-icon name="moon"></ion-icon>
+          </div>
+          <h2>Recovery Day</h2>
+          <p>Your muscles grow when you rest. Take a break today.</p>
         </div>
         
-        <ion-list *ngIf="!todaysPlan.isRestDay">
-          <ion-list-header>Warm-up</ion-list-header>
-          <ion-item button (click)="openWorkoutDetails(todaysPlan.warmUp)">
-            <ion-label>{{ todaysPlan.warmUp?.name }}</ion-label>
-            <ion-label slot="end" color="medium">{{ todaysPlan.warmUp?.reps }}</ion-label>
-          </ion-item>
-          
-          <ion-list-header>Primary exercise</ion-list-header>
-          <ion-item *ngFor="let ex of todaysPlan.exercises" button (click)="openWorkoutDetails(ex)">
-            <ion-label>{{ ex.name }}</ion-label>
-            <ion-label slot="end" color="medium">{{ ex.sets }} x {{ ex.reps }}</ion-label>
-          </ion-item>
+        <div *ngIf="!todaysPlan.isRestDay">
+          <div class="session-header">
+            <span class="sub-label">Today's Session</span>
+          </div>
 
-          <ion-list-header>Relaxation and stretching</ion-list-header>
-          <ion-item button (click)="openWorkoutDetails(todaysPlan.coolDown)">
-            <ion-label>{{ todaysPlan.coolDown?.name }}</ion-label>
-            <ion-label slot="end" color="medium">{{ todaysPlan.coolDown?.reps }}</ion-label>
-          </ion-item>
-        </ion-list>
+          <div class="section-block">
+            <div class="block-title">Warm Up</div>
+            <div class="exercise-item" (click)="openWorkoutDetails(todaysPlan.warmUp)">
+              <div class="ex-content">
+                <span class="ex-name">{{ todaysPlan.warmUp?.name }}</span>
+                <span class="ex-meta">{{ todaysPlan.warmUp?.reps }}</span>
+              </div>
+              <ion-icon name="play-circle-outline"></ion-icon>
+            </div>
+          </div>
+          
+          <div class="section-block">
+            <div class="block-title">Main Circuit</div>
+            <div 
+              class="exercise-item" 
+              *ngFor="let ex of todaysPlan.exercises; let i = index" 
+              (click)="openWorkoutDetails(ex)"
+            >
+              <div class="ex-number">{{ i + 1 }}</div>
+              <div class="ex-content">
+                <span class="ex-name">{{ ex.name }}</span>
+                <span class="ex-meta">{{ ex.sets }} sets × {{ ex.reps }} reps</span>
+              </div>
+              <ion-icon name="play-circle-outline"></ion-icon>
+            </div>
+          </div>
+
+          <div class="section-block">
+            <div class="block-title">Cool Down</div>
+            <div class="exercise-item" (click)="openWorkoutDetails(todaysPlan.coolDown)">
+              <div class="ex-content">
+                <span class="ex-name">{{ todaysPlan.coolDown?.name }}</span>
+                <span class="ex-meta">{{ todaysPlan.coolDown?.reps }}</span>
+              </div>
+              <ion-icon name="play-circle-outline"></ion-icon>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
 
-    <div *ngSwitchCase="'week'">
+    <div *ngSwitchCase="'week'" class="fade-in">
       <div *ngIf="!isLoadingWeek && weeklyPlan.length > 0">
         
         <div class="day-selector">
-          <ion-chip
+          <div 
+            class="day-pill" 
             *ngFor="let day of weeklyPlan; let i = index"
-            [outline]="selectedDayIndex !== i"
-            [color]="selectedDayIndex === i ? 'primary' : 'medium'"
+            [class.active]="selectedDayIndex === i"
             (click)="selectDay(i)"
           >
-            <ion-label>{{ day.dayShort }}</ion-label> 
-          </ion-chip>
+            <span class="day-text">{{ day.dayShort }}</span>
+          </div>
         </div>
         
-        <ion-card class="plan-title-card">
-          <ion-card-header>
-            <ion-icon name="barbell-outline" slot="start" color="primary"></ion-icon>
-            <ion-card-title>{{ selectedDayTitle }}</ion-card-title>
-          </ion-card-header>
-        </ion-card>
+        <div *ngIf="selectedDayPlan && !selectedDayPlan.isRestDay" class="focus-card">
+          <span class="focus-label">Focus</span>
+          <h2 class="focus-title">{{ selectedDayTitle }}</h2>
+        </div>
 
-        <div *ngIf="selectedDayPlan?.isRestDay" class="rest-day-container">
-          <ion-icon name="moon-outline" size="large"></ion-icon>
-          <h3>Day off</h3>
-          <p>Today is a rest and recovery day.</p>
+        <div *ngIf="selectedDayPlan?.isRestDay" class="rest-day-state small">
+          <ion-icon name="moon-outline"></ion-icon>
+          <h3>Rest Day</h3>
+          <p>Recover and prepare for tomorrow.</p>
         </div>
         
-        <ion-list *ngIf="selectedDayPlan && !selectedDayPlan.isRestDay">
-          <ion-list-header>Warm-up</ion-list-header>
-          <ion-item button (click)="openWorkoutDetails(selectedDayPlan.warmUp)">
-            <ion-label>{{ selectedDayPlan.warmUp?.name }}</ion-label>
-            <ion-label slot="end" color="medium">{{ selectedDayPlan.warmUp?.reps }}</ion-label>
-          </ion-item>
+        <div *ngIf="selectedDayPlan && !selectedDayPlan.isRestDay" class="plan-list">
           
-          <ion-list-header>Primary exercise</ion-list-header>
-          <ion-item *ngFor="let ex of selectedDayPlan.exercises" button (click)="openWorkoutDetails(ex)">
-            <ion-label>{{ ex.name }}</ion-label>
-            <ion-label slot="end" color="medium">{{ ex.sets }} x {{ ex.reps }}</ion-label>
-          </ion-item>
+          <div class="section-block">
+            <div class="block-title">Warm Up</div>
+            <div class="exercise-item" (click)="openWorkoutDetails(selectedDayPlan.warmUp)">
+              <div class="ex-content">
+                <span class="ex-name">{{ selectedDayPlan.warmUp?.name }}</span>
+                <span class="ex-meta">{{ selectedDayPlan.warmUp?.reps }}</span>
+              </div>
+              <ion-icon name="chevron-forward" class="arrow-mini"></ion-icon>
+            </div>
+          </div>
+          
+          <div class="section-block">
+            <div class="block-title">Main Circuit</div>
+            <div class="exercise-item" *ngFor="let ex of selectedDayPlan.exercises" (click)="openWorkoutDetails(ex)">
+              <div class="ex-content">
+                <span class="ex-name">{{ ex.name }}</span>
+                <span class="ex-meta">{{ ex.sets }} × {{ ex.reps }}</span>
+              </div>
+              <ion-icon name="chevron-forward" class="arrow-mini"></ion-icon>
+            </div>
+          </div>
 
-          <ion-list-header>Relaxation and stretching</ion-list-header>
-          <ion-item button (click)="openWorkoutDetails(selectedDayPlan.coolDown)">
-            <ion-label>{{ selectedDayPlan.coolDown?.name }}</ion-label>
-            <ion-label slot="end" color="medium">{{ selectedDayPlan.coolDown?.reps }}</ion-label>
-          </ion-item>
-        </ion-list>
+          <div class="section-block">
+            <div class="block-title">Cool Down</div>
+            <div class="exercise-item" (click)="openWorkoutDetails(selectedDayPlan.coolDown)">
+              <div class="ex-content">
+                <span class="ex-name">{{ selectedDayPlan.coolDown?.name }}</span>
+                <span class="ex-meta">{{ selectedDayPlan.coolDown?.reps }}</span>
+              </div>
+              <ion-icon name="chevron-forward" class="arrow-mini"></ion-icon>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 

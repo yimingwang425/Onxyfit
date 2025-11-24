@@ -12,8 +12,11 @@ import {
   IonToggle,
   IonButton,
   IonButtons,
-  IonBackButton
+  IonBackButton,
+  IonIcon
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { chevronForward } from 'ionicons/icons';
 
 @Component({
   selector: 'app-settings',
@@ -31,15 +34,18 @@ import {
     IonToggle,
     IonButton,
     IonButtons,
-    IonBackButton
+    IonBackButton,
+    IonIcon
   ],
   templateUrl: './settings.page.html',
-  styles: [`.logout { margin-top:18px }`]
+  styleUrls: ['./settings.page.scss']
 })
 export class SettingsPage {
   notifications = localStorage.getItem('pref_notifications') === 'true';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) {
+    addIcons({ chevronForward });
+  }
 
   toggleNotifications() {
     this.notifications = !this.notifications;

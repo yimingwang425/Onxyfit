@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
+import { addIcons } from 'ionicons';
+import { settingsOutline, chevronForward, personOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-tab4',
@@ -11,7 +13,7 @@ import { AuthService } from '../../services/auth';
   templateUrl: './tab4.page.html',
   styleUrls: ['./tab4.page.scss'],
 })
-export class Tab4Page implements OnInit {
+export class Tab4Page implements OnInit, OnDestroy {
   avatar = '🐶';
   displayName = 'User';
   email = '';
@@ -19,7 +21,9 @@ export class Tab4Page implements OnInit {
 
   private animalEmojis = ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐷','🐵'];
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router) {
+    addIcons({ settingsOutline, chevronForward, personOutline });
+  }
 
   private profileUpdatedHandler = (ev: any) => {
     this.loadProfile();
@@ -90,6 +94,10 @@ export class Tab4Page implements OnInit {
 
   goToSettings() {
     this.router.navigateByUrl('/auth/settings');
+  }
+
+  goToEditProfile() {
+    this.router.navigateByUrl('/auth/settings'); 
   }
 
   logout() {

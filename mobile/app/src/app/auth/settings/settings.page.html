@@ -1,31 +1,49 @@
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/tabs/tab4"></ion-back-button>
+      <ion-back-button defaultHref="/tabs/tab4" color="dark"></ion-back-button>
     </ion-buttons>
-    <ion-title>Settings</ion-title>
+    <ion-title class="page-title">Settings</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <ion-list>
-    <ion-item>
-      <ion-label>Notifications</ion-label>
-      <ion-toggle slot="end" [checked]="notifications" (ionChange)="toggleNotifications()"></ion-toggle>
-    </ion-item>
+<ion-content>
+  <div class="settings-container">
+    
+    <div class="section-title">Preferences</div>
 
-    <ion-item button (click)="changeEmail()">
-      <ion-label>Change email</ion-label>
-    </ion-item>
+    <ion-list lines="none" class="premium-list">
+      <ion-item class="setting-item">
+        <ion-label>Notifications</ion-label>
+        <ion-toggle slot="end" [checked]="notifications" (ionChange)="toggleNotifications()" color="dark"></ion-toggle>
+      </ion-item>
+    </ion-list>
 
-    <ion-item button (click)="editPersonalInfo()">
-      <ion-label>Change personal information</ion-label>
-    </ion-item>
+    <div class="section-title">Account</div>
 
-    <ion-item button>
-      <ion-label>Other</ion-label>
-    </ion-item>
-  </ion-list>
+    <ion-list lines="none" class="premium-list">
+      <ion-item button detail="false" class="setting-item" (click)="changeEmail()">
+        <ion-label>Change email</ion-label>
+        <ion-icon slot="end" name="chevron-forward" class="arrow-icon"></ion-icon>
+      </ion-item>
 
-  <ion-button color="danger" expand="block" class="logout" (click)="logout()">Log out</ion-button>
+      <ion-item button detail="false" class="setting-item" (click)="editPersonalInfo()">
+        <ion-label>Personal information</ion-label>
+        <ion-icon slot="end" name="chevron-forward" class="arrow-icon"></ion-icon>
+      </ion-item>
+
+      <ion-item button detail="false" class="setting-item">
+        <ion-label>Other</ion-label>
+        <ion-icon slot="end" name="chevron-forward" class="arrow-icon"></ion-icon>
+      </ion-item>
+    </ion-list>
+
+    <div class="logout-container">
+      <ion-button fill="clear" color="danger" (click)="logout()">
+        Log out
+      </ion-button>
+      <div class="version-text">Version 1.0.0</div>
+    </div>
+
+  </div>
 </ion-content>

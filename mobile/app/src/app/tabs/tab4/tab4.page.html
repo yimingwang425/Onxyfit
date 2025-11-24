@@ -1,47 +1,73 @@
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar>
-    <ion-title>Me</ion-title>
+    <ion-title class="page-title">Profile</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <div class="center">
-    <div class="avatar" aria-hidden="true">{{ avatar }}</div>
-    <div class="username">{{ displayName }}</div>
-    <div class="email" *ngIf="email">{{ email }}</div>
+<ion-content [fullscreen]="true">
+  
+  <div class="profile-header fade-in">
+    <div class="avatar-circle">
+      {{ avatar }}
+    </div>
+    <div class="user-info">
+      <h1>{{ displayName }}</h1>
+      <p>{{ email }}</p>
+      
+      <div class="badges-row">
+        <div class="pref-badge" *ngIf="profile.goal">
+          {{ profile.goal }}
+        </div>
+        
+        <div class="pref-badge" *ngIf="profile.activityLevel">
+          {{ profile.activityLevel }}
+        </div>
+        
+        <div class="pref-badge" *ngIf="profile.dietPref">
+          {{ profile.dietPref }}
+        </div>
+      </div>
+
+    </div>
   </div>
 
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title>Personal information</ion-card-title>
-    </ion-card-header>
+  <div class="metrics-dashboard fade-in">
     
-    <ion-card-content>
-      <ion-list [inset]="false">
-        <ion-item lines="full">
-          <ion-label>Age</ion-label>
-          <ion-label slot="end" color="medium">{{ profile.age ?? 'Not set' }}</ion-label>
-        </ion-item>
+    <div class="metric-item">
+      <span class="label">Age</span>
+      <span class="value">{{ profile.age || '-' }}</span>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="metric-item">
+      <span class="label">Height</span>
+      <span class="value">{{ profile.heightCm || profile.height || '-' }}<small>cm</small></span>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="metric-item">
+      <span class="label">Weight</span>
+      <span class="value">{{ profile.weightKg || profile.weight || '-' }}<small>kg</small></span>
+    </div>
 
-        <ion-item lines="full">
-          <ion-label>Height (cm)</ion-label>
-          <ion-label slot="end" color="medium">{{ profile.height_cm ?? profile.height ?? 'Not set' }}</ion-label>
-        </ion-item>
-
-        <ion-item lines="full">
-          <ion-label>Weight (kg)</ion-label>
-          <ion-label slot="end" color="medium">{{ profile.weight_kg ?? profile.weight ?? 'Not set' }}</ion-label>
-        </ion-item>
-
-        <ion-item lines="none">
-          <ion-label>Preference</ion-label>
-          <ion-label slot="end" color="medium">{{ profile.preference ?? profile.dietPref ?? 'Not set' }}</ion-label>
-        </ion-item>
-      </ion-list>
-    </ion-card-content>
-    </ion-card>
-
-  <div class="buttons">
-    <ion-button expand="block" (click)="goToSettings()">Settings</ion-button>
   </div>
+
+  <div class="menu-section fade-in">
+    <div class="section-title">Account</div>
+    
+    <ion-list lines="none" class="premium-list">
+      <ion-item button detail="false" (click)="goToSettings()">
+        <div class="icon-box">
+          <ion-icon name="settings-outline"></ion-icon>
+        </div>
+        <div class="item-content">
+          <span class="item-title">Settings</span>
+        </div>
+        <ion-icon name="chevron-forward" class="arrow-icon"></ion-icon>
+      </ion-item>
+    </ion-list>
+  </div>
+
 </ion-content>

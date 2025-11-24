@@ -1,0 +1,72 @@
+ion-content {
+  --background: #FAFAFA;
+}
+
+.page-title {
+  font-weight: 800;
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+}
+
+.settings-container {
+  padding: 16px;
+  padding-top: 10px;
+}
+
+.section-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding-left: 4px;
+  margin-bottom: 12px;
+  margin-top: 12px;
+  opacity: 0.6;
+}
+
+.premium-list {
+  background: transparent;
+  padding: 0;
+  margin-bottom: 24px;
+}
+
+.setting-item {
+  --background: #FFFFFF;
+  --min-height: 60px;
+  --padding-start: 20px;
+  --inner-padding-end: 16px;
+  --border-radius: 16px;
+  
+  margin-bottom: 12px;
+  
+  border: 1px solid #F2F2F2;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  
+  font-weight: 600;
+  font-size: 1rem;
+  color: #000;
+}
+
+.arrow-icon {
+  font-size: 1.2rem;
+  color: #CCC;
+}
+
+.logout-container {
+  margin-top: 40px;
+  text-align: center;
+  
+  ion-button {
+    font-weight: 600;
+    font-size: 1rem;
+    --ripple-color: rgba(255, 0, 0, 0.1);
+  }
+}
+
+.version-text {
+  font-size: 0.75rem;
+  color: #CCC;
+  margin-top: 16px;
+  font-weight: 500;
+}

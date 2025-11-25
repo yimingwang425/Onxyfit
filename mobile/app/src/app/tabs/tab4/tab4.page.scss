@@ -5,9 +5,15 @@ ion-content {
 .page-title {
   font-size: 1.8rem;
   font-weight: 800;
-  padding-left: 12px;
+  padding-left: 20px !important;
   text-align: left;
   letter-spacing: -0.02em;
+}
+
+ion-toolbar {
+  --background: transparent;
+  --padding-start: 0;
+  --padding-end: 0;
 }
 
 .profile-header {

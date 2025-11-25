@@ -17,6 +17,7 @@ import {
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { chevronForward } from 'ionicons/icons';
+import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-settings',
@@ -42,7 +43,7 @@ import { chevronForward } from 'ionicons/icons';
 })
 export class SettingsPage {
   
-  constructor(private router: Router) {
+  constructor(private router: Router, private auth: AuthService) {
     addIcons({ chevronForward });
   }
 
@@ -59,7 +60,8 @@ export class SettingsPage {
   }
 
   logout() {
-    localStorage.removeItem('auth_token');
+    this.auth.logout();
+    
     this.router.navigateByUrl('/auth/welcome', { replaceUrl: true });
   }
 }

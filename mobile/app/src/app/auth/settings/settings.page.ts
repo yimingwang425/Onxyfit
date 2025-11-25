@@ -41,15 +41,13 @@ import { chevronForward } from 'ionicons/icons';
   styleUrls: ['./settings.page.scss']
 })
 export class SettingsPage {
-  notifications = localStorage.getItem('pref_notifications') === 'true';
-
+  
   constructor(private router: Router) {
     addIcons({ chevronForward });
   }
 
-  toggleNotifications() {
-    this.notifications = !this.notifications;
-    localStorage.setItem('pref_notifications', String(this.notifications));
+  goToNotifications() {
+    this.router.navigate(['/auth/notification']).catch(()=>{});
   }
 
   changeEmail() {

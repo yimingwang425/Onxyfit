@@ -1,0 +1,130 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/auth/settings" color="dark"></ion-back-button>
+    </ion-buttons>
+    <ion-title class="page-title">Notifications</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="settings-container">
+    
+    <div class="section-title">Daily Tracking</div>
+    <ion-list lines="none" class="premium-list">
+      
+      <ion-item class="setting-item">
+        <div class="item-icon water">
+          <ion-icon name="water-outline"></ion-icon>
+        </div>
+        <ion-label>Hydration Alerts</ion-label>
+        <ion-toggle slot="end" [(ngModel)]="config.water" (ionChange)="saveConfig()" color="dark"></ion-toggle>
+      </ion-item>
+
+      <ion-item class="setting-item">
+        <div class="item-icon mood">
+          <ion-icon name="happy-outline"></ion-icon>
+        </div>
+        <ion-label>Mood Check-in</ion-label>
+        <ion-toggle slot="end" [(ngModel)]="config.mood" (ionChange)="saveConfig()" color="dark"></ion-toggle>
+      </ion-item>
+    </ion-list>
+
+
+    <div class="section-title">Fitness</div>
+    <ion-list lines="none" class="premium-list">
+      
+      <ion-item class="setting-item">
+        <div class="item-icon workout">
+          <ion-icon name="barbell-outline"></ion-icon>
+        </div>
+        <ion-label>Workout Reminder</ion-label>
+        <ion-toggle slot="end" [(ngModel)]="config.workout.enabled" (ionChange)="saveConfig()" color="dark"></ion-toggle>
+      </ion-item>
+
+      <div class="sub-setting-wrapper" *ngIf="config.workout.enabled">
+        <ion-item button detail="false" id="open-workout-time" class="setting-item sub-item">
+          <ion-label>Time</ion-label>
+          <div class="time-display">{{ formatTime(config.workout.time) }}</div>
+        </ion-item>
+        <ion-modal trigger="open-workout-time" [keepContentsMounted]="true">
+          <ng-template>
+            <ion-datetime
+              presentation="time"
+              [(ngModel)]="config.workout.time"
+              (ionChange)="saveConfig()"
+            ></ion-datetime>
+          </ng-template>
+        </ion-modal>
+      </div>
+
+    </ion-list>
+
+
+    <div class="section-title">Nutrition</div>
+    <ion-list lines="none" class="premium-list">
+      
+      <ion-item class="setting-item">
+        <div class="item-icon breakfast">
+          <ion-icon name="sunny-outline"></ion-icon>
+        </div>
+        <ion-label>Breakfast</ion-label>
+        <ion-toggle slot="end" [(ngModel)]="config.meal.breakfastEnabled" (ionChange)="saveConfig()" color="dark"></ion-toggle>
+      </ion-item>
+
+      <div class="sub-setting-wrapper" *ngIf="config.meal.breakfastEnabled">
+        <ion-item button detail="false" id="open-breakfast-time" class="setting-item sub-item">
+          <ion-label>Time</ion-label>
+          <div class="time-display">{{ formatTime(config.meal.breakfastTime) }}</div>
+        </ion-item>
+        <ion-modal trigger="open-breakfast-time" [keepContentsMounted]="true">
+          <ng-template>
+            <ion-datetime presentation="time" [(ngModel)]="config.meal.breakfastTime" (ionChange)="saveConfig()"></ion-datetime>
+          </ng-template>
+        </ion-modal>
+      </div>
+
+      <ion-item class="setting-item">
+        <div class="item-icon lunch">
+          <ion-icon name="restaurant-outline"></ion-icon>
+        </div>
+        <ion-label>Lunch</ion-label>
+        <ion-toggle slot="end" [(ngModel)]="config.meal.lunchEnabled" (ionChange)="saveConfig()" color="dark"></ion-toggle>
+      </ion-item>
+
+      <div class="sub-setting-wrapper" *ngIf="config.meal.lunchEnabled">
+        <ion-item button detail="false" id="open-lunch-time" class="setting-item sub-item">
+          <ion-label>Time</ion-label>
+          <div class="time-display">{{ formatTime(config.meal.lunchTime) }}</div>
+        </ion-item>
+        <ion-modal trigger="open-lunch-time" [keepContentsMounted]="true">
+          <ng-template>
+            <ion-datetime presentation="time" [(ngModel)]="config.meal.lunchTime" (ionChange)="saveConfig()"></ion-datetime>
+          </ng-template>
+        </ion-modal>
+      </div>
+
+      <ion-item class="setting-item">
+        <div class="item-icon dinner">
+          <ion-icon name="moon-outline"></ion-icon>
+        </div>
+        <ion-label>Dinner</ion-label>
+        <ion-toggle slot="end" [(ngModel)]="config.meal.dinnerEnabled" (ionChange)="saveConfig()" color="dark"></ion-toggle>
+      </ion-item>
+
+      <div class="sub-setting-wrapper" *ngIf="config.meal.dinnerEnabled">
+        <ion-item button detail="false" id="open-dinner-time" class="setting-item sub-item">
+          <ion-label>Time</ion-label>
+          <div class="time-display">{{ formatTime(config.meal.dinnerTime) }}</div>
+        </ion-item>
+        <ion-modal trigger="open-dinner-time" [keepContentsMounted]="true">
+          <ng-template>
+            <ion-datetime presentation="time" [(ngModel)]="config.meal.dinnerTime" (ionChange)="saveConfig()"></ion-datetime>
+          </ng-template>
+        </ion-modal>
+      </div>
+
+    </ion-list>
+
+  </div>
+</ion-content>

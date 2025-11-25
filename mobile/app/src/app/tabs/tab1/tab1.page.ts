@@ -26,6 +26,7 @@ import {
   informationCircleOutline,
   waterOutline,
   sparklesOutline,
+  happyOutline,
   barChartOutline
 } from 'ionicons/icons';
 import { Chart } from 'chart.js/auto';
@@ -81,6 +82,7 @@ export class Tab1Page {
     addIcons({
       informationCircleOutline,
       waterOutline,
+      happyOutline,
       sparklesOutline,
       barChartOutline
     });

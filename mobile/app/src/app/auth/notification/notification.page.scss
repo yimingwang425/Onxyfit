@@ -1,0 +1,91 @@
+ion-content {
+  --background: #FAFAFA;
+}
+
+.page-title {
+  font-weight: 800;
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+}
+
+.settings-container {
+  padding: 16px;
+  padding-top: 10px;
+}
+
+.section-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding-left: 4px;
+  margin-bottom: 12px;
+  margin-top: 20px;
+  opacity: 0.6;
+}
+
+.premium-list {
+  background: transparent;
+  padding: 0;
+  margin-bottom: 8px;
+}
+
+.setting-item {
+  --background: #FFFFFF;
+  --min-height: 60px;
+  --padding-start: 16px;
+  --inner-padding-end: 16px;
+  --border-radius: 16px;
+  
+  margin-bottom: 12px;
+  border: 1px solid #F2F2F2;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  
+  font-weight: 600;
+  font-size: 1rem;
+  color: #000;
+}
+
+.setting-item.sub-item {
+  margin-top: -6px;
+  margin-left: 12px;
+  margin-right: 12px;
+  --min-height: 50px;
+  border-top: none;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  background: #fdfdfd;
+}
+
+.item-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+  font-size: 1.2rem;
+  
+  &.water { background: #E3F2FD; color: #2196F3; }
+  &.mood { background: #FFF3E0; color: #FF9800; }
+  &.workout { background: #E8F5E9; color: #4CAF50; }
+  &.breakfast { background: #FFF8E1; color: #FFC107; }
+  &.lunch { background: #F3E5F5; color: #9C27B0; }
+  &.dinner { background: #E0F7FA; color: #00BCD4; }
+}
+
+.time-display {
+  background: #F4F5F8;
+  padding: 4px 10px;
+  border-radius: 8px;
+  color: #000;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+ion-datetime {
+  border-radius: 16px;
+  margin: 20px auto;
+}

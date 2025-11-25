@@ -95,6 +95,10 @@ export const routes: Routes = [
         path: 'setup-metabolic',
         loadComponent: () => import('./auth/setup-metabolic/setup-metabolic.component').then( m => m.SetupMetabolicPage)
       },
+      {
+        path: 'notification',
+        loadComponent: () => import('./auth/notification/notification.page').then( m => m.NotificationPage)
+      },
     ]
   },
 ];

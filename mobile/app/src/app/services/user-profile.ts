@@ -18,7 +18,7 @@ export type UserProfileDto = {
   providedIn: 'root'
 })
 export class UserProfileService {
-  private useMock = true;
+  private useMock = false;
   private readonly endpoint = '/api/user-profiles';
 
   private requiredFields: (keyof UserProfileDto)[] = [
@@ -65,7 +65,7 @@ export class UserProfileService {
     const profile = this.getProfile();
     
     if (!profile) {
-      console.log('❌ [Check] No profile found in localStorage!');
+      console.log('No profile found in localStorage!');
       return Object.values(this.fieldLabels);
     }
 
@@ -73,13 +73,13 @@ export class UserProfileService {
     this.requiredFields.forEach(key => {
       const val = profile[key];
       if (val === null || val === undefined || val === '') {
-        console.log(`❌ [Check] Missing Field detected: ${key}`);
+        console.log(`Missing Field detected: ${key}`);
         missing.push(this.fieldLabels[key as string]);
       }
     });
     
     if (missing.length === 0) {
-      console.log('✅ [Check] Profile is complete!');
+      console.log('Profile is complete!');
     }
     
     return missing;

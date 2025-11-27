@@ -100,7 +100,13 @@ export class LoginPasswordPage implements OnInit {
     this.loading = true;
     const { password } = this.form.getRawValue();
 
-    this.auth.login(this.email, password).subscribe({
+    const credentials = {
+      username: this.email, // JHipster 默认字段名叫 username
+      password: password,
+      rememberMe: true      // 建议加上这个，保持登录状态
+    };
+
+    this.auth.login(credentials).subscribe({
       next: (response: any) => {
         this.loading = false;
         localStorage.setItem('registered_email', this.email as string);
@@ -109,7 +115,11 @@ export class LoginPasswordPage implements OnInit {
       },
       error: (err: any) => {
         this.loading = false;
-        this.error = 'Incorrect password. Please try again.';
+        if (err.status === 401) {
+          this.error = 'Incorrect password. Please try again.';
+        } else {
+          this.error = 'Login failed. Please check your connection.';
+        }
         console.error('Login failed:', err);
       }
     });

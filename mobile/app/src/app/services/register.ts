@@ -12,7 +12,7 @@ export class RegisterService {
 
   tempPassword?: string;
 
-  private useMock = true;
+  private useMock = false;
 
   constructor(private http: HttpClient) {}
 

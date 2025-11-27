@@ -5,17 +5,21 @@ import { Router } from '@angular/router';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar, 
   IonButton, IonIcon,
-  IonBackButton, IonButtons, IonLabel } from '@ionic/angular/standalone';
+  IonBackButton, IonButtons, IonLabel 
+} from '@ionic/angular/standalone';
 import { AlertController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { checkmarkCircle, informationCircleOutline } from 'ionicons/icons';
+import { UserProfileService } from '../../services/user-profile';
+import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-setup-metabolic',
   templateUrl: './setup-metabolic.component.html',
   styleUrls: ['./setup-metabolic.component.scss'],
   standalone: true,
-  imports: [IonLabel, 
+  imports: [
+    IonLabel, 
     CommonModule, ReactiveFormsModule, IonContent, IonHeader, IonTitle,
     IonToolbar, IonButton, IonIcon,
     IonBackButton, IonButtons
@@ -34,23 +38,15 @@ export class SetupMetabolicPage {
   constructor(
     private fb: FormBuilder, 
     private router: Router,
-    private alertCtrl: AlertController
+    private alertCtrl: AlertController,
+    private userProfileService: UserProfileService,
+    private authService: AuthService
   ) {
     addIcons({ checkmarkCircle, informationCircleOutline });
   }
 
   selectOption(value: string) {
     this.form.patchValue({ metabolicProfile: value });
-  }
-
-  private saveProfileData(data: any) {
-    let profile: any = {};
-    const raw = localStorage.getItem('user_profile');
-    if (raw) {
-      try { profile = JSON.parse(raw); } catch (e) {}
-    }
-    const updatedProfile = { ...profile, ...data };
-    localStorage.setItem('user_profile', JSON.stringify(updatedProfile));
   }
 
   async openMetabolicInfo() {
@@ -70,12 +66,56 @@ export class SetupMetabolicPage {
   }
 
   skip() {
+    console.warn('User skipped metabolic profile setup');
     this.router.navigateByUrl('/tabs/tab1', { replaceUrl: true });
   }
 
   next() {
     if (this.form.invalid) { return; }
-    this.saveProfileData({ metabolicProfile: this.form.value.metabolicProfile });
-    this.router.navigateByUrl('/tabs/tab1', { replaceUrl: true });
+    const currentStepData = { metabolicProfile: this.form.value.metabolicProfile };
+
+    let finalProfile: any = {};
+    const raw = localStorage.getItem('user_profile');
+    if (raw) {
+      try { finalProfile = JSON.parse(raw); } catch (e) {}
+    }
+
+    this.authService.identity().subscribe({
+      next: (account) => {
+        
+        const payload = {
+          ...finalProfile,
+          ...currentStepData,
+          user: { 
+            id: account.id, 
+            login: account.login 
+          },
+          createdAt: new Date().toISOString()
+        };
+
+        console.log('Sending Profile to Backend:', payload);
+
+        this.userProfileService.saveProfile(payload).subscribe({
+          next: (res) => {
+            console.log('Profile saved successfully!', res);
+            
+            localStorage.removeItem('user_profile');
+            this.router.navigateByUrl('/tabs/tab1', { replaceUrl: true });
+          },
+          error: (err) => {
+            console.error('Failed to save profile', err);
+            this.alertCtrl.create({
+              header: 'Error',
+              message: 'Could not save profile. Please check your connection.',
+              buttons: ['OK']
+            }).then(a => a.present());
+          }
+        });
+      },
+      error: (err) => {
+        console.error('User is not logged in?', err);
+        this.router.navigateByUrl('/auth/welcome');
+      }
+    });
   }
 }

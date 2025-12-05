@@ -1,0 +1,72 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    @if (plan(); as planRef) {
+      <div>
+        <h2 data-cy="planDetailsHeading"><span jhiTranslate="fypApp.plan.detail.title">Plan</span></h2>
+
+        <hr />
+
+        <jhi-alert-error />
+
+        <jhi-alert />
+
+        <dl class="row-md jh-entity-details">
+          <dt><span jhiTranslate="global.field.id">ID</span></dt>
+          <dd>
+            <span>{{ planRef.id }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.plan.caloriesKcal">Calories Kcal</span></dt>
+          <dd>
+            <span>{{ planRef.caloriesKcal }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.plan.proteinG">Protein G</span></dt>
+          <dd>
+            <span>{{ planRef.proteinG }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.plan.carbsG">Carbs G</span></dt>
+          <dd>
+            <span>{{ planRef.carbsG }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.plan.fatG">Fat G</span></dt>
+          <dd>
+            <span>{{ planRef.fatG }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.plan.workoutType">Workout Type</span></dt>
+          <dd>
+            <span [jhiTranslate]="'fypApp.WorkoutType.' + (planRef.workoutType ?? 'null')">{{
+              { null: '', FBW: 'FBW', PPL: 'PPL', UPPER_LOWER: 'UPPER_LOWER', CARDIO_MIX: 'CARDIO_MIX' }[planRef.workoutType ?? 'null']
+            }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.plan.workoutIntensity">Workout Intensity</span></dt>
+          <dd>
+            <span>{{ planRef.workoutIntensity }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.plan.source">Source</span></dt>
+          <dd>
+            <span>{{ planRef.source }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.plan.createdAt">Created At</span></dt>
+          <dd>
+            <span>{{ planRef.createdAt | formatMediumDatetime }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.plan.profile">Profile</span></dt>
+          <dd>
+            @if (plan()!.profile) {
+              <div>
+                <a [routerLink]="['/user-profile', plan()!.profile?.id, 'view']">{{ planRef.profile?.id }}</a>
+              </div>
+            }
+          </dd>
+        </dl>
+
+        <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+          <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back">Back</span>
+        </button>
+
+        <button type="button" [routerLink]="['/plan', planRef.id, 'edit']" class="btn btn-primary">
+          <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit">Edit</span>
+        </button>
+      </div>
+    }
+  </div>
+</div>

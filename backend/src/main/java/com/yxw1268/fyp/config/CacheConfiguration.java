@@ -50,6 +50,10 @@ public class CacheConfiguration {
             createCache(cm, com.yxw1268.fyp.domain.User.class.getName());
             createCache(cm, com.yxw1268.fyp.domain.Authority.class.getName());
             createCache(cm, com.yxw1268.fyp.domain.User.class.getName() + ".authorities");
+            createCache(cm, com.yxw1268.fyp.domain.OtpRecord.class.getName());
+            createCache(cm, com.yxw1268.fyp.domain.UserProfile.class.getName());
+            createCache(cm, com.yxw1268.fyp.domain.Plan.class.getName());
+            createCache(cm, com.yxw1268.fyp.domain.ProgressLog.class.getName());
             // jhipster-needle-ehcache-add-entry
         };
     }

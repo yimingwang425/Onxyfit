@@ -79,30 +79,42 @@ export class RegisterPasswordConfirmPage {
 
     try {
       const completeFn = (this.registerService as any).completeRegistration;
-      if (typeof completeFn === 'function') {
-        const maybeObs = completeFn.call(this.registerService, tempToken || '', savedPw);
-        const res: any = await lastValueFrom(maybeObs);
-        const jwt = res?.jwt ?? res?.id_token ?? ('mock-jwt-' + Date.now());
-        this.auth.setToken(jwt);
-        const regEmail = (this.registerService as any).email
+      
+      const maybeObs = completeFn.call(this.registerService, tempToken || '', savedPw);
+      await lastValueFrom(maybeObs);
+      
+      console.log('Account registration successful! Now initiating automatic login to obtain the token...');
+
+      const regEmail = (this.registerService as any).email
           || (this.registerService as any).email$?.getValue?.()
           || localStorage.getItem('temp_register_email') || '';
-        if (regEmail) localStorage.setItem('registered_email', regEmail);
-
-      } else {
-        const jwt = 'mock-jwt-' + Date.now();
-        this.auth.setToken(jwt);
-        const regEmail = (this.registerService as any).email || localStorage.getItem('temp_register_email') || '';
-        if (regEmail) localStorage.setItem('registered_email', regEmail);
+      
+      if (!regEmail) {
+        throw new Error('Email missing for auto login');
       }
 
-      try { window.dispatchEvent(new CustomEvent('profile-updated', { detail: { email: localStorage.getItem('registered_email') } })); } catch {}
+      const loginCreds = {
+        username: regEmail,
+        password: savedPw,
+        rememberMe: true
+      };
+
+      await lastValueFrom(this.auth.login(loginCreds));
+      
+      console.log('Automatic login successful');
+
+      localStorage.setItem('registered_email', regEmail);
+      try { window.dispatchEvent(new CustomEvent('profile-updated', { detail: { email: regEmail } })); } catch {}
 
       await this.router.navigateByUrl('/auth/setup-age', { replaceUrl: true });
 
     } catch (err: any) {
-      console.error(err);
-      this.error = err?.message ?? 'Registration failed. Please try again.';
+      console.error('Failed to register or log in:', err);
+      if (err.status === 400 && err.error?.type === 'login-already-used') {
+        this.error = 'This email is already registered. Please log in.';
+      } else {
+        this.error = 'Registration failed. Please try again.';
+      }
     } finally {
       this.loading = false;
     }

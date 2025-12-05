@@ -1,0 +1,73 @@
+{
+  "annotations": {
+    "changelogDate": "20251129190050"
+  },
+  "applications": "*",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "caloriesKcal",
+      "fieldType": "Integer",
+      "fieldValidateRules": ["required", "min", "max"],
+      "fieldValidateRulesMax": "6000",
+      "fieldValidateRulesMin": "100"
+    },
+    {
+      "fieldName": "proteinG",
+      "fieldType": "BigDecimal",
+      "fieldValidateRules": ["required", "min", "max"],
+      "fieldValidateRulesMax": "500",
+      "fieldValidateRulesMin": "0"
+    },
+    {
+      "fieldName": "carbsG",
+      "fieldType": "BigDecimal",
+      "fieldValidateRules": ["required", "min", "max"],
+      "fieldValidateRulesMax": "1000",
+      "fieldValidateRulesMin": "0"
+    },
+    {
+      "fieldName": "fatG",
+      "fieldType": "BigDecimal",
+      "fieldValidateRules": ["required", "min", "max"],
+      "fieldValidateRulesMax": "1000",
+      "fieldValidateRulesMin": "0"
+    },
+    {
+      "fieldName": "workoutType",
+      "fieldType": "WorkoutType",
+      "fieldValues": "FBW,PPL,UPPER_LOWER,CARDIO_MIX"
+    },
+    {
+      "fieldName": "workoutIntensity",
+      "fieldType": "BigDecimal",
+      "fieldValidateRules": ["min", "max"],
+      "fieldValidateRulesMax": "1.0",
+      "fieldValidateRulesMin": "0.0"
+    },
+    {
+      "fieldName": "source",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "name": "Plan",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityField": "id",
+      "otherEntityName": "userProfile",
+      "relationshipName": "profile",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one",
+      "relationshipValidateRules": "required"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

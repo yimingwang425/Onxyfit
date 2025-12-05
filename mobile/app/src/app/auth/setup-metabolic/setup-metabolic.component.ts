@@ -114,6 +114,7 @@ export class SetupMetabolicPage {
       },
       error: (err) => {
         console.error('User is not logged in?', err);
+
         this.router.navigateByUrl('/auth/welcome');
       }
     });

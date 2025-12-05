@@ -1,0 +1,72 @@
+{
+  "annotations": {
+    "changelogDate": "20251129190049"
+  },
+  "applications": "*",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "age",
+      "fieldType": "Integer",
+      "fieldValidateRules": ["required", "min", "max"],
+      "fieldValidateRulesMax": "100",
+      "fieldValidateRulesMin": "10"
+    },
+    {
+      "fieldName": "heightCm",
+      "fieldType": "BigDecimal",
+      "fieldValidateRules": ["required", "min", "max"],
+      "fieldValidateRulesMax": "380",
+      "fieldValidateRulesMin": "80"
+    },
+    {
+      "fieldName": "weightKg",
+      "fieldType": "BigDecimal",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "activityLevel",
+      "fieldType": "ActivityLevel",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "SEDENTARY,LIGHT,MODERATE,ACTIVE,VERY_ACTIVE"
+    },
+    {
+      "fieldName": "goal",
+      "fieldType": "Goal",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "LOSE,MAINTAIN,GAIN"
+    },
+    {
+      "fieldName": "dietPref",
+      "fieldType": "DietPref",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "BALANCED,HIGH_PROTEIN,VEGETARIAN,NO_PREFERENCE"
+    },
+    {
+      "fieldName": "metabolicProfile",
+      "fieldType": "MetabolicProfile",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "PROFILE_1,PROFILE_2"
+    },
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "name": "UserProfile",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityField": "login",
+      "otherEntityName": "user",
+      "relationshipName": "user",
+      "relationshipSide": "left",
+      "relationshipType": "one-to-one",
+      "relationshipValidateRules": "required",
+      "relationshipWithBuiltInEntity": true
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

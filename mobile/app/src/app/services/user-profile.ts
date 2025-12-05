@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { delay, tap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 export type UserProfileDto = {
+  id?: number;
   age: number;
   heightCm: number;
   weightKg: number;
@@ -11,7 +13,8 @@ export type UserProfileDto = {
   goal: 'LOSE' | 'MAINTAIN' | 'GAIN';
   dietPref: 'BALANCED' | 'HIGH_PROTEIN' | 'VEGETARIAN' | 'NO_PREFERENCE';
   metabolicProfile?: 'PROFILE_1' | 'PROFILE_2'; 
-  createdAt: string;
+  createdAt?: string;
+  user?: any;
 };
 
 @Injectable({
@@ -19,7 +22,8 @@ export type UserProfileDto = {
 })
 export class UserProfileService {
   private useMock = false;
-  private readonly endpoint = '/api/user-profiles';
+  
+  private readonly endpoint = `${environment.apiUrl}/user-profiles`;
 
   private requiredFields: (keyof UserProfileDto)[] = [
     'age', 'heightCm', 'weightKg', 'activityLevel', 'goal', 'dietPref'
@@ -40,20 +44,41 @@ export class UserProfileService {
     this.useMock = false;
   }
 
-  saveProfile(profile: UserProfileDto): Observable<{ success: boolean; data?: any }> {
+  saveProfile(profile: UserProfileDto): Observable<any> {
     if (this.useMock) {
       return of({ success: true, data: profile }).pipe(
         delay(600),
         tap(() => {
            const current = this.getProfile() || {};
            const updated = { ...current, ...profile };
-           console.log('🔥 [Mock] Profile Saved to LocalStorage:', updated);
+           console.log('Profile Saved to LocalStorage:', updated);
            localStorage.setItem('user_profile', JSON.stringify(updated));
         })
       );
     } else {
-      return this.http.post<{ success: boolean; data?: any }>(this.endpoint, profile);
+      const token = localStorage.getItem('authenticationToken') || localStorage.getItem('auth_token');
+      let headers = new HttpHeaders();
+      if (token) {
+        headers = headers.set('Authorization', `Bearer ${token}`);
+      }
+
+      if (profile.id) {
+        console.log('Updating Profile (PUT), ID:', profile.id);
+        return this.http.put<any>(`${this.endpoint}/${profile.id}`, profile, { headers });
+      } else {
+        console.log('Creating new Profile (POST)');
+        return this.http.post<any>(this.endpoint, profile, { headers });
+      }
     }
+  }
+
+  getProfileData(): Observable<any> {
+      const token = localStorage.getItem('authenticationToken') || localStorage.getItem('auth_token');
+      let headers = new HttpHeaders();
+      if (token) {
+        headers = headers.set('Authorization', `Bearer ${token}`);
+      }
+      return this.http.get<any>(this.endpoint, { headers });
   }
 
   getProfile(): UserProfileDto | null {
@@ -61,41 +86,42 @@ export class UserProfileService {
     return p ? JSON.parse(p) : null;
   }
 
-  getMissingFields(): string[] {
-    const profile = this.getProfile();
+  getMissingFields(profile?: any): string[] {
+    const target = profile || this.getProfile();
     
-    if (!profile) {
-      console.log('No profile found in localStorage!');
+    if (!target) {
       return Object.values(this.fieldLabels);
     }
 
     const missing: string[] = [];
     this.requiredFields.forEach(key => {
-      const val = profile[key];
+      const val = target[key];
       if (val === null || val === undefined || val === '') {
-        console.log(`Missing Field detected: ${key}`);
         missing.push(this.fieldLabels[key as string]);
       }
     });
     
-    if (missing.length === 0) {
-      console.log('Profile is complete!');
-    }
-    
     return missing;
   }
 
-  getSummaryString(): string {
-    const profile = this.getProfile();
-    if (!profile) return 'No information available';
+  getSummaryString(profile?: any): string {
+    const target = profile || this.getProfile();
+    if (!target) return 'No information available';
+
+    const age = target.age;
+    const height = target.heightCm || target.height;
+    const weight = target.weightKg || target.weight;
+    const act = target.activityLevel;
+    const goal = target.goal;
+    const diet = target.dietPref;
 
     return `
-      Age: ${profile.age || '-'}
-      Height: ${profile.heightCm || '-'} cm
-      Weight: ${profile.weightKg || '-'} kg
-      Activity: ${profile.activityLevel || '-'}
-      Goal: ${profile.goal || '-'}
-      Diet: ${profile.dietPref || '-'}
+      Age: ${age || '-'}
+      Height: ${height || '-'} cm
+      Weight: ${weight || '-'} kg
+      Activity: ${act || '-'}
+      Goal: ${goal || '-'}
+      Diet: ${diet || '-'}
     `;
   }
 }

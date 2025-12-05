@@ -1,0 +1,32 @@
+{
+  "fypApp": {
+    "plan": {
+      "home": {
+        "title": "Plans",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Create a new Plan",
+        "createOrEditLabel": "Create or edit a Plan",
+        "notFound": "No Plans found"
+      },
+      "created": "A new Plan is created with identifier {{ param }}",
+      "updated": "A Plan is updated with identifier {{ param }}",
+      "deleted": "A Plan is deleted with identifier {{ param }}",
+      "delete": {
+        "question": "Are you sure you want to delete Plan {{ id }}?"
+      },
+      "detail": {
+        "title": "Plan"
+      },
+      "id": "ID",
+      "caloriesKcal": "Calories Kcal",
+      "proteinG": "Protein G",
+      "carbsG": "Carbs G",
+      "fatG": "Fat G",
+      "workoutType": "Workout Type",
+      "workoutIntensity": "Workout Intensity",
+      "source": "Source",
+      "createdAt": "Created At",
+      "profile": "Profile"
+    }
+  }
+}

@@ -1,0 +1,74 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    @if (progressLog(); as progressLogRef) {
+      <div>
+        <h2 data-cy="progressLogDetailsHeading"><span jhiTranslate="fypApp.progressLog.detail.title">Progress Log</span></h2>
+
+        <hr />
+
+        <jhi-alert-error />
+
+        <jhi-alert />
+
+        <dl class="row-md jh-entity-details">
+          <dt><span jhiTranslate="global.field.id">ID</span></dt>
+          <dd>
+            <span>{{ progressLogRef.id }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.progressLog.logDate">Log Date</span></dt>
+          <dd>
+            <span>{{ progressLogRef.logDate | formatMediumDate }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.progressLog.weightKg">Weight Kg</span></dt>
+          <dd>
+            <span>{{ progressLogRef.weightKg }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.progressLog.completedWorkout">Completed Workout</span></dt>
+          <dd>
+            <span>{{ progressLogRef.completedWorkout }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.progressLog.caloriesIntake">Calories Intake</span></dt>
+          <dd>
+            <span>{{ progressLogRef.caloriesIntake }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.progressLog.steps">Steps</span></dt>
+          <dd>
+            <span>{{ progressLogRef.steps }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.progressLog.notes">Notes</span></dt>
+          <dd>
+            <span>{{ progressLogRef.notes }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.progressLog.createdAt">Created At</span></dt>
+          <dd>
+            <span>{{ progressLogRef.createdAt | formatMediumDatetime }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.progressLog.profile">Profile</span></dt>
+          <dd>
+            @if (progressLog()!.profile) {
+              <div>
+                <a [routerLink]="['/user-profile', progressLog()!.profile?.id, 'view']">{{ progressLogRef.profile?.id }}</a>
+              </div>
+            }
+          </dd>
+          <dt><span jhiTranslate="fypApp.progressLog.plan">Plan</span></dt>
+          <dd>
+            @if (progressLog()!.plan) {
+              <div>
+                <a [routerLink]="['/plan', progressLog()!.plan?.id, 'view']">{{ progressLogRef.plan?.id }}</a>
+              </div>
+            }
+          </dd>
+        </dl>
+
+        <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+          <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back">Back</span>
+        </button>
+
+        <button type="button" [routerLink]="['/progress-log', progressLogRef.id, 'edit']" class="btn btn-primary">
+          <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit">Edit</span>
+        </button>
+      </div>
+    }
+  </div>
+</div>

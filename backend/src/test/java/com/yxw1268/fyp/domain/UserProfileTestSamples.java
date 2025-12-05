@@ -1,0 +1,24 @@
+package com.yxw1268.fyp.domain;
+
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
+public class UserProfileTestSamples {
+
+    private static final Random random = new Random();
+    private static final AtomicLong longCount = new AtomicLong(random.nextInt() + (2 * Integer.MAX_VALUE));
+    private static final AtomicInteger intCount = new AtomicInteger(random.nextInt() + (2 * Short.MAX_VALUE));
+
+    public static UserProfile getUserProfileSample1() {
+        return new UserProfile().id(1L).age(1);
+    }
+
+    public static UserProfile getUserProfileSample2() {
+        return new UserProfile().id(2L).age(2);
+    }
+
+    public static UserProfile getUserProfileRandomSampleGenerator() {
+        return new UserProfile().id(longCount.incrementAndGet()).age(intCount.incrementAndGet());
+    }
+}

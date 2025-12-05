@@ -1,0 +1,9 @@
+export enum WorkoutType {
+  FBW = 'FBW',
+
+  PPL = 'PPL',
+
+  UPPER_LOWER = 'UPPER_LOWER',
+
+  CARDIO_MIX = 'CARDIO_MIX',
+}

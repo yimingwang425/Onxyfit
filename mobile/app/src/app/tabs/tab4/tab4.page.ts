@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
+import { UserProfileService } from '../../services/user-profile'; 
 import { addIcons } from 'ionicons';
 import { settingsOutline, chevronForward, personOutline } from 'ionicons/icons';
 
@@ -21,7 +22,11 @@ export class Tab4Page implements OnInit, OnDestroy {
 
   private animalEmojis = ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐷','🐵'];
 
-  constructor(private auth: AuthService, private router: Router) {
+  constructor(
+    private auth: AuthService, 
+    private router: Router,
+    private userProfileService: UserProfileService 
+  ) {
     addIcons({ settingsOutline, chevronForward, personOutline });
   }
 
@@ -71,17 +76,26 @@ export class Tab4Page implements OnInit, OnDestroy {
   }
 
   private loadProfile() {
-    const raw = localStorage.getItem('user_profile');
-    if (raw) {
-      try { this.profile = JSON.parse(raw); } catch { this.profile = {}; }
-    } else {
-      this.profile = {};
-    }
-
     const regEmail = localStorage.getItem('registered_email') || localStorage.getItem('auth_email') || '';
-    this.email = regEmail || this.profile.email || '';
+    this.email = regEmail;
+    this.displayName = regEmail ? regEmail.split('@')[0] : 'User';
 
-    this.displayName = this.profile.name || 'User'; 
+    // 调用后端接口
+    this.userProfileService.getProfileData().subscribe({
+      // 【修改】明确指定参数类型为 any，解决 TS 报错
+      next: (data: any) => {
+        if (Array.isArray(data) && data.length > 0) {
+          this.profile = data[0];
+          console.log('✅ Tab4: 成功从后端加载 Profile', this.profile);
+        } else {
+          this.profile = {};
+        }
+      },
+      // 【修改】明确指定参数类型为 any
+      error: (err: any) => {
+        console.error('❌ Tab4: 加载 Profile 失败 (可能是 401 或网络问题)', err);
+      }
+    });
   }
 
   private emailHashIndex(email: string, modulo: number): number {

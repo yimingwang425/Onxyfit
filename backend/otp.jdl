@@ -1,0 +1,8 @@
+entity OtpRecord {
+    email String required,
+    otpCode String required,
+    expiryTime Instant required,
+    verified Boolean
+}
+
+service OtpRecord with serviceClass

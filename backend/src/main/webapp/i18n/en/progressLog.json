@@ -1,0 +1,32 @@
+{
+  "fypApp": {
+    "progressLog": {
+      "home": {
+        "title": "Progress Logs",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Create a new Progress Log",
+        "createOrEditLabel": "Create or edit a Progress Log",
+        "notFound": "No Progress Logs found"
+      },
+      "created": "A new Progress Log is created with identifier {{ param }}",
+      "updated": "A Progress Log is updated with identifier {{ param }}",
+      "deleted": "A Progress Log is deleted with identifier {{ param }}",
+      "delete": {
+        "question": "Are you sure you want to delete Progress Log {{ id }}?"
+      },
+      "detail": {
+        "title": "Progress Log"
+      },
+      "id": "ID",
+      "logDate": "Log Date",
+      "weightKg": "Weight Kg",
+      "completedWorkout": "Completed Workout",
+      "caloriesIntake": "Calories Intake",
+      "steps": "Steps",
+      "notes": "Notes",
+      "createdAt": "Created At",
+      "profile": "Profile",
+      "plan": "Plan"
+    }
+  }
+}

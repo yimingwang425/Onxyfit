@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+    <!--
+        Added the constraints for entity ProgressLog.
+    -->
+    <changeSet id="20251129190051-2" author="jhipster">
+
+        <addForeignKeyConstraint baseColumnNames="profile_id"
+                                 baseTableName="progress_log"
+                                 constraintName="fk_progress_log__profile_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="user_profile"
+                                 />
+
+        <addForeignKeyConstraint baseColumnNames="plan_id"
+                                 baseTableName="progress_log"
+                                 constraintName="fk_progress_log__plan_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="plan"
+                                 />
+    </changeSet>
+</databaseChangeLog>

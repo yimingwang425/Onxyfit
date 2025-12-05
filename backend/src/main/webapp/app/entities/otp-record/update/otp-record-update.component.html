@@ -1,0 +1,96 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <form name="editForm" novalidate (ngSubmit)="save()" [formGroup]="editForm">
+      <h2 id="jhi-otp-record-heading" data-cy="OtpRecordCreateUpdateHeading" jhiTranslate="fypApp.otpRecord.home.createOrEditLabel">
+        Create or edit a Otp Record
+      </h2>
+
+      <div>
+        <jhi-alert-error />
+
+        @if (editForm.controls.id.value !== null) {
+          <div class="mb-3">
+            <label class="form-label" for="field_id" jhiTranslate="fypApp.otpRecord.id">ID</label>
+            <input type="number" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" [readonly]="true" />
+          </div>
+        }
+
+        @let emailRef = editForm.get('email')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_email" jhiTranslate="fypApp.otpRecord.email">Email</label>
+          <input type="text" class="form-control" name="email" id="field_email" data-cy="email" formControlName="email" />
+          @if (emailRef.invalid && (emailRef.dirty || emailRef.touched)) {
+            <div>
+              @if (editForm.get('email')?.errors?.required) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.required">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        @let otpCodeRef = editForm.get('otpCode')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_otpCode" jhiTranslate="fypApp.otpRecord.otpCode">Otp Code</label>
+          <input type="text" class="form-control" name="otpCode" id="field_otpCode" data-cy="otpCode" formControlName="otpCode" />
+          @if (otpCodeRef.invalid && (otpCodeRef.dirty || otpCodeRef.touched)) {
+            <div>
+              @if (editForm.get('otpCode')?.errors?.required) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.required">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        @let expiryTimeRef = editForm.get('expiryTime')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_expiryTime" jhiTranslate="fypApp.otpRecord.expiryTime">Expiry Time</label>
+          <div class="d-flex">
+            <input
+              id="field_expiryTime"
+              data-cy="expiryTime"
+              type="datetime-local"
+              class="form-control"
+              name="expiryTime"
+              formControlName="expiryTime"
+              placeholder="YYYY-MM-DD HH:mm"
+            />
+          </div>
+          @if (expiryTimeRef.invalid && (expiryTimeRef.dirty || expiryTimeRef.touched)) {
+            <div>
+              @if (editForm.get('expiryTime')?.errors?.required) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.required">This field is required.</small>
+              }
+              <small
+                class="form-text text-danger"
+                [hidden]="!editForm.get('expiryTime')?.errors?.datetimelocal"
+                jhiTranslate="entity.validation.datetimelocal"
+                >This field should be a date and time.</small
+              >
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_verified" jhiTranslate="fypApp.otpRecord.verified">Verified</label>
+          <input type="checkbox" class="form-check" name="verified" id="field_verified" data-cy="verified" formControlName="verified" />
+        </div>
+      </div>
+
+      <div>
+        <button type="button" id="cancel-save" data-cy="entityCreateCancelButton" class="btn btn-secondary" (click)="previousState()">
+          <fa-icon icon="ban"></fa-icon>&nbsp;<span jhiTranslate="entity.action.cancel">Cancel</span>
+        </button>
+
+        <button
+          type="submit"
+          id="save-entity"
+          data-cy="entityCreateSaveButton"
+          [disabled]="editForm.invalid || isSaving"
+          class="btn btn-primary"
+        >
+          <fa-icon icon="save"></fa-icon>&nbsp;<span jhiTranslate="entity.action.save">Save</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

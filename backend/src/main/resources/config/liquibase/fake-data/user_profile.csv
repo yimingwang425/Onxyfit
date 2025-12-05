@@ -1,0 +1,3 @@
+id;age;height_cm;weight_kg;activity_level;goal;diet_pref;metabolic_profile;created_at;user_id
+1;74;323.77;10814.52;SEDENTARY;LOSE;VEGETARIAN;PROFILE_1;2025-11-28T21:12:51;1
+2;42;284.23;15966.24;ACTIVE;LOSE;NO_PREFERENCE;PROFILE_1;2025-11-29T18:18:33;2

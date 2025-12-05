@@ -1,0 +1,31 @@
+{
+  "annotations": {
+    "changelogDate": "20251128155044"
+  },
+  "applications": "*",
+  "fields": [
+    {
+      "fieldName": "email",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "otpCode",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "expiryTime",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "verified",
+      "fieldType": "Boolean"
+    }
+  ],
+  "name": "OtpRecord",
+  "relationships": [],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

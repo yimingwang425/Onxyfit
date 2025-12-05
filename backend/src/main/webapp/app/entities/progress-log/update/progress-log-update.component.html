@@ -1,0 +1,224 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <form name="editForm" novalidate (ngSubmit)="save()" [formGroup]="editForm">
+      <h2 id="jhi-progress-log-heading" data-cy="ProgressLogCreateUpdateHeading" jhiTranslate="fypApp.progressLog.home.createOrEditLabel">
+        Create or edit a Progress Log
+      </h2>
+
+      <div>
+        <jhi-alert-error />
+
+        @if (editForm.controls.id.value !== null) {
+          <div class="mb-3">
+            <label class="form-label" for="field_id" jhiTranslate="fypApp.progressLog.id">ID</label>
+            <input type="number" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" [readonly]="true" />
+          </div>
+        }
+
+        @let logDateRef = editForm.get('logDate')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_logDate" jhiTranslate="fypApp.progressLog.logDate">Log Date</label>
+          <div class="input-group">
+            <input
+              id="field_logDate"
+              data-cy="logDate"
+              type="text"
+              class="form-control"
+              name="logDate"
+              ngbDatepicker
+              #logDateDp="ngbDatepicker"
+              formControlName="logDate"
+            />
+            <button type="button" class="btn btn-secondary" (click)="logDateDp.toggle()"><fa-icon icon="calendar-alt"></fa-icon></button>
+          </div>
+          @if (logDateRef.invalid && (logDateRef.dirty || logDateRef.touched)) {
+            <div>
+              @if (editForm.get('logDate')?.errors?.required) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.required">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_weightKg" jhiTranslate="fypApp.progressLog.weightKg">Weight Kg</label>
+          <input type="number" class="form-control" name="weightKg" id="field_weightKg" data-cy="weightKg" formControlName="weightKg" />
+        </div>
+
+        @let completedWorkoutRef = editForm.get('completedWorkout')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_completedWorkout" jhiTranslate="fypApp.progressLog.completedWorkout"
+            >Completed Workout</label
+          >
+          <input
+            type="checkbox"
+            class="form-check"
+            name="completedWorkout"
+            id="field_completedWorkout"
+            data-cy="completedWorkout"
+            formControlName="completedWorkout"
+          />
+          @if (completedWorkoutRef.invalid && (completedWorkoutRef.dirty || completedWorkoutRef.touched)) {
+            <div>
+              @if (editForm.get('completedWorkout')?.errors?.required) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.required">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        @let caloriesIntakeRef = editForm.get('caloriesIntake')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_caloriesIntake" jhiTranslate="fypApp.progressLog.caloriesIntake">Calories Intake</label>
+          <input
+            type="number"
+            class="form-control"
+            name="caloriesIntake"
+            id="field_caloriesIntake"
+            data-cy="caloriesIntake"
+            formControlName="caloriesIntake"
+          />
+          @if (caloriesIntakeRef.invalid && (caloriesIntakeRef.dirty || caloriesIntakeRef.touched)) {
+            <div>
+              @if (editForm.get('caloriesIntake')?.errors?.min) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.min" [translateValues]="{ min: '0' }"
+                  >This field should be at least 0.</small
+                >
+              }
+              @if (editForm.get('caloriesIntake')?.errors?.max) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.max" [translateValues]="{ max: '15000' }"
+                  >This field cannot be more than 15000.</small
+                >
+              }
+              <small
+                class="form-text text-danger"
+                [hidden]="!editForm.get('caloriesIntake')?.errors?.number"
+                jhiTranslate="entity.validation.number"
+                >This field should be a number.</small
+              >
+            </div>
+          }
+        </div>
+
+        @let stepsRef = editForm.get('steps')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_steps" jhiTranslate="fypApp.progressLog.steps">Steps</label>
+          <input type="number" class="form-control" name="steps" id="field_steps" data-cy="steps" formControlName="steps" />
+          @if (stepsRef.invalid && (stepsRef.dirty || stepsRef.touched)) {
+            <div>
+              @if (editForm.get('steps')?.errors?.min) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.min" [translateValues]="{ min: '0' }"
+                  >This field should be at least 0.</small
+                >
+              }
+              @if (editForm.get('steps')?.errors?.max) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.max" [translateValues]="{ max: '250000' }"
+                  >This field cannot be more than 250000.</small
+                >
+              }
+              <small class="form-text text-danger" [hidden]="!editForm.get('steps')?.errors?.number" jhiTranslate="entity.validation.number"
+                >This field should be a number.</small
+              >
+            </div>
+          }
+        </div>
+
+        @let notesRef = editForm.get('notes')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_notes" jhiTranslate="fypApp.progressLog.notes">Notes</label>
+          <input type="text" class="form-control" name="notes" id="field_notes" data-cy="notes" formControlName="notes" />
+          @if (notesRef.invalid && (notesRef.dirty || notesRef.touched)) {
+            <div>
+              @if (editForm.get('notes')?.errors?.maxlength) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.maxlength" [translateValues]="{ max: '1000' }"
+                  >This field cannot be longer than 1000 characters.</small
+                >
+              }
+            </div>
+          }
+        </div>
+
+        @let createdAtRef = editForm.get('createdAt')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_createdAt" jhiTranslate="fypApp.progressLog.createdAt">Created At</label>
+          <div class="d-flex">
+            <input
+              id="field_createdAt"
+              data-cy="createdAt"
+              type="datetime-local"
+              class="form-control"
+              name="createdAt"
+              formControlName="createdAt"
+              placeholder="YYYY-MM-DD HH:mm"
+            />
+          </div>
+          @if (createdAtRef.invalid && (createdAtRef.dirty || createdAtRef.touched)) {
+            <div>
+              @if (editForm.get('createdAt')?.errors?.required) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.required">This field is required.</small>
+              }
+              <small
+                class="form-text text-danger"
+                [hidden]="!editForm.get('createdAt')?.errors?.datetimelocal"
+                jhiTranslate="entity.validation.datetimelocal"
+                >This field should be a date and time.</small
+              >
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_profile" jhiTranslate="fypApp.progressLog.profile">Profile</label>
+          <select
+            class="form-control"
+            id="field_profile"
+            data-cy="profile"
+            name="profile"
+            formControlName="profile"
+            [compareWith]="compareUserProfile"
+          >
+            @if (!editForm.get('profile')!.value) {
+              <option [ngValue]="null" selected></option>
+            }
+            @for (userProfileOption of userProfilesSharedCollection; track $index) {
+              <option [ngValue]="userProfileOption">{{ userProfileOption.id }}</option>
+            }
+          </select>
+        </div>
+        @if (editForm.get(['profile'])!.invalid && (editForm.get(['profile'])!.dirty || editForm.get(['profile'])!.touched)) {
+          <div>
+            @if (editForm.get(['profile'])?.errors?.required) {
+              <small class="form-text text-danger" jhiTranslate="entity.validation.required">This field is required.</small>
+            }
+          </div>
+        }
+
+        <div class="mb-3">
+          <label class="form-label" for="field_plan" jhiTranslate="fypApp.progressLog.plan">Plan</label>
+          <select class="form-control" id="field_plan" data-cy="plan" name="plan" formControlName="plan" [compareWith]="comparePlan">
+            <option [ngValue]="null"></option>
+            @for (planOption of plansSharedCollection; track $index) {
+              <option [ngValue]="planOption">{{ planOption.id }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <button type="button" id="cancel-save" data-cy="entityCreateCancelButton" class="btn btn-secondary" (click)="previousState()">
+          <fa-icon icon="ban"></fa-icon>&nbsp;<span jhiTranslate="entity.action.cancel">Cancel</span>
+        </button>
+
+        <button
+          type="submit"
+          id="save-entity"
+          data-cy="entityCreateSaveButton"
+          [disabled]="editForm.invalid || isSaving"
+          class="btn btn-primary"
+        >
+          <fa-icon icon="save"></fa-icon>&nbsp;<span jhiTranslate="entity.action.save">Save</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -3,36 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProfileCheckModalComponent } from '../../components/profile-check-modal/profile-check-modal.component';
 import {
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonSegment,
-  IonSegmentButton,
-  IonLabel,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardSubtitle,
-  IonChip,
-  IonSpinner,
-  IonIcon,
-  ModalController,
-  IonItem,
-  IonList,
-  IonListHeader,
-  AlertController,
-  NavController
+  IonHeader, IonToolbar, IonTitle, IonContent, IonSegment, IonSegmentButton,
+  IonLabel, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonChip,
+  IonSpinner, IonIcon, ModalController, IonItem, IonList, IonListHeader,
+  AlertController, NavController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { barbellOutline, moonOutline } from 'ionicons/icons';
 
-import {
-  WorkoutPlanService,
-  DailyWorkoutPlan,
-  WeeklyWorkoutPlan,
-  Exercise,
-} from '../../services/workout-plan';
+import { WorkoutPlanService, DailyWorkoutPlan, WeeklyWorkoutPlan, Exercise } from '../../services/workout-plan';
 import { WorkoutDetailComponent } from '../../components/workout-detail/workout-detail.component';
 import { UserProfileService } from '../../services/user-profile';
 
@@ -42,37 +21,18 @@ import { UserProfileService } from '../../services/user-profile';
   styleUrls: ['tab3.page.scss'],
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonContent,
-    IonSegment,
-    IonSegmentButton,
-    IonLabel,
-    IonCard,
-    IonCardHeader,
-    IonCardTitle,
-    IonCardSubtitle,
-    IonChip,
-    IonSpinner,
-    IonIcon,
-    IonItem,
-    IonList,
-    IonListHeader,
+    CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle, IonContent,
+    IonSegment, IonSegmentButton, IonLabel, IonCard, IonCardHeader, IonCardTitle,
+    IonCardSubtitle, IonChip, IonSpinner, IonIcon, IonItem, IonList, IonListHeader,
     WorkoutDetailComponent,
   ],
 })
 export class Tab3Page implements OnInit {
   currentSegment = 'today';
-
   isLoadingToday = false;
   isLoadingWeek = false;
-
   todaysPlan: DailyWorkoutPlan | null = null;
   weeklyPlan: WeeklyWorkoutPlan[] = [];
-
   selectedDayIndex: number = 0;
 
   constructor(
@@ -85,61 +45,59 @@ export class Tab3Page implements OnInit {
     addIcons({ barbellOutline, moonOutline });
   }
 
-  ngOnInit() {
-  }
+  ngOnInit() {}
 
   ionViewWillEnter() {
     this.checkProfileAndLoad();
   }
 
   async checkProfileAndLoad() {
-    const missingFields = this.profileService.getMissingFields();
-    
-    if (missingFields.length > 0) {
-      const modal = await this.modalCtrl.create({
-        component: ProfileCheckModalComponent,
-        componentProps: {
-          mode: 'missing',
-          missingFields: missingFields
-        },
-        backdropDismiss: false,
-      });
+    this.profileService.getProfileData().subscribe({
+      next: async (data: any) => {
+        let profile = null;
+        if (Array.isArray(data) && data.length > 0) {
+          profile = data[0];
+        }
+        const missingFields = this.profileService.getMissingFields(profile);
+        
+        if (missingFields.length > 0) {
+          const modal = await this.modalCtrl.create({
+            component: ProfileCheckModalComponent,
+            componentProps: { mode: 'missing', missingFields: missingFields },
+            backdropDismiss: false,
+          });
+          await modal.present();
+          const { role } = await modal.onWillDismiss();
+          if (role === 'complete') {
+            this.navCtrl.navigateForward('/auth/user-profile-setup?from=missing');
+          }
+          return;
+        }
 
-      await modal.present();
-      const { role } = await modal.onWillDismiss();
-
-      if (role === 'complete') {
-        this.navCtrl.navigateForward('/auth/user-profile-setup?from=missing');
+        const hasConfirmed = localStorage.getItem('has_confirmed_plan_start');
+        if (!hasConfirmed) {
+          const summary = this.profileService.getSummaryString(profile);
+          const modal = await this.modalCtrl.create({
+            component: ProfileCheckModalComponent,
+            componentProps: { mode: 'confirm', summary: summary },
+            backdropDismiss: false
+          });
+          await modal.present();
+          const { role } = await modal.onWillDismiss();
+          if (role === 'edit') {
+            this.navCtrl.navigateForward('/auth/user-profile-setup?from=review');
+          } else if (role === 'confirm') {
+            localStorage.setItem('has_confirmed_plan_start', 'true');
+            this.loadData();
+          }
+        } else {
+          this.loadData();
+        }
+      },
+      error: (err) => {
+        console.error('Tab3: Unable to retrieve user information', err);
       }
-      return;
-    }
-
-    const hasConfirmed = localStorage.getItem('has_confirmed_plan_start');
-
-    if (!hasConfirmed) {
-      const summary = this.profileService.getSummaryString();
-      
-      const modal = await this.modalCtrl.create({
-        component: ProfileCheckModalComponent,
-        componentProps: {
-          mode: 'confirm',
-          summary: summary
-        },
-        backdropDismiss: false
-      });
-
-      await modal.present();
-      const { role } = await modal.onWillDismiss();
-
-      if (role === 'edit') {
-        this.navCtrl.navigateForward('/auth/user-profile-setup?from=review');
-      } else if (role === 'confirm') {
-        localStorage.setItem('has_confirmed_plan_start', 'true');
-        this.loadData();
-      }
-    } else {
-      this.loadData();
-    }
+    });
   }
 
   loadData() {
@@ -152,7 +110,6 @@ export class Tab3Page implements OnInit {
 
   segmentChanged(event: any) {
     this.currentSegment = event.detail.value;
-
     if (this.currentSegment === 'week' && this.weeklyPlan.length === 0) {
       this.loadWeeklyPlan();
     }
@@ -170,18 +127,14 @@ export class Tab3Page implements OnInit {
     this.isLoadingWeek = true;
     this.workoutPlanService.getWeeklyPlan().subscribe((data) => {
       this.weeklyPlan = data;
-      
       const daysMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       const todayStr = daysMap[new Date().getDay()]; 
-
       const foundIndex = data.findIndex(d => d.day === todayStr);
-      
       if (foundIndex !== -1) {
         this.selectedDayIndex = foundIndex;
       } else {
         this.selectedDayIndex = 0;
       }
-
       this.isLoadingWeek = false;
     });
   }
@@ -191,15 +144,10 @@ export class Tab3Page implements OnInit {
   }
 
   async openWorkoutDetails(exercise: Exercise | null) {
-    if (!exercise) {
-      return;
-    }
-
+    if (!exercise) return;
     const modal = await this.modalCtrl.create({
       component: WorkoutDetailComponent,
-      componentProps: {
-        exercise: exercise,
-      },
+      componentProps: { exercise: exercise },
     });
     await modal.present();
   }

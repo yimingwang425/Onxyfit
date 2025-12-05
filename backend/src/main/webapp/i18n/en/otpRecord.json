@@ -1,0 +1,27 @@
+{
+  "fypApp": {
+    "otpRecord": {
+      "home": {
+        "title": "Otp Records",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Create a new Otp Record",
+        "createOrEditLabel": "Create or edit a Otp Record",
+        "notFound": "No Otp Records found"
+      },
+      "created": "A new Otp Record is created with identifier {{ param }}",
+      "updated": "A Otp Record is updated with identifier {{ param }}",
+      "deleted": "A Otp Record is deleted with identifier {{ param }}",
+      "delete": {
+        "question": "Are you sure you want to delete Otp Record {{ id }}?"
+      },
+      "detail": {
+        "title": "Otp Record"
+      },
+      "id": "ID",
+      "email": "Email",
+      "otpCode": "Otp Code",
+      "expiryTime": "Expiry Time",
+      "verified": "Verified"
+    }
+  }
+}

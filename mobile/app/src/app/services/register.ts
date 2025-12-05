@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { delay, map } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -14,44 +15,45 @@ export class RegisterService {
 
   private useMock = false;
 
+  private API_URL = environment.apiUrl;
+
   constructor(private http: HttpClient) {}
 
   setEmail(email: string) { this.email$.next(email); }
 
-  sendOtp(email: string): Observable<{ message: string; expiresIn: number }> {
+  sendOtp(email: string): Observable<any> {
     this.setEmail(email);
     if (this.useMock) {
       return of({ message: 'otp_sent', expiresIn: 600 }).pipe(delay(700));
     } else {
-      return this.http.post<{ message: string; expiresIn: number }>('/api/register/send-otp', { email });
+      return this.http.post(`${this.API_URL}/register/send-otp`, { email });
     }
   }
 
-  verifyOtp(email: string, otp: string): Observable<{ verified: boolean; tempToken?: string }> {
+  verifyOtp(email: string, otp: string): Observable<any> {
     if (this.useMock) {
-      const ok = true;
-      if (ok) {
-        const fake = 'mock-temp-' + Date.now();
-        this.tempToken$.next(fake);
-        return of({ verified: true, tempToken: fake }).pipe(delay(500));
-      } else {
-        return of({ verified: false }).pipe(delay(300));
-      }
+      const fake = 'mock-temp-' + Date.now();
+      this.tempToken$.next(fake);
+      return of({ verified: true, tempToken: fake }).pipe(delay(500));
     } else {
-      return this.http.post<{ verified: boolean; tempToken?: string }>('/api/register/verify-otp', { email, otp });
+      return this.http.post(`${this.API_URL}/register/verify-otp`, { email, otp });
     }
   }
 
-  completeRegistration(tempToken: string, password: string): Observable<{ success: boolean; jwt?: string }> {
+  completeRegistration(tempToken: string, password: string): Observable<any> {
     if (this.useMock) {
       return of({ success: true, jwt: 'mock-jwt-' + Date.now() }).pipe(delay(700));
     } else {
-      return this.http.post<{ success: boolean; jwt?: string }>(
-        '/api/register/complete',
-        { password },
-        {
-          headers: { Authorization: `Bearer ${tempToken}` }
-        }
+      const email = this.email$.value;
+      const payload = {
+        login: email,
+        email: email,
+        password: password,
+        langKey: 'en'
+      };
+
+      return this.http.post(`${this.API_URL}/register`, payload).pipe(
+        map(() => ({ success: true }))
       );
     }
   }

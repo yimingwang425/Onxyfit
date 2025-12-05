@@ -1,0 +1,108 @@
+<div>
+  <h2 id="page-heading" data-cy="OtpRecordHeading">
+    <span jhiTranslate="fypApp.otpRecord.home.title">Otp Records</span>
+
+    <div class="d-flex justify-content-end">
+      <button class="btn btn-info me-2" (click)="load()" [disabled]="isLoading">
+        <fa-icon icon="sync" [animation]="isLoading ? 'spin' : undefined"></fa-icon>
+        <span jhiTranslate="fypApp.otpRecord.home.refreshListLabel">Refresh list</span>
+      </button>
+
+      <button
+        id="jh-create-entity"
+        data-cy="entityCreateButton"
+        class="btn btn-primary jh-create-entity create-otp-record"
+        [routerLink]="['/otp-record/new']"
+      >
+        <fa-icon icon="plus"></fa-icon>
+        <span jhiTranslate="fypApp.otpRecord.home.createLabel">Create a new Otp Record</span>
+      </button>
+    </div>
+  </h2>
+
+  <jhi-alert-error />
+
+  <jhi-alert />
+
+  @if (otpRecords().length === 0) {
+    <div class="alert alert-warning" id="no-result">
+      <span jhiTranslate="fypApp.otpRecord.home.notFound">No Otp Records found</span>
+    </div>
+  } @else {
+    <div class="table-responsive table-entities" id="entities">
+      <table class="table table-striped" aria-describedby="page-heading">
+        <thead>
+          <tr jhiSort [sortState]="sortState" (sortChange)="navigateToWithComponentValues($event)">
+            <th scope="col" jhiSortBy="id">
+              <div class="d-flex">
+                <span jhiTranslate="global.field.id">ID</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="email">
+              <div class="d-flex">
+                <span jhiTranslate="fypApp.otpRecord.email">Email</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="otpCode">
+              <div class="d-flex">
+                <span jhiTranslate="fypApp.otpRecord.otpCode">Otp Code</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="expiryTime">
+              <div class="d-flex">
+                <span jhiTranslate="fypApp.otpRecord.expiryTime">Expiry Time</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="verified">
+              <div class="d-flex">
+                <span jhiTranslate="fypApp.otpRecord.verified">Verified</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (otpRecord of otpRecords(); track trackId(otpRecord)) {
+            <tr data-cy="entityTable">
+              <td>
+                <a [routerLink]="['/otp-record', otpRecord.id, 'view']">{{ otpRecord.id }}</a>
+              </td>
+              <td>{{ otpRecord.email }}</td>
+              <td>{{ otpRecord.otpCode }}</td>
+              <td>{{ otpRecord.expiryTime | formatMediumDatetime }}</td>
+              <td>{{ otpRecord.verified }}</td>
+              <td class="text-end">
+                <div class="btn-group">
+                  <a [routerLink]="['/otp-record', otpRecord.id, 'view']" class="btn btn-info btn-sm" data-cy="entityDetailsButton">
+                    <fa-icon icon="eye"></fa-icon>
+                    <span class="d-none d-md-inline" jhiTranslate="entity.action.view">View</span>
+                  </a>
+
+                  <a [routerLink]="['/otp-record', otpRecord.id, 'edit']" class="btn btn-primary btn-sm" data-cy="entityEditButton">
+                    <fa-icon icon="pencil-alt"></fa-icon>
+                    <span class="d-none d-md-inline" jhiTranslate="entity.action.edit">Edit</span>
+                  </a>
+
+                  <button type="submit" (click)="delete(otpRecord)" class="btn btn-danger btn-sm" data-cy="entityDeleteButton">
+                    <fa-icon icon="times"></fa-icon>
+                    <span class="d-none d-md-inline" jhiTranslate="entity.action.delete">Delete</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

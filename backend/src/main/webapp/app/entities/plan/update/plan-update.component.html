@@ -1,0 +1,267 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <form name="editForm" novalidate (ngSubmit)="save()" [formGroup]="editForm">
+      <h2 id="jhi-plan-heading" data-cy="PlanCreateUpdateHeading" jhiTranslate="fypApp.plan.home.createOrEditLabel">
+        Create or edit a Plan
+      </h2>
+
+      <div>
+        <jhi-alert-error />
+
+        @if (editForm.controls.id.value !== null) {
+          <div class="mb-3">
+            <label class="form-label" for="field_id" jhiTranslate="fypApp.plan.id">ID</label>
+            <input type="number" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" [readonly]="true" />
+          </div>
+        }
+
+        @let caloriesKcalRef = editForm.get('caloriesKcal')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_caloriesKcal" jhiTranslate="fypApp.plan.caloriesKcal">Calories Kcal</label>
+          <input
+            type="number"
+            class="form-control"
+            name="caloriesKcal"
+            id="field_caloriesKcal"
+            data-cy="caloriesKcal"
+            formControlName="caloriesKcal"
+          />
+          @if (caloriesKcalRef.invalid && (caloriesKcalRef.dirty || caloriesKcalRef.touched)) {
+            <div>
+              @if (editForm.get('caloriesKcal')?.errors?.required) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.required">This field is required.</small>
+              }
+              @if (editForm.get('caloriesKcal')?.errors?.min) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.min" [translateValues]="{ min: '100' }"
+                  >This field should be at least 100.</small
+                >
+              }
+              @if (editForm.get('caloriesKcal')?.errors?.max) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.max" [translateValues]="{ max: '6000' }"
+                  >This field cannot be more than 6000.</small
+                >
+              }
+              <small
+                class="form-text text-danger"
+                [hidden]="!editForm.get('caloriesKcal')?.errors?.number"
+                jhiTranslate="entity.validation.number"
+                >This field should be a number.</small
+              >
+            </div>
+          }
+        </div>
+
+        @let proteinGRef = editForm.get('proteinG')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_proteinG" jhiTranslate="fypApp.plan.proteinG">Protein G</label>
+          <input type="number" class="form-control" name="proteinG" id="field_proteinG" data-cy="proteinG" formControlName="proteinG" />
+          @if (proteinGRef.invalid && (proteinGRef.dirty || proteinGRef.touched)) {
+            <div>
+              @if (editForm.get('proteinG')?.errors?.required) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.required">This field is required.</small>
+              }
+              @if (editForm.get('proteinG')?.errors?.min) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.min" [translateValues]="{ min: '0' }"
+                  >This field should be at least 0.</small
+                >
+              }
+              @if (editForm.get('proteinG')?.errors?.max) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.max" [translateValues]="{ max: '500' }"
+                  >This field cannot be more than 500.</small
+                >
+              }
+              <small
+                class="form-text text-danger"
+                [hidden]="!editForm.get('proteinG')?.errors?.number"
+                jhiTranslate="entity.validation.number"
+                >This field should be a number.</small
+              >
+            </div>
+          }
+        </div>
+
+        @let carbsGRef = editForm.get('carbsG')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_carbsG" jhiTranslate="fypApp.plan.carbsG">Carbs G</label>
+          <input type="number" class="form-control" name="carbsG" id="field_carbsG" data-cy="carbsG" formControlName="carbsG" />
+          @if (carbsGRef.invalid && (carbsGRef.dirty || carbsGRef.touched)) {
+            <div>
+              @if (editForm.get('carbsG')?.errors?.required) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.required">This field is required.</small>
+              }
+              @if (editForm.get('carbsG')?.errors?.min) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.min" [translateValues]="{ min: '0' }"
+                  >This field should be at least 0.</small
+                >
+              }
+              @if (editForm.get('carbsG')?.errors?.max) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.max" [translateValues]="{ max: '1000' }"
+                  >This field cannot be more than 1000.</small
+                >
+              }
+              <small
+                class="form-text text-danger"
+                [hidden]="!editForm.get('carbsG')?.errors?.number"
+                jhiTranslate="entity.validation.number"
+                >This field should be a number.</small
+              >
+            </div>
+          }
+        </div>
+
+        @let fatGRef = editForm.get('fatG')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_fatG" jhiTranslate="fypApp.plan.fatG">Fat G</label>
+          <input type="number" class="form-control" name="fatG" id="field_fatG" data-cy="fatG" formControlName="fatG" />
+          @if (fatGRef.invalid && (fatGRef.dirty || fatGRef.touched)) {
+            <div>
+              @if (editForm.get('fatG')?.errors?.required) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.required">This field is required.</small>
+              }
+              @if (editForm.get('fatG')?.errors?.min) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.min" [translateValues]="{ min: '0' }"
+                  >This field should be at least 0.</small
+                >
+              }
+              @if (editForm.get('fatG')?.errors?.max) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.max" [translateValues]="{ max: '1000' }"
+                  >This field cannot be more than 1000.</small
+                >
+              }
+              <small class="form-text text-danger" [hidden]="!editForm.get('fatG')?.errors?.number" jhiTranslate="entity.validation.number"
+                >This field should be a number.</small
+              >
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_workoutType" jhiTranslate="fypApp.plan.workoutType">Workout Type</label>
+          <select class="form-control" name="workoutType" formControlName="workoutType" id="field_workoutType" data-cy="workoutType">
+            <option [ngValue]="null">{{ 'fypApp.WorkoutType.null' | translate }}</option>
+            @for (workoutType of workoutTypeValues; track $index) {
+              <option [value]="workoutType">{{ 'fypApp.WorkoutType.' + workoutType | translate }}</option>
+            }
+          </select>
+        </div>
+
+        @let workoutIntensityRef = editForm.get('workoutIntensity')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_workoutIntensity" jhiTranslate="fypApp.plan.workoutIntensity">Workout Intensity</label>
+          <input
+            type="number"
+            class="form-control"
+            name="workoutIntensity"
+            id="field_workoutIntensity"
+            data-cy="workoutIntensity"
+            formControlName="workoutIntensity"
+          />
+          @if (workoutIntensityRef.invalid && (workoutIntensityRef.dirty || workoutIntensityRef.touched)) {
+            <div>
+              @if (editForm.get('workoutIntensity')?.errors?.min) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.min" [translateValues]="{ min: '0' }"
+                  >This field should be at least 0.</small
+                >
+              }
+              @if (editForm.get('workoutIntensity')?.errors?.max) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.max" [translateValues]="{ max: '1' }"
+                  >This field cannot be more than 1.</small
+                >
+              }
+              <small
+                class="form-text text-danger"
+                [hidden]="!editForm.get('workoutIntensity')?.errors?.number"
+                jhiTranslate="entity.validation.number"
+                >This field should be a number.</small
+              >
+            </div>
+          }
+        </div>
+
+        @let sourceRef = editForm.get('source')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_source" jhiTranslate="fypApp.plan.source">Source</label>
+          <input type="text" class="form-control" name="source" id="field_source" data-cy="source" formControlName="source" />
+          @if (sourceRef.invalid && (sourceRef.dirty || sourceRef.touched)) {
+            <div>
+              @if (editForm.get('source')?.errors?.required) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.required">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        @let createdAtRef = editForm.get('createdAt')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_createdAt" jhiTranslate="fypApp.plan.createdAt">Created At</label>
+          <div class="d-flex">
+            <input
+              id="field_createdAt"
+              data-cy="createdAt"
+              type="datetime-local"
+              class="form-control"
+              name="createdAt"
+              formControlName="createdAt"
+              placeholder="YYYY-MM-DD HH:mm"
+            />
+          </div>
+          @if (createdAtRef.invalid && (createdAtRef.dirty || createdAtRef.touched)) {
+            <div>
+              @if (editForm.get('createdAt')?.errors?.required) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.required">This field is required.</small>
+              }
+              <small
+                class="form-text text-danger"
+                [hidden]="!editForm.get('createdAt')?.errors?.datetimelocal"
+                jhiTranslate="entity.validation.datetimelocal"
+                >This field should be a date and time.</small
+              >
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_profile" jhiTranslate="fypApp.plan.profile">Profile</label>
+          <select
+            class="form-control"
+            id="field_profile"
+            data-cy="profile"
+            name="profile"
+            formControlName="profile"
+            [compareWith]="compareUserProfile"
+          >
+            @if (!editForm.get('profile')!.value) {
+              <option [ngValue]="null" selected></option>
+            }
+            @for (userProfileOption of userProfilesSharedCollection; track $index) {
+              <option [ngValue]="userProfileOption">{{ userProfileOption.id }}</option>
+            }
+          </select>
+        </div>
+        @if (editForm.get(['profile'])!.invalid && (editForm.get(['profile'])!.dirty || editForm.get(['profile'])!.touched)) {
+          <div>
+            @if (editForm.get(['profile'])?.errors?.required) {
+              <small class="form-text text-danger" jhiTranslate="entity.validation.required">This field is required.</small>
+            }
+          </div>
+        }
+      </div>
+
+      <div>
+        <button type="button" id="cancel-save" data-cy="entityCreateCancelButton" class="btn btn-secondary" (click)="previousState()">
+          <fa-icon icon="ban"></fa-icon>&nbsp;<span jhiTranslate="entity.action.cancel">Cancel</span>
+        </button>
+
+        <button
+          type="submit"
+          id="save-entity"
+          data-cy="entityCreateSaveButton"
+          [disabled]="editForm.invalid || isSaving"
+          class="btn btn-primary"
+        >
+          <fa-icon icon="save"></fa-icon>&nbsp;<span jhiTranslate="entity.action.save">Save</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

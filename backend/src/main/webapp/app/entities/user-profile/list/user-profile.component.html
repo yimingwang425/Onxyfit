@@ -1,0 +1,188 @@
+<div>
+  <h2 id="page-heading" data-cy="UserProfileHeading">
+    <span jhiTranslate="fypApp.userProfile.home.title">User Profiles</span>
+
+    <div class="d-flex justify-content-end">
+      <button class="btn btn-info me-2" (click)="load()" [disabled]="isLoading">
+        <fa-icon icon="sync" [animation]="isLoading ? 'spin' : undefined"></fa-icon>
+        <span jhiTranslate="fypApp.userProfile.home.refreshListLabel">Refresh list</span>
+      </button>
+
+      <button
+        id="jh-create-entity"
+        data-cy="entityCreateButton"
+        class="btn btn-primary jh-create-entity create-user-profile"
+        [routerLink]="['/user-profile/new']"
+      >
+        <fa-icon icon="plus"></fa-icon>
+        <span jhiTranslate="fypApp.userProfile.home.createLabel">Create a new User Profile</span>
+      </button>
+    </div>
+  </h2>
+
+  <jhi-alert-error />
+
+  <jhi-alert />
+
+  @if (userProfiles().length === 0) {
+    <div class="alert alert-warning" id="no-result">
+      <span jhiTranslate="fypApp.userProfile.home.notFound">No User Profiles found</span>
+    </div>
+  } @else {
+    <div class="table-responsive table-entities" id="entities">
+      <table class="table table-striped" aria-describedby="page-heading">
+        <thead>
+          <tr jhiSort [sortState]="sortState" (sortChange)="navigateToWithComponentValues($event)">
+            <th scope="col" jhiSortBy="id">
+              <div class="d-flex">
+                <span jhiTranslate="global.field.id">ID</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="age">
+              <div class="d-flex">
+                <span jhiTranslate="fypApp.userProfile.age">Age</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="heightCm">
+              <div class="d-flex">
+                <span jhiTranslate="fypApp.userProfile.heightCm">Height Cm</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="weightKg">
+              <div class="d-flex">
+                <span jhiTranslate="fypApp.userProfile.weightKg">Weight Kg</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="activityLevel">
+              <div class="d-flex">
+                <span jhiTranslate="fypApp.userProfile.activityLevel">Activity Level</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="goal">
+              <div class="d-flex">
+                <span jhiTranslate="fypApp.userProfile.goal">Goal</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="dietPref">
+              <div class="d-flex">
+                <span jhiTranslate="fypApp.userProfile.dietPref">Diet Pref</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="metabolicProfile">
+              <div class="d-flex">
+                <span jhiTranslate="fypApp.userProfile.metabolicProfile">Metabolic Profile</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="createdAt">
+              <div class="d-flex">
+                <span jhiTranslate="fypApp.userProfile.createdAt">Created At</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="user.login">
+              <div class="d-flex">
+                <span jhiTranslate="fypApp.userProfile.user">User</span>
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (userProfile of userProfiles(); track trackId(userProfile)) {
+            <tr data-cy="entityTable">
+              <td>
+                <a [routerLink]="['/user-profile', userProfile.id, 'view']">{{ userProfile.id }}</a>
+              </td>
+              <td>{{ userProfile.age }}</td>
+              <td>{{ userProfile.heightCm }}</td>
+              <td>{{ userProfile.weightKg }}</td>
+              <td [jhiTranslate]="'fypApp.ActivityLevel.' + (userProfile.activityLevel ?? 'null')">
+                {{
+                  { null: '', SEDENTARY: 'SEDENTARY', LIGHT: 'LIGHT', MODERATE: 'MODERATE', ACTIVE: 'ACTIVE', VERY_ACTIVE: 'VERY_ACTIVE' }[
+                    userProfile.activityLevel ?? 'null'
+                  ]
+                }}
+              </td>
+              <td [jhiTranslate]="'fypApp.Goal.' + (userProfile.goal ?? 'null')">
+                {{ { null: '', LOSE: 'LOSE', MAINTAIN: 'MAINTAIN', GAIN: 'GAIN' }[userProfile.goal ?? 'null'] }}
+              </td>
+              <td [jhiTranslate]="'fypApp.DietPref.' + (userProfile.dietPref ?? 'null')">
+                {{
+                  {
+                    null: '',
+                    BALANCED: 'BALANCED',
+                    HIGH_PROTEIN: 'HIGH_PROTEIN',
+                    VEGETARIAN: 'VEGETARIAN',
+                    NO_PREFERENCE: 'NO_PREFERENCE',
+                  }[userProfile.dietPref ?? 'null']
+                }}
+              </td>
+              <td [jhiTranslate]="'fypApp.MetabolicProfile.' + (userProfile.metabolicProfile ?? 'null')">
+                {{ { null: '', PROFILE_1: 'PROFILE_1', PROFILE_2: 'PROFILE_2' }[userProfile.metabolicProfile ?? 'null'] }}
+              </td>
+              <td>{{ userProfile.createdAt | formatMediumDatetime }}</td>
+              <td>
+                {{ userProfile.user?.login }}
+              </td>
+              <td class="text-end">
+                <div class="btn-group">
+                  <a [routerLink]="['/user-profile', userProfile.id, 'view']" class="btn btn-info btn-sm" data-cy="entityDetailsButton">
+                    <fa-icon icon="eye"></fa-icon>
+                    <span class="d-none d-md-inline" jhiTranslate="entity.action.view">View</span>
+                  </a>
+
+                  <a [routerLink]="['/user-profile', userProfile.id, 'edit']" class="btn btn-primary btn-sm" data-cy="entityEditButton">
+                    <fa-icon icon="pencil-alt"></fa-icon>
+                    <span class="d-none d-md-inline" jhiTranslate="entity.action.edit">Edit</span>
+                  </a>
+
+                  <button type="submit" (click)="delete(userProfile)" class="btn btn-danger btn-sm" data-cy="entityDeleteButton">
+                    <fa-icon icon="times"></fa-icon>
+                    <span class="d-none d-md-inline" jhiTranslate="entity.action.delete">Delete</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  @if (userProfiles().length > 0) {
+    <div>
+      <div class="d-flex justify-content-center">
+        <jhi-item-count [params]="{ page, totalItems, itemsPerPage }" />
+      </div>
+
+      <div class="d-flex justify-content-center">
+        <ngb-pagination
+          [collectionSize]="totalItems"
+          [page]="page"
+          [pageSize]="itemsPerPage"
+          [maxSize]="5"
+          [rotate]="true"
+          [boundaryLinks]="true"
+          (pageChange)="navigateToPage($event)"
+        ></ngb-pagination>
+      </div>
+    </div>
+  }
+</div>

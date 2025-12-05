@@ -1,0 +1,78 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    @if (userProfile(); as userProfileRef) {
+      <div>
+        <h2 data-cy="userProfileDetailsHeading"><span jhiTranslate="fypApp.userProfile.detail.title">User Profile</span></h2>
+
+        <hr />
+
+        <jhi-alert-error />
+
+        <jhi-alert />
+
+        <dl class="row-md jh-entity-details">
+          <dt><span jhiTranslate="global.field.id">ID</span></dt>
+          <dd>
+            <span>{{ userProfileRef.id }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.userProfile.age">Age</span></dt>
+          <dd>
+            <span>{{ userProfileRef.age }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.userProfile.heightCm">Height Cm</span></dt>
+          <dd>
+            <span>{{ userProfileRef.heightCm }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.userProfile.weightKg">Weight Kg</span></dt>
+          <dd>
+            <span>{{ userProfileRef.weightKg }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.userProfile.activityLevel">Activity Level</span></dt>
+          <dd>
+            <span [jhiTranslate]="'fypApp.ActivityLevel.' + (userProfileRef.activityLevel ?? 'null')">{{
+              { null: '', SEDENTARY: 'SEDENTARY', LIGHT: 'LIGHT', MODERATE: 'MODERATE', ACTIVE: 'ACTIVE', VERY_ACTIVE: 'VERY_ACTIVE' }[
+                userProfileRef.activityLevel ?? 'null'
+              ]
+            }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.userProfile.goal">Goal</span></dt>
+          <dd>
+            <span [jhiTranslate]="'fypApp.Goal.' + (userProfileRef.goal ?? 'null')">{{
+              { null: '', LOSE: 'LOSE', MAINTAIN: 'MAINTAIN', GAIN: 'GAIN' }[userProfileRef.goal ?? 'null']
+            }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.userProfile.dietPref">Diet Pref</span></dt>
+          <dd>
+            <span [jhiTranslate]="'fypApp.DietPref.' + (userProfileRef.dietPref ?? 'null')">{{
+              { null: '', BALANCED: 'BALANCED', HIGH_PROTEIN: 'HIGH_PROTEIN', VEGETARIAN: 'VEGETARIAN', NO_PREFERENCE: 'NO_PREFERENCE' }[
+                userProfileRef.dietPref ?? 'null'
+              ]
+            }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.userProfile.metabolicProfile">Metabolic Profile</span></dt>
+          <dd>
+            <span [jhiTranslate]="'fypApp.MetabolicProfile.' + (userProfileRef.metabolicProfile ?? 'null')">{{
+              { null: '', PROFILE_1: 'PROFILE_1', PROFILE_2: 'PROFILE_2' }[userProfileRef.metabolicProfile ?? 'null']
+            }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.userProfile.createdAt">Created At</span></dt>
+          <dd>
+            <span>{{ userProfileRef.createdAt | formatMediumDatetime }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.userProfile.user">User</span></dt>
+          <dd>
+            <span>{{ userProfileRef.user?.login }}</span>
+          </dd>
+        </dl>
+
+        <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+          <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back">Back</span>
+        </button>
+
+        <button type="button" [routerLink]="['/user-profile', userProfileRef.id, 'edit']" class="btn btn-primary">
+          <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit">Edit</span>
+        </button>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,10 @@
+{
+  "fypApp": {
+    "Goal": {
+      "null": "",
+      "LOSE": "LOSE",
+      "MAINTAIN": "MAINTAIN",
+      "GAIN": "GAIN"
+    }
+  }
+}

@@ -221,6 +221,47 @@
         </div>
 
         <div class="mb-3">
+          <label class="form-label" for="field_mealPlanJson" jhiTranslate="fypApp.plan.mealPlanJson">Meal Plan Json</label>
+          <textarea
+            class="form-control"
+            name="mealPlanJson"
+            id="field_mealPlanJson"
+            data-cy="mealPlanJson"
+            formControlName="mealPlanJson"
+          ></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_workoutPlanJson" jhiTranslate="fypApp.plan.workoutPlanJson">Workout Plan Json</label>
+          <textarea
+            class="form-control"
+            name="workoutPlanJson"
+            id="field_workoutPlanJson"
+            data-cy="workoutPlanJson"
+            formControlName="workoutPlanJson"
+          ></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_weekStartDate" jhiTranslate="fypApp.plan.weekStartDate">Week Start Date</label>
+          <div class="input-group">
+            <input
+              id="field_weekStartDate"
+              data-cy="weekStartDate"
+              type="text"
+              class="form-control"
+              name="weekStartDate"
+              ngbDatepicker
+              #weekStartDateDp="ngbDatepicker"
+              formControlName="weekStartDate"
+            />
+            <button type="button" class="btn btn-secondary" (click)="weekStartDateDp.toggle()">
+              <fa-icon icon="calendar-alt"></fa-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="mb-3">
           <label class="form-label" for="field_profile" jhiTranslate="fypApp.plan.profile">Profile</label>
           <select
             class="form-control"

@@ -7,6 +7,7 @@ import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
@@ -67,6 +68,17 @@ public class Plan implements Serializable {
     @NotNull
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    @Lob
+    @Column(name = "meal_plan_json")
+    private String mealPlanJson;
+
+    @Lob
+    @Column(name = "workout_plan_json")
+    private String workoutPlanJson;
+
+    @Column(name = "week_start_date")
+    private LocalDate weekStartDate;
 
     @ManyToOne(optional = false)
     @NotNull
@@ -192,6 +204,45 @@ public class Plan implements Serializable {
         this.createdAt = createdAt;
     }
 
+    public String getMealPlanJson() {
+        return this.mealPlanJson;
+    }
+
+    public Plan mealPlanJson(String mealPlanJson) {
+        this.setMealPlanJson(mealPlanJson);
+        return this;
+    }
+
+    public void setMealPlanJson(String mealPlanJson) {
+        this.mealPlanJson = mealPlanJson;
+    }
+
+    public String getWorkoutPlanJson() {
+        return this.workoutPlanJson;
+    }
+
+    public Plan workoutPlanJson(String workoutPlanJson) {
+        this.setWorkoutPlanJson(workoutPlanJson);
+        return this;
+    }
+
+    public void setWorkoutPlanJson(String workoutPlanJson) {
+        this.workoutPlanJson = workoutPlanJson;
+    }
+
+    public LocalDate getWeekStartDate() {
+        return this.weekStartDate;
+    }
+
+    public Plan weekStartDate(LocalDate weekStartDate) {
+        this.setWeekStartDate(weekStartDate);
+        return this;
+    }
+
+    public void setWeekStartDate(LocalDate weekStartDate) {
+        this.weekStartDate = weekStartDate;
+    }
+
     public UserProfile getProfile() {
         return this.profile;
     }
@@ -237,6 +288,9 @@ public class Plan implements Serializable {
             ", workoutIntensity=" + getWorkoutIntensity() +
             ", source='" + getSource() + "'" +
             ", createdAt='" + getCreatedAt() + "'" +
+            ", mealPlanJson='" + getMealPlanJson() + "'" +
+            ", workoutPlanJson='" + getWorkoutPlanJson() + "'" +
+            ", weekStartDate='" + getWeekStartDate() + "'" +
             "}";
     }
 }

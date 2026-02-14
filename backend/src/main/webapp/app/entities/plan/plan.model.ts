@@ -12,6 +12,9 @@ export interface IPlan {
   workoutIntensity?: number | null;
   source?: string | null;
   createdAt?: dayjs.Dayjs | null;
+  mealPlanJson?: string | null;
+  workoutPlanJson?: string | null;
+  weekStartDate?: dayjs.Dayjs | null;
   profile?: Pick<IUserProfile, 'id'> | null;
 }
 

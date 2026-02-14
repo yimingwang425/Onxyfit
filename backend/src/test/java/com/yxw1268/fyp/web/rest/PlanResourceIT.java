@@ -19,6 +19,8 @@ import com.yxw1268.fyp.service.mapper.PlanMapper;
 import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
@@ -64,6 +66,15 @@ class PlanResourceIT {
     private static final Instant DEFAULT_CREATED_AT = Instant.ofEpochMilli(0L);
     private static final Instant UPDATED_CREATED_AT = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
+    private static final String DEFAULT_MEAL_PLAN_JSON = "AAAAAAAAAA";
+    private static final String UPDATED_MEAL_PLAN_JSON = "BBBBBBBBBB";
+
+    private static final String DEFAULT_WORKOUT_PLAN_JSON = "AAAAAAAAAA";
+    private static final String UPDATED_WORKOUT_PLAN_JSON = "BBBBBBBBBB";
+
+    private static final LocalDate DEFAULT_WEEK_START_DATE = LocalDate.ofEpochDay(0L);
+    private static final LocalDate UPDATED_WEEK_START_DATE = LocalDate.now(ZoneId.systemDefault());
+
     private static final String ENTITY_API_URL = "/api/plans";
     private static final String ENTITY_API_URL_ID = ENTITY_API_URL + "/{id}";
 
@@ -104,7 +115,10 @@ class PlanResourceIT {
             .workoutType(DEFAULT_WORKOUT_TYPE)
             .workoutIntensity(DEFAULT_WORKOUT_INTENSITY)
             .source(DEFAULT_SOURCE)
-            .createdAt(DEFAULT_CREATED_AT);
+            .createdAt(DEFAULT_CREATED_AT)
+            .mealPlanJson(DEFAULT_MEAL_PLAN_JSON)
+            .workoutPlanJson(DEFAULT_WORKOUT_PLAN_JSON)
+            .weekStartDate(DEFAULT_WEEK_START_DATE);
         // Add required entity
         UserProfile userProfile;
         if (TestUtil.findAll(em, UserProfile.class).isEmpty()) {
@@ -133,7 +147,10 @@ class PlanResourceIT {
             .workoutType(UPDATED_WORKOUT_TYPE)
             .workoutIntensity(UPDATED_WORKOUT_INTENSITY)
             .source(UPDATED_SOURCE)
-            .createdAt(UPDATED_CREATED_AT);
+            .createdAt(UPDATED_CREATED_AT)
+            .mealPlanJson(UPDATED_MEAL_PLAN_JSON)
+            .workoutPlanJson(UPDATED_WORKOUT_PLAN_JSON)
+            .weekStartDate(UPDATED_WEEK_START_DATE);
         // Add required entity
         UserProfile userProfile;
         if (TestUtil.findAll(em, UserProfile.class).isEmpty()) {
@@ -323,7 +340,10 @@ class PlanResourceIT {
             .andExpect(jsonPath("$.[*].workoutType").value(hasItem(DEFAULT_WORKOUT_TYPE.toString())))
             .andExpect(jsonPath("$.[*].workoutIntensity").value(hasItem(sameNumber(DEFAULT_WORKOUT_INTENSITY))))
             .andExpect(jsonPath("$.[*].source").value(hasItem(DEFAULT_SOURCE)))
-            .andExpect(jsonPath("$.[*].createdAt").value(hasItem(DEFAULT_CREATED_AT.toString())));
+            .andExpect(jsonPath("$.[*].createdAt").value(hasItem(DEFAULT_CREATED_AT.toString())))
+            .andExpect(jsonPath("$.[*].mealPlanJson").value(hasItem(DEFAULT_MEAL_PLAN_JSON)))
+            .andExpect(jsonPath("$.[*].workoutPlanJson").value(hasItem(DEFAULT_WORKOUT_PLAN_JSON)))
+            .andExpect(jsonPath("$.[*].weekStartDate").value(hasItem(DEFAULT_WEEK_START_DATE.toString())));
     }
 
     @Test
@@ -345,7 +365,10 @@ class PlanResourceIT {
             .andExpect(jsonPath("$.workoutType").value(DEFAULT_WORKOUT_TYPE.toString()))
             .andExpect(jsonPath("$.workoutIntensity").value(sameNumber(DEFAULT_WORKOUT_INTENSITY)))
             .andExpect(jsonPath("$.source").value(DEFAULT_SOURCE))
-            .andExpect(jsonPath("$.createdAt").value(DEFAULT_CREATED_AT.toString()));
+            .andExpect(jsonPath("$.createdAt").value(DEFAULT_CREATED_AT.toString()))
+            .andExpect(jsonPath("$.mealPlanJson").value(DEFAULT_MEAL_PLAN_JSON))
+            .andExpect(jsonPath("$.workoutPlanJson").value(DEFAULT_WORKOUT_PLAN_JSON))
+            .andExpect(jsonPath("$.weekStartDate").value(DEFAULT_WEEK_START_DATE.toString()));
     }
 
     @Test
@@ -375,7 +398,10 @@ class PlanResourceIT {
             .workoutType(UPDATED_WORKOUT_TYPE)
             .workoutIntensity(UPDATED_WORKOUT_INTENSITY)
             .source(UPDATED_SOURCE)
-            .createdAt(UPDATED_CREATED_AT);
+            .createdAt(UPDATED_CREATED_AT)
+            .mealPlanJson(UPDATED_MEAL_PLAN_JSON)
+            .workoutPlanJson(UPDATED_WORKOUT_PLAN_JSON)
+            .weekStartDate(UPDATED_WEEK_START_DATE);
         PlanDTO planDTO = planMapper.toDto(updatedPlan);
 
         restPlanMockMvc
@@ -457,7 +483,12 @@ class PlanResourceIT {
         Plan partialUpdatedPlan = new Plan();
         partialUpdatedPlan.setId(plan.getId());
 
-        partialUpdatedPlan.carbsG(UPDATED_CARBS_G).workoutIntensity(UPDATED_WORKOUT_INTENSITY);
+        partialUpdatedPlan
+            .carbsG(UPDATED_CARBS_G)
+            .workoutIntensity(UPDATED_WORKOUT_INTENSITY)
+            .mealPlanJson(UPDATED_MEAL_PLAN_JSON)
+            .workoutPlanJson(UPDATED_WORKOUT_PLAN_JSON)
+            .weekStartDate(UPDATED_WEEK_START_DATE);
 
         restPlanMockMvc
             .perform(
@@ -493,7 +524,10 @@ class PlanResourceIT {
             .workoutType(UPDATED_WORKOUT_TYPE)
             .workoutIntensity(UPDATED_WORKOUT_INTENSITY)
             .source(UPDATED_SOURCE)
-            .createdAt(UPDATED_CREATED_AT);
+            .createdAt(UPDATED_CREATED_AT)
+            .mealPlanJson(UPDATED_MEAL_PLAN_JSON)
+            .workoutPlanJson(UPDATED_WORKOUT_PLAN_JSON)
+            .weekStartDate(UPDATED_WEEK_START_DATE);
 
         restPlanMockMvc
             .perform(

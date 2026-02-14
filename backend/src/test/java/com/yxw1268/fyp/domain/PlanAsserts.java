@@ -64,7 +64,10 @@ public class PlanAsserts {
                     .isEqualTo(expected.getWorkoutIntensity())
             )
             .satisfies(a -> assertThat(a.getSource()).as("check source").isEqualTo(expected.getSource()))
-            .satisfies(a -> assertThat(a.getCreatedAt()).as("check createdAt").isEqualTo(expected.getCreatedAt()));
+            .satisfies(a -> assertThat(a.getCreatedAt()).as("check createdAt").isEqualTo(expected.getCreatedAt()))
+            .satisfies(a -> assertThat(a.getMealPlanJson()).as("check mealPlanJson").isEqualTo(expected.getMealPlanJson()))
+            .satisfies(a -> assertThat(a.getWorkoutPlanJson()).as("check workoutPlanJson").isEqualTo(expected.getWorkoutPlanJson()))
+            .satisfies(a -> assertThat(a.getWeekStartDate()).as("check weekStartDate").isEqualTo(expected.getWeekStartDate()));
     }
 
     /**

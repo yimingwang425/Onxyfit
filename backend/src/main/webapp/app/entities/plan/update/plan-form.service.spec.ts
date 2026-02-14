@@ -28,6 +28,9 @@ describe('Plan Form Service', () => {
             workoutIntensity: expect.any(Object),
             source: expect.any(Object),
             createdAt: expect.any(Object),
+            mealPlanJson: expect.any(Object),
+            workoutPlanJson: expect.any(Object),
+            weekStartDate: expect.any(Object),
             profile: expect.any(Object),
           }),
         );
@@ -47,6 +50,9 @@ describe('Plan Form Service', () => {
             workoutIntensity: expect.any(Object),
             source: expect.any(Object),
             createdAt: expect.any(Object),
+            mealPlanJson: expect.any(Object),
+            workoutPlanJson: expect.any(Object),
+            weekStartDate: expect.any(Object),
             profile: expect.any(Object),
           }),
         );

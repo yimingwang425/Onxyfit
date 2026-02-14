@@ -39,6 +39,9 @@ type PlanFormGroupContent = {
   workoutIntensity: FormControl<PlanFormRawValue['workoutIntensity']>;
   source: FormControl<PlanFormRawValue['source']>;
   createdAt: FormControl<PlanFormRawValue['createdAt']>;
+  mealPlanJson: FormControl<PlanFormRawValue['mealPlanJson']>;
+  workoutPlanJson: FormControl<PlanFormRawValue['workoutPlanJson']>;
+  weekStartDate: FormControl<PlanFormRawValue['weekStartDate']>;
   profile: FormControl<PlanFormRawValue['profile']>;
 };
 
@@ -81,6 +84,9 @@ export class PlanFormService {
       createdAt: new FormControl(planRawValue.createdAt, {
         validators: [Validators.required],
       }),
+      mealPlanJson: new FormControl(planRawValue.mealPlanJson),
+      workoutPlanJson: new FormControl(planRawValue.workoutPlanJson),
+      weekStartDate: new FormControl(planRawValue.weekStartDate),
       profile: new FormControl(planRawValue.profile, {
         validators: [Validators.required],
       }),

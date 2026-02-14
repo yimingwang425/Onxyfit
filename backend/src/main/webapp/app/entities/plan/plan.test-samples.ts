@@ -13,14 +13,16 @@ export const sampleWithRequiredData: IPlan = {
 };
 
 export const sampleWithPartialData: IPlan = {
-  id: 30510,
-  caloriesKcal: 1228,
-  proteinG: 24.06,
-  carbsG: 929.53,
-  fatG: 454.12,
-  workoutType: 'FBW',
-  source: 'brr replicate sadly',
-  createdAt: dayjs('2025-11-28T22:45'),
+  id: 30458,
+  caloriesKcal: 2779,
+  proteinG: 13.49,
+  carbsG: 823.5,
+  fatG: 155.62,
+  workoutType: 'PPL',
+  source: 'yippee unexpectedly offensively',
+  createdAt: dayjs('2025-11-29T12:02'),
+  workoutPlanJson: '../fake-data/blob/hipster.txt',
+  weekStartDate: dayjs('2025-11-28'),
 };
 
 export const sampleWithFullData: IPlan = {
@@ -33,6 +35,9 @@ export const sampleWithFullData: IPlan = {
   workoutIntensity: 0.71,
   source: 'yet whisper happy',
   createdAt: dayjs('2025-11-29T08:13'),
+  mealPlanJson: '../fake-data/blob/hipster.txt',
+  workoutPlanJson: '../fake-data/blob/hipster.txt',
+  weekStartDate: dayjs('2025-11-29'),
 };
 
 export const sampleWithNewData: NewPlan = {

@@ -1,16 +1,13 @@
 package com.yxw1268.fyp.web.rest;
 
 import com.yxw1268.fyp.repository.UserProfileRepository;
-import com.yxw1268.fyp.security.SecurityUtils;
 import com.yxw1268.fyp.service.UserProfileService;
 import com.yxw1268.fyp.service.dto.UserProfileDTO;
-import com.yxw1268.fyp.service.mapper.UserProfileMapper;
 import com.yxw1268.fyp.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -45,39 +42,21 @@ public class UserProfileResource {
 
     private final UserProfileRepository userProfileRepository;
 
-    private final UserProfileMapper userProfileMapper;
-
-    public UserProfileResource(
-        UserProfileService userProfileService,
-        UserProfileRepository userProfileRepository,
-        UserProfileMapper userProfileMapper
-    ) {
+    public UserProfileResource(UserProfileService userProfileService, UserProfileRepository userProfileRepository) {
         this.userProfileService = userProfileService;
         this.userProfileRepository = userProfileRepository;
-        this.userProfileMapper = userProfileMapper;
     }
 
     /**
      * {@code POST  /user-profiles} : Create a new userProfile.
+     *
+     * @param userProfileDTO the userProfileDTO to create.
+     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new userProfileDTO, or with status {@code 400 (Bad Request)} if the userProfile has already an ID.
+     * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("")
     public ResponseEntity<UserProfileDTO> createUserProfile(@Valid @RequestBody UserProfileDTO userProfileDTO) throws URISyntaxException {
         LOG.debug("REST request to save UserProfile : {}", userProfileDTO);
-
-        String currentUserLogin = SecurityUtils.getCurrentUserLogin().orElse("");
-        Optional<com.yxw1268.fyp.domain.UserProfile> existingProfile = userProfileRepository.findOneByUserLogin(currentUserLogin);
-        if (existingProfile.isPresent()) {
-            LOG.debug("UserProfile already exists for user: {}, performing UPDATE instead of CREATE", currentUserLogin);
-            
-            Long existingId = existingProfile.get().getId();
-            userProfileDTO.setId(existingId);
-            UserProfileDTO result = userProfileService.update(userProfileDTO);
-            
-            return ResponseEntity.ok()
-                .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, userProfileDTO.getId().toString()))
-                .body(result);
-        }
-        
         if (userProfileDTO.getId() != null) {
             throw new BadRequestAlertException("A new userProfile cannot already have an ID", ENTITY_NAME, "idexists");
         }
@@ -89,6 +68,13 @@ public class UserProfileResource {
 
     /**
      * {@code PUT  /user-profiles/:id} : Updates an existing userProfile.
+     *
+     * @param id the id of the userProfileDTO to save.
+     * @param userProfileDTO the userProfileDTO to update.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated userProfileDTO,
+     * or with status {@code 400 (Bad Request)} if the userProfileDTO is not valid,
+     * or with status {@code 500 (Internal Server Error)} if the userProfileDTO couldn't be updated.
+     * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/{id}")
     public ResponseEntity<UserProfileDTO> updateUserProfile(
@@ -115,6 +101,14 @@ public class UserProfileResource {
 
     /**
      * {@code PATCH  /user-profiles/:id} : Partial updates given fields of an existing userProfile, field will ignore if it is null
+     *
+     * @param id the id of the userProfileDTO to save.
+     * @param userProfileDTO the userProfileDTO to update.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated userProfileDTO,
+     * or with status {@code 400 (Bad Request)} if the userProfileDTO is not valid,
+     * or with status {@code 404 (Not Found)} if the userProfileDTO is not found,
+     * or with status {@code 500 (Internal Server Error)} if the userProfileDTO couldn't be updated.
+     * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<UserProfileDTO> partialUpdateUserProfile(
@@ -142,30 +136,33 @@ public class UserProfileResource {
     }
 
     /**
-     * {@code GET  /user-profiles} : get userProfiles for current user.
-     * Return only the profile of the currently logged-in user.
+     * {@code GET  /user-profiles} : get all the userProfiles.
+     *
+     * @param pageable the pagination information.
+     * @param eagerload flag to eager load entities from relationships (This is applicable for many-to-many).
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of userProfiles in body.
      */
     @GetMapping("")
     public ResponseEntity<List<UserProfileDTO>> getAllUserProfiles(
         @org.springdoc.core.annotations.ParameterObject Pageable pageable,
         @RequestParam(name = "eagerload", required = false, defaultValue = "true") boolean eagerload
     ) {
-        LOG.debug("REST request to get UserProfile for current user");
-
-        String currentUserLogin = SecurityUtils.getCurrentUserLogin().orElse("");
-
-        Optional<com.yxw1268.fyp.domain.UserProfile> profile = userProfileRepository.findOneByUserLogin(currentUserLogin);
-
-        List<UserProfileDTO> result = profile
-            .map(userProfileMapper::toDto)
-            .map(Collections::singletonList)
-            .orElse(Collections.emptyList());
-
-        return ResponseEntity.ok().body(result);
+        LOG.debug("REST request to get a page of UserProfiles");
+        Page<UserProfileDTO> page;
+        if (eagerload) {
+            page = userProfileService.findAllWithEagerRelationships(pageable);
+        } else {
+            page = userProfileService.findAll(pageable);
+        }
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+        return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
     /**
      * {@code GET  /user-profiles/:id} : get the "id" userProfile.
+     *
+     * @param id the id of the userProfileDTO to retrieve.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the userProfileDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
     public ResponseEntity<UserProfileDTO> getUserProfile(@PathVariable("id") Long id) {
@@ -176,6 +173,9 @@ public class UserProfileResource {
 
     /**
      * {@code DELETE  /user-profiles/:id} : delete the "id" userProfile.
+     *
+     * @param id the id of the userProfileDTO to delete.
+     * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUserProfile(@PathVariable("id") Long id) {

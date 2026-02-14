@@ -5,14 +5,16 @@ import { Observable, map } from 'rxjs';
 import dayjs from 'dayjs/esm';
 
 import { isPresent } from 'app/core/util/operators';
+import { DATE_FORMAT } from 'app/config/input.constants';
 import { ApplicationConfigService } from 'app/core/config/application-config.service';
 import { createRequestOption } from 'app/core/request/request-util';
 import { IPlan, NewPlan } from '../plan.model';
 
 export type PartialUpdatePlan = Partial<IPlan> & Pick<IPlan, 'id'>;
 
-type RestOf<T extends IPlan | NewPlan> = Omit<T, 'createdAt'> & {
+type RestOf<T extends IPlan | NewPlan> = Omit<T, 'createdAt' | 'weekStartDate'> & {
   createdAt?: string | null;
+  weekStartDate?: string | null;
 };
 
 export type RestPlan = RestOf<IPlan>;
@@ -99,6 +101,7 @@ export class PlanService {
     return {
       ...plan,
       createdAt: plan.createdAt?.toJSON() ?? null,
+      weekStartDate: plan.weekStartDate?.format(DATE_FORMAT) ?? null,
     };
   }
 
@@ -106,6 +109,7 @@ export class PlanService {
     return {
       ...restPlan,
       createdAt: restPlan.createdAt ? dayjs(restPlan.createdAt) : undefined,
+      weekStartDate: restPlan.weekStartDate ? dayjs(restPlan.weekStartDate) : undefined,
     };
   }
 

@@ -54,6 +54,18 @@
       "fieldName": "createdAt",
       "fieldType": "Instant",
       "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "mealPlanJson",
+      "fieldType": "TextBlob"
+    },
+    {
+      "fieldName": "workoutPlanJson",
+      "fieldType": "TextBlob"
+    },
+    {
+      "fieldName": "weekStartDate",
+      "fieldType": "LocalDate"
     }
   ],
   "name": "Plan",

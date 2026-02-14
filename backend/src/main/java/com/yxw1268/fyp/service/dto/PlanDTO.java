@@ -1,10 +1,12 @@
 package com.yxw1268.fyp.service.dto;
 
 import com.yxw1268.fyp.domain.enumeration.WorkoutType;
+import jakarta.persistence.Lob;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Objects;
 
 /**
@@ -46,6 +48,14 @@ public class PlanDTO implements Serializable {
 
     @NotNull
     private Instant createdAt;
+
+    @Lob
+    private String mealPlanJson;
+
+    @Lob
+    private String workoutPlanJson;
+
+    private LocalDate weekStartDate;
 
     @NotNull
     private UserProfileDTO profile;
@@ -122,6 +132,30 @@ public class PlanDTO implements Serializable {
         this.createdAt = createdAt;
     }
 
+    public String getMealPlanJson() {
+        return mealPlanJson;
+    }
+
+    public void setMealPlanJson(String mealPlanJson) {
+        this.mealPlanJson = mealPlanJson;
+    }
+
+    public String getWorkoutPlanJson() {
+        return workoutPlanJson;
+    }
+
+    public void setWorkoutPlanJson(String workoutPlanJson) {
+        this.workoutPlanJson = workoutPlanJson;
+    }
+
+    public LocalDate getWeekStartDate() {
+        return weekStartDate;
+    }
+
+    public void setWeekStartDate(LocalDate weekStartDate) {
+        this.weekStartDate = weekStartDate;
+    }
+
     public UserProfileDTO getProfile() {
         return profile;
     }
@@ -164,6 +198,9 @@ public class PlanDTO implements Serializable {
             ", workoutIntensity=" + getWorkoutIntensity() +
             ", source='" + getSource() + "'" +
             ", createdAt='" + getCreatedAt() + "'" +
+            ", mealPlanJson='" + getMealPlanJson() + "'" +
+            ", workoutPlanJson='" + getWorkoutPlanJson() + "'" +
+            ", weekStartDate='" + getWeekStartDate() + "'" +
             ", profile=" + getProfile() +
             "}";
     }

@@ -23,7 +23,11 @@ entity Plan {
   workoutType WorkoutType,
   workoutIntensity BigDecimal min(0.0) max(1.0),
   source String required,
-  createdAt Instant required
+  createdAt Instant required,
+
+  mealPlanJson TextBlob,
+  workoutPlanJson TextBlob,
+  weekStartDate LocalDate
 }
 
 entity ProgressLog {

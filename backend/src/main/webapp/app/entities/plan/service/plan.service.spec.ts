@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 
+import { DATE_FORMAT } from 'app/config/input.constants';
 import { IPlan } from '../plan.model';
 import { sampleWithFullData, sampleWithNewData, sampleWithPartialData, sampleWithRequiredData } from '../plan.test-samples';
 
@@ -10,6 +11,7 @@ import { PlanService, RestPlan } from './plan.service';
 const requireRestSample: RestPlan = {
   ...sampleWithRequiredData,
   createdAt: sampleWithRequiredData.createdAt?.toJSON(),
+  weekStartDate: sampleWithRequiredData.weekStartDate?.format(DATE_FORMAT),
 };
 
 describe('Plan Service', () => {

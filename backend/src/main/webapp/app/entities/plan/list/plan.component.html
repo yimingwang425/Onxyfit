@@ -96,6 +96,27 @@
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
             </th>
+            <th scope="col" jhiSortBy="mealPlanJson">
+              <div class="d-flex">
+                <span jhiTranslate="fypApp.plan.mealPlanJson">Meal Plan Json</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="workoutPlanJson">
+              <div class="d-flex">
+                <span jhiTranslate="fypApp.plan.workoutPlanJson">Workout Plan Json</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="weekStartDate">
+              <div class="d-flex">
+                <span jhiTranslate="fypApp.plan.weekStartDate">Week Start Date</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
             <th scope="col" jhiSortBy="profile.id">
               <div class="d-flex">
                 <span jhiTranslate="fypApp.plan.profile">Profile</span>
@@ -121,6 +142,9 @@
               <td>{{ plan.workoutIntensity }}</td>
               <td>{{ plan.source }}</td>
               <td>{{ plan.createdAt | formatMediumDatetime }}</td>
+              <td>{{ plan.mealPlanJson }}</td>
+              <td>{{ plan.workoutPlanJson }}</td>
+              <td>{{ plan.weekStartDate | formatMediumDate }}</td>
               <td>
                 @if (plan.profile) {
                   <div>

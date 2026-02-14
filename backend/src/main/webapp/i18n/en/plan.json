@@ -26,6 +26,9 @@
       "workoutIntensity": "Workout Intensity",
       "source": "Source",
       "createdAt": "Created At",
+      "mealPlanJson": "Meal Plan Json",
+      "workoutPlanJson": "Workout Plan Json",
+      "weekStartDate": "Week Start Date",
       "profile": "Profile"
     }
   }

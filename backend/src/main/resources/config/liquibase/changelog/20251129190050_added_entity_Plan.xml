@@ -38,6 +38,15 @@
             <column name="created_at" type="${datetimeType}">
                 <constraints nullable="false" />
             </column>
+            <column name="meal_plan_json" type="${clobType}">
+                <constraints nullable="true" />
+            </column>
+            <column name="workout_plan_json" type="${clobType}">
+                <constraints nullable="true" />
+            </column>
+            <column name="week_start_date" type="date">
+                <constraints nullable="true" />
+            </column>
             <column name="profile_id" type="bigint">
                 <constraints nullable="false" />
             </column>
@@ -71,6 +80,9 @@
             <column name="workout_intensity" type="numeric"/>
             <column name="source" type="string"/>
             <column name="created_at" type="date"/>
+            <column name="meal_plan_json" type="clob"/>
+            <column name="workout_plan_json" type="clob"/>
+            <column name="week_start_date" type="date"/>
             <column name="profile_id" type="numeric"/>
             <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here -->
         </loadData>

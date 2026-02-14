@@ -49,6 +49,18 @@
           <dd>
             <span>{{ planRef.createdAt | formatMediumDatetime }}</span>
           </dd>
+          <dt><span jhiTranslate="fypApp.plan.mealPlanJson">Meal Plan Json</span></dt>
+          <dd>
+            <span>{{ planRef.mealPlanJson }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.plan.workoutPlanJson">Workout Plan Json</span></dt>
+          <dd>
+            <span>{{ planRef.workoutPlanJson }}</span>
+          </dd>
+          <dt><span jhiTranslate="fypApp.plan.weekStartDate">Week Start Date</span></dt>
+          <dd>
+            <span>{{ planRef.weekStartDate | formatMediumDate }}</span>
+          </dd>
           <dt><span jhiTranslate="fypApp.plan.profile">Profile</span></dt>
           <dd>
             @if (plan()!.profile) {

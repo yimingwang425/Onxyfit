@@ -123,3 +123,7 @@ jhipster:
 # ===================================================================
 
 # application:
+# ML Service Configuration
+app:
+  ml-service:
+    url: http://localhost:5001

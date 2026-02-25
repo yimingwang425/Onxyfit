@@ -1,6 +1,9 @@
 package com.yxw1268.fyp.web.rest;
 
+import com.yxw1268.fyp.domain.User;
 import com.yxw1268.fyp.repository.PlanRepository;
+import com.yxw1268.fyp.repository.UserRepository;
+import com.yxw1268.fyp.security.SecurityUtils;
 import com.yxw1268.fyp.service.PlanService;
 import com.yxw1268.fyp.service.dto.PlanDTO;
 import com.yxw1268.fyp.web.rest.errors.BadRequestAlertException;
@@ -42,9 +45,12 @@ public class PlanResource {
 
     private final PlanRepository planRepository;
 
-    public PlanResource(PlanService planService, PlanRepository planRepository) {
+    private final UserRepository userRepository;
+
+    public PlanResource(PlanService planService, PlanRepository planRepository, UserRepository userRepository) {
         this.planService = planService;
         this.planRepository = planRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -175,5 +181,28 @@ public class PlanResource {
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
+    }
+
+    /**
+     * {@code POST  /plans/generate} : Generate a plan for current user
+     *
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the generated plan in body
+     */
+    @PostMapping("/generate")
+    public ResponseEntity<PlanDTO> generatePlan() {
+        LOG.debug("REST request to generate AI plan for current user");
+        
+        String userLogin = SecurityUtils
+            .getCurrentUserLogin()
+            .orElseThrow(() -> new RuntimeException("No user logged in"));
+        
+        // Obtain User ID
+        User user = userRepository
+            .findOneByLogin(userLogin)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        PlanDTO result = planService.generatePlanForUser(user.getId());
+        
+        return ResponseEntity.ok().body(result);
     }
 }

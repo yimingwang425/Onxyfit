@@ -7,7 +7,6 @@ import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDate;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
@@ -69,16 +68,11 @@ public class Plan implements Serializable {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    @Lob
-    @Column(name = "meal_plan_json")
+    @Column(name = "meal_plan_json", columnDefinition = "TEXT")
     private String mealPlanJson;
 
-    @Lob
-    @Column(name = "workout_plan_json")
+    @Column(name = "workout_plan_json", columnDefinition = "TEXT")
     private String workoutPlanJson;
-
-    @Column(name = "week_start_date")
-    private LocalDate weekStartDate;
 
     @ManyToOne(optional = false)
     @NotNull
@@ -204,6 +198,19 @@ public class Plan implements Serializable {
         this.createdAt = createdAt;
     }
 
+    public UserProfile getProfile() {
+        return this.profile;
+    }
+
+    public void setProfile(UserProfile userProfile) {
+        this.profile = userProfile;
+    }
+
+    public Plan profile(UserProfile userProfile) {
+        this.setProfile(userProfile);
+        return this;
+    }
+
     public String getMealPlanJson() {
         return this.mealPlanJson;
     }
@@ -228,32 +235,6 @@ public class Plan implements Serializable {
 
     public void setWorkoutPlanJson(String workoutPlanJson) {
         this.workoutPlanJson = workoutPlanJson;
-    }
-
-    public LocalDate getWeekStartDate() {
-        return this.weekStartDate;
-    }
-
-    public Plan weekStartDate(LocalDate weekStartDate) {
-        this.setWeekStartDate(weekStartDate);
-        return this;
-    }
-
-    public void setWeekStartDate(LocalDate weekStartDate) {
-        this.weekStartDate = weekStartDate;
-    }
-
-    public UserProfile getProfile() {
-        return this.profile;
-    }
-
-    public void setProfile(UserProfile userProfile) {
-        this.profile = userProfile;
-    }
-
-    public Plan profile(UserProfile userProfile) {
-        this.setProfile(userProfile);
-        return this;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here
@@ -288,9 +269,8 @@ public class Plan implements Serializable {
             ", workoutIntensity=" + getWorkoutIntensity() +
             ", source='" + getSource() + "'" +
             ", createdAt='" + getCreatedAt() + "'" +
-            ", mealPlanJson='" + getMealPlanJson() + "'" +
-            ", workoutPlanJson='" + getWorkoutPlanJson() + "'" +
-            ", weekStartDate='" + getWeekStartDate() + "'" +
+            ", mealPlanJson='" + (getMealPlanJson() != null ? "..." : "null") + "'" +
+            ", workoutPlanJson='" + (getWorkoutPlanJson() != null ? "..." : "null") + "'" +
             "}";
     }
 }

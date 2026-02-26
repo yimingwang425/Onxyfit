@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { of, Observable } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { delay, map, switchMap } from 'rxjs/operators';
+import { PlanService, AIPlan } from './plan.service';
 
 export interface Meal {
   name: string;
@@ -16,6 +17,8 @@ export interface DailyPlan {
   lunch: Meal;
   dinner: Meal;
   snack: Meal;
+  aiData?: AIPlan;
+  aiSuggestedCalories?: number;
 }
 
 export interface WeeklyPlan {
@@ -28,6 +31,8 @@ export interface WeeklyPlan {
   providedIn: 'root',
 })
 export class MealPlanService {
+  private useMock = false;
+
   private mockMeals = {
     oats: {
       name: 'High-Protein Oatmeal Bowl',
@@ -75,49 +80,172 @@ export class MealPlanService {
     },
   };
 
-  constructor() {}
+  constructor(private planService: PlanService) {}
 
   getTodaysPlan(): Observable<DailyPlan> {
-    const today: DailyPlan = {
+    if (this.useMock) {
+      const today: DailyPlan = {
+        breakfast: this.mockMeals.oats,
+        lunch: this.mockMeals.chickenSalad,
+        dinner: this.mockMeals.salmonRice,
+        snack: this.mockMeals.proteinShake,
+      };
+      return of(today).pipe(delay(300));
+    } else {
+      const aiPlan = this.planService.getCurrentPlan();
+      const todayDow = new Date().getDay(); // 0=Sun ... 6=Sat
+      if (aiPlan) {
+        return of(this.buildPlanFromAI(aiPlan, todayDow)).pipe(delay(100));
+      } else {
+        return this.planService.generatePlan().pipe(
+          map(aiPlan => this.buildPlanFromAI(aiPlan, todayDow))
+        );
+      }
+    }
+  }
+
+  getWeeklyPlan(): Observable<WeeklyPlan[]> {
+    if (this.useMock) {
+      const week: WeeklyPlan[] = [
+        {
+          day: 'Wed',
+          dayShort: 'Wed',
+          plan: {
+            breakfast: this.mockMeals.oats,
+            lunch: this.mockMeals.salmonRice,
+            dinner: this.mockMeals.chickenSalad,
+            snack: this.mockMeals.proteinShake,
+          },
+        },
+        { day: 'Thu', dayShort: 'Thu', plan: null },
+        {
+          day: 'Fri',
+          dayShort: 'Fri',
+          plan: {
+            breakfast: this.mockMeals.oats,
+            lunch: this.mockMeals.chickenSalad,
+            dinner: this.mockMeals.salmonRice,
+            snack: this.mockMeals.proteinShake,
+          },
+        },
+        { day: 'Sat', dayShort: 'Sat', plan: null },
+        { day: 'Sun', dayShort: 'Sun', plan: null },
+      ];
+      return of(week).pipe(delay(500));
+    } else {
+      const aiPlan = this.planService.getCurrentPlan();
+      if (aiPlan) {
+        return of(this.buildWeeklyPlanFromAI(aiPlan)).pipe(delay(100));
+      } else {
+        return this.planService.generatePlan().pipe(
+          map(aiPlan => this.buildWeeklyPlanFromAI(aiPlan))
+        );
+      }
+    }
+  }
+
+  /**
+   * Build a DailyPlan for a specific day of the week
+   * Looks up that day's meals from the weekly meal plan
+   */
+  private buildPlanFromAI(aiPlan: AIPlan, dayOfWeek: number): DailyPlan {
+
+    // get the weekly meal plan object
+    let weeklyMealPlan = (aiPlan as any).weeklyMealPlan || (aiPlan as any).mealPlan;
+
+    if (!weeklyMealPlan && (aiPlan as any).mealPlanJson) {
+      try {
+        console.log('Parsing mealPlanJson from database');
+        weeklyMealPlan = JSON.parse((aiPlan as any).mealPlanJson);
+      } catch (e) {
+        console.error('Failed to parse mealPlanJson:', e);
+      }
+    }
+
+    if (weeklyMealPlan) {
+      const dayKey = String(dayOfWeek);
+      const dayPlan = weeklyMealPlan[dayKey];
+
+      if (dayPlan && dayPlan.breakfast) {
+        console.log(`Found Llama meals for day ${dayOfWeek} (${this.getDayName(dayOfWeek)})`);
+        return {
+          breakfast: this.convertLlamaMeal(dayPlan.breakfast),
+          lunch: this.convertLlamaMeal(dayPlan.lunch),
+          dinner: this.convertLlamaMeal(dayPlan.dinner),
+          snack: this.convertLlamaMeal(dayPlan.snack),
+          aiData: aiPlan,
+          aiSuggestedCalories: aiPlan.caloriesKcal
+        };
+      }
+
+      if (weeklyMealPlan.breakfast) {
+        console.log('Using old single-day format (backward compat)');
+        return {
+          breakfast: this.convertLlamaMeal(weeklyMealPlan.breakfast),
+          lunch: this.convertLlamaMeal(weeklyMealPlan.lunch),
+          dinner: this.convertLlamaMeal(weeklyMealPlan.dinner),
+          snack: this.convertLlamaMeal(weeklyMealPlan.snack),
+          aiData: aiPlan,
+          aiSuggestedCalories: aiPlan.caloriesKcal
+        };
+      }
+    }
+
+    console.log('No Llama meals found, using MOCK data');
+    return {
       breakfast: this.mockMeals.oats,
       lunch: this.mockMeals.chickenSalad,
       dinner: this.mockMeals.salmonRice,
       snack: this.mockMeals.proteinShake,
+      aiData: aiPlan,
+      aiSuggestedCalories: aiPlan.caloriesKcal
     };
-    return of(today).pipe(delay(300));
   }
 
-  // Obtain this week's schedule (mock)
-  // Simulating a user who registered on Wednesday, it only returns data from today (Wednesday) through to Sunday
-  getWeeklyPlan(): Observable<WeeklyPlan[]> {
-    const week: WeeklyPlan[] = [
-      // { day: 'Mon', dayShort: 'Mon', plan: null },
-      // { day: 'Tue', dayShort: 'Tue', plan: null },
-      {
-        day: 'Wed',
-        dayShort: 'Wed',
-        plan: {
-          breakfast: this.mockMeals.oats,
-          lunch: this.mockMeals.salmonRice,
-          dinner: this.mockMeals.chickenSalad,
-          snack: this.mockMeals.proteinShake,
-        },
-      },
-      { day: 'Thu', dayShort: 'Thu', plan: null },
-      {
-        day: 'Fri',
-        dayShort: 'Fri',
-        plan: {
-          breakfast: this.mockMeals.oats,
-          lunch: this.mockMeals.chickenSalad,
-          dinner: this.mockMeals.salmonRice,
-          snack: this.mockMeals.proteinShake,
-        },
-      },
-      { day: 'Sat', dayShort: 'Sat', plan: null },
-      { day: 'Sun', dayShort: 'Sun', plan: null },
-    ];
+  private convertLlamaMeal(llamaMeal: any): Meal {
+    // Convert ingredient objects to strings if needed
+    let ingredients = (llamaMeal.ingredients || []).map((ing: any) => {
+      if (typeof ing === 'string') return ing;
+      return `${ing.quantity || ''} ${ing.unit || ''} ${ing.name || ''}`.trim();
+    });
 
-    return of(week).pipe(delay(500));
+    const dayNames = /^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+/i;
+    const cleanName = (llamaMeal.name || 'Meal').replace(dayNames, '');
+
+    return {
+      name: cleanName,
+      calories: llamaMeal.calories || 0,
+      macros: llamaMeal.macros || { p: 0, c: 0, f: 0 },
+      ingredients,
+      recipe: Array.isArray(llamaMeal.recipe)
+        ? llamaMeal.recipe.map((step: any) => typeof step === 'string' ? step : JSON.stringify(step))
+        : [],
+      amazonLink: 'https://www.amazon.com/fresh'
+    };
+  }
+
+  private buildWeeklyPlanFromAI(aiPlan: AIPlan): WeeklyPlan[] {
+    const today = new Date().getDay(); // 0=Sun, 1=Mon, ...
+    const days: ('Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun')[] =
+      ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    const week: WeeklyPlan[] = [];
+
+    for (let i = today; i <= 6; i++) {
+      const dayName = days[i];
+      const isRestDay = (i === 0 || i === 6);
+
+      week.push({
+        day: dayName,
+        dayShort: dayName,
+        plan: isRestDay ? null : this.buildPlanFromAI(aiPlan, i)
+      });
+    }
+
+    return week;
+  }
+
+  private getDayName(dow: number): string {
+    return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dow] || '?';
   }
 }

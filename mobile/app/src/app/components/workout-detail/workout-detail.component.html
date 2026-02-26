@@ -1,6 +1,6 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>{{ exercise?.name || 'Action Details' }}</ion-title>
+    <ion-title>{{ exercise?.name || 'Exercise Details' }}</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="dismiss()">
         <ion-icon slot="icon-only" name="close-circle-outline"></ion-icon>
@@ -10,27 +10,34 @@
 </ion-header>
 
 <ion-content>
-  <div class="gif-container">
-    <img [src]="exercise?.gifUrl" [alt]="exercise?.name" />
+  <div class="video-container">
+    <video
+      *ngIf="videoUrl"
+      [src]="videoUrl"
+      autoplay
+      loop
+      muted
+      playsinline>
+    </video>
   </div>
 
   <div class="ion-padding">
     <ion-item lines="none" class="sets-reps">
       <ion-label>
-        <h2>{{ exercise?.sets }} Group</h2>
+        <h2>{{ exercise?.sets }} Sets</h2>
       </ion-label>
       <ion-label slot="end">
-        <h2>{{ exercise?.reps }} times per second</h2>
+        <h2>{{ exercise?.reps }} Reps</h2>
       </ion-label>
     </ion-item>
 
     <ion-list-header>
-      <ion-label>Target muscle group</ion-label>
+      <ion-label>Target Muscle Group</ion-label>
     </ion-list-header>
     <ion-chip color="primary">{{ exercise?.targetMuscles }}</ion-chip>
 
     <ion-list-header>
-      <ion-label>Key points of the movement</ion-label>
+      <ion-label>Key Points</ion-label>
     </ion-list-header>
     <ion-item lines="none">
       <ion-text class="notes-text">

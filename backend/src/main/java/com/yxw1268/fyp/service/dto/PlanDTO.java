@@ -16,6 +16,7 @@ import java.util.Objects;
 public class PlanDTO implements Serializable {
 
     private Long id;
+    private Object mealPlan;
 
     @NotNull
     @Min(value = 100)
@@ -162,6 +163,14 @@ public class PlanDTO implements Serializable {
 
     public void setProfile(UserProfileDTO profile) {
         this.profile = profile;
+    }
+
+    public Object getMealPlan() {
+        return mealPlan;
+    }
+
+    public void setMealPlan(Object mealPlan) {
+        this.mealPlan = mealPlan;
     }
 
     @Override

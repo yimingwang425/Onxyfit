@@ -1,9 +1,6 @@
 package com.yxw1268.fyp.web.rest;
 
-import com.yxw1268.fyp.domain.User;
 import com.yxw1268.fyp.repository.PlanRepository;
-import com.yxw1268.fyp.repository.UserRepository;
-import com.yxw1268.fyp.security.SecurityUtils;
 import com.yxw1268.fyp.service.PlanService;
 import com.yxw1268.fyp.service.dto.PlanDTO;
 import com.yxw1268.fyp.web.rest.errors.BadRequestAlertException;
@@ -45,20 +42,13 @@ public class PlanResource {
 
     private final PlanRepository planRepository;
 
-    private final UserRepository userRepository;
-
-    public PlanResource(PlanService planService, PlanRepository planRepository, UserRepository userRepository) {
+    public PlanResource(PlanService planService, PlanRepository planRepository) {
         this.planService = planService;
         this.planRepository = planRepository;
-        this.userRepository = userRepository;
     }
 
     /**
      * {@code POST  /plans} : Create a new plan.
-     *
-     * @param planDTO the planDTO to create.
-     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new planDTO, or with status {@code 400 (Bad Request)} if the plan has already an ID.
-     * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("")
     public ResponseEntity<PlanDTO> createPlan(@Valid @RequestBody PlanDTO planDTO) throws URISyntaxException {
@@ -74,13 +64,6 @@ public class PlanResource {
 
     /**
      * {@code PUT  /plans/:id} : Updates an existing plan.
-     *
-     * @param id the id of the planDTO to save.
-     * @param planDTO the planDTO to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated planDTO,
-     * or with status {@code 400 (Bad Request)} if the planDTO is not valid,
-     * or with status {@code 500 (Internal Server Error)} if the planDTO couldn't be updated.
-     * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/{id}")
     public ResponseEntity<PlanDTO> updatePlan(
@@ -106,15 +89,7 @@ public class PlanResource {
     }
 
     /**
-     * {@code PATCH  /plans/:id} : Partial updates given fields of an existing plan, field will ignore if it is null
-     *
-     * @param id the id of the planDTO to save.
-     * @param planDTO the planDTO to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated planDTO,
-     * or with status {@code 400 (Bad Request)} if the planDTO is not valid,
-     * or with status {@code 404 (Not Found)} if the planDTO is not found,
-     * or with status {@code 500 (Internal Server Error)} if the planDTO couldn't be updated.
-     * @throws URISyntaxException if the Location URI syntax is incorrect.
+     * {@code PATCH  /plans/:id} : Partial updates given fields of an existing plan.
      */
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<PlanDTO> partialUpdatePlan(
@@ -143,9 +118,6 @@ public class PlanResource {
 
     /**
      * {@code GET  /plans} : get all the plans.
-     *
-     * @param pageable the pagination information.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of plans in body.
      */
     @GetMapping("")
     public ResponseEntity<List<PlanDTO>> getAllPlans(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
@@ -157,9 +129,6 @@ public class PlanResource {
 
     /**
      * {@code GET  /plans/:id} : get the "id" plan.
-     *
-     * @param id the id of the planDTO to retrieve.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the planDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
     public ResponseEntity<PlanDTO> getPlan(@PathVariable("id") Long id) {
@@ -170,9 +139,6 @@ public class PlanResource {
 
     /**
      * {@code DELETE  /plans/:id} : delete the "id" plan.
-     *
-     * @param id the id of the planDTO to delete.
-     * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePlan(@PathVariable("id") Long id) {
@@ -184,25 +150,21 @@ public class PlanResource {
     }
 
     /**
-     * {@code POST  /plans/generate} : Generate a plan for current user
-     *
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the generated plan in body
+     * {@code POST  /plans/generate} : Generate a new AI-powered plan for current user.
      */
     @PostMapping("/generate")
     public ResponseEntity<PlanDTO> generatePlan() {
-        LOG.debug("REST request to generate AI plan for current user");
+        LOG.info("REST request to generate AI plan for current user");
         
-        String userLogin = SecurityUtils
-            .getCurrentUserLogin()
-            .orElseThrow(() -> new RuntimeException("No user logged in"));
-        
-        // Obtain User ID
-        User user = userRepository
-            .findOneByLogin(userLogin)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        PlanDTO result = planService.generatePlanForUser(user.getId());
-        
-        return ResponseEntity.ok().body(result);
+        try {
+            PlanDTO planDTO = planService.generatePlanForCurrentUser();
+            
+            return ResponseEntity.ok()
+                .headers(HeaderUtil.createAlert(applicationName, "AI plan generated successfully", planDTO.getId().toString()))
+                .body(planDTO);
+        } catch (Exception e) {
+            LOG.error("Failed to generate AI plan", e);
+            throw new RuntimeException("Failed to generate AI plan: " + e.getMessage());
+        }
     }
 }

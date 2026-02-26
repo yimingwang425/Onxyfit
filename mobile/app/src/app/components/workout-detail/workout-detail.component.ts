@@ -19,6 +19,7 @@ import {
 import { addIcons } from 'ionicons';
 import { closeCircleOutline } from 'ionicons/icons';
 import { Exercise } from '../../services/workout-plan';
+import { UserProfileService } from '../../services/user-profile';
 
 @Component({
   selector: 'app-workout-detail',
@@ -45,11 +46,31 @@ import { Exercise } from '../../services/workout-plan';
 export class WorkoutDetailComponent implements OnInit {
   @Input() exercise!: Exercise;
 
-  constructor(private modalCtrl: ModalController) {
+  videoUrl = '';
+
+  constructor(
+    private modalCtrl: ModalController,
+    private profileService: UserProfileService
+  ) {
     addIcons({ closeCircleOutline });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.loadVideoUrl();
+  }
+
+  private loadVideoUrl() {
+    this.profileService.getProfileData().subscribe({
+      next: (data: any) => {
+        let profile = Array.isArray(data) && data.length > 0 ? data[0] : null;
+        const gender = profile?.metabolicProfile === 'PROFILE_2' ? 'female' : 'male';
+        this.videoUrl = `assets/workout/${gender}/${this.exercise.videoFile}`;
+      },
+      error: () => {
+        this.videoUrl = `assets/workout/male/${this.exercise.videoFile}`;
+      }
+    });
+  }
 
   dismiss() {
     this.modalCtrl.dismiss();

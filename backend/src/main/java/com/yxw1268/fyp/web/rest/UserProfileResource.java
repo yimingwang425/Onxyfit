@@ -1,8 +1,10 @@
 package com.yxw1268.fyp.web.rest;
 
 import com.yxw1268.fyp.repository.UserProfileRepository;
+import com.yxw1268.fyp.security.SecurityUtils;
 import com.yxw1268.fyp.service.UserProfileService;
 import com.yxw1268.fyp.service.dto.UserProfileDTO;
+import com.yxw1268.fyp.service.mapper.UserProfileMapper;
 import com.yxw1268.fyp.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -23,6 +25,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.PaginationUtil;
 import tech.jhipster.web.util.ResponseUtil;
+import java.util.Collections;
 
 /**
  * REST controller for managing {@link com.yxw1268.fyp.domain.UserProfile}.
@@ -42,9 +45,15 @@ public class UserProfileResource {
 
     private final UserProfileRepository userProfileRepository;
 
-    public UserProfileResource(UserProfileService userProfileService, UserProfileRepository userProfileRepository) {
+    private final com.yxw1268.fyp.service.mapper.UserProfileMapper userProfileMapper;
+
+    public UserProfileResource(
+        UserProfileService userProfileService,
+        UserProfileRepository userProfileRepository,
+        UserProfileMapper userProfileMapper) {
         this.userProfileService = userProfileService;
         this.userProfileRepository = userProfileRepository;
+        this.userProfileMapper = userProfileMapper;
     }
 
     /**
@@ -136,27 +145,27 @@ public class UserProfileResource {
     }
 
     /**
-     * {@code GET  /user-profiles} : get all the userProfiles.
-     *
-     * @param pageable the pagination information.
-     * @param eagerload flag to eager load entities from relationships (This is applicable for many-to-many).
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of userProfiles in body.
-     */
-    @GetMapping("")
-    public ResponseEntity<List<UserProfileDTO>> getAllUserProfiles(
-        @org.springdoc.core.annotations.ParameterObject Pageable pageable,
-        @RequestParam(name = "eagerload", required = false, defaultValue = "true") boolean eagerload
-    ) {
-        LOG.debug("REST request to get a page of UserProfiles");
-        Page<UserProfileDTO> page;
-        if (eagerload) {
-            page = userProfileService.findAllWithEagerRelationships(pageable);
-        } else {
-            page = userProfileService.findAll(pageable);
-        }
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-        return ResponseEntity.ok().headers(headers).body(page.getContent());
-    }
+ * {@code GET  /user-profiles} : get current user's profile.
+ */
+@GetMapping("")
+public ResponseEntity<List<UserProfileDTO>> getAllUserProfiles(
+    @org.springdoc.core.annotations.ParameterObject Pageable pageable,
+    @RequestParam(name = "eagerload", required = false, defaultValue = "true") boolean eagerload
+) {
+    LOG.debug("REST request to get UserProfile for current user");
+
+    String currentUserLogin = SecurityUtils.getCurrentUserLogin().orElse("");
+
+    Optional<com.yxw1268.fyp.domain.UserProfile> profile = 
+        userProfileRepository.findOneByUserLogin(currentUserLogin);
+
+    List<UserProfileDTO> result = profile
+        .map(userProfileMapper::toDto)
+        .map(Collections::singletonList)
+        .orElse(Collections.emptyList());
+
+    return ResponseEntity.ok().body(result);
+}
 
     /**
      * {@code GET  /user-profiles/:id} : get the "id" userProfile.

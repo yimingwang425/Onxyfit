@@ -30,8 +30,6 @@ spring:
   docker:
     compose:
       enabled: false
-      profiles:
-        active: dev
   jackson:
     serialization:
       indent-output: true

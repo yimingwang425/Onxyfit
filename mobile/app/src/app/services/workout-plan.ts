@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { of, Observable } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { delay, map } from 'rxjs/operators';
+import { PlanService, AIPlan } from './plan.service';
 
 export interface Exercise {
   name: string;
   sets: number;
   reps: string;
-  gifUrl: string;
+  videoFile: string;
   notes: string;
   targetMuscles: string;
 }
@@ -16,6 +17,7 @@ export interface DailyWorkoutPlan {
   warmUp: Exercise | null;
   exercises: Exercise[];
   coolDown: Exercise | null;
+  aiData?: AIPlan;
 }
 
 export interface WeeklyWorkoutPlan {
@@ -29,118 +31,304 @@ export interface WeeklyWorkoutPlan {
   providedIn: 'root',
 })
 export class WorkoutPlanService {
-  private mockExercises = {
-    jumpingJacks: {
-      name: 'Jumping jacks',
+  private useMock = false;
+
+  private warmUps = {
+    general: {
+      name: 'Jumping Jacks',
       sets: 1,
       reps: '60s',
-      gifUrl: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExYTJib2NmMjhpZGR3eGZ5dGZ2OXBvMnBzaGticG5meWpjZ2Q0bXYzZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/2WdHa8e6m1S5G/giphy.gif',
+      videoFile: 'jumping-jacks.mp4',
       notes: 'Keep your core engaged and land lightly.',
-      targetMuscles: 'entire body',
+      targetMuscles: 'Entire body',
     },
+    upper: {
+      name: 'Incline Push-up',
+      sets: 1,
+      reps: '15 reps',
+      videoFile: 'incline-push-up.mp4',
+      notes: 'Use a bench or elevated surface; great for warming up chest and shoulders.',
+      targetMuscles: 'Chest, Shoulders, core',
+    },
+    lower: {
+      name: 'Bodyweight Squats',
+      sets: 1,
+      reps: '15 reps',
+      videoFile: 'bodyweight-squats.mp4',
+      notes: 'Warm up the hips, knees and ankles before heavy leg work.',
+      targetMuscles: 'Quads, glutes, hip flexors',
+    },
+  };
 
+  private coolDowns = {
+    chest: {
+      name: 'Chest & Shoulder Stretch',
+      sets: 1,
+      reps: '30s each side',
+      videoFile: 'chest-shoulder-stretch.mp4',
+      notes: 'Hold each side gently; do not bounce.',
+      targetMuscles: 'Chest, front deltoids',
+    },
+    back: {
+      name: 'Lat & Upper Back Stretch',
+      sets: 1,
+      reps: '30s each side',
+      videoFile: 'lat-upper-back-stretch.mp4',
+      notes: 'Reach overhead and lean to one side; feel the stretch along your lats.',
+      targetMuscles: 'Lats, upper back',
+    },
+    legs: {
+      name: 'Quad & Hamstring Stretch',
+      sets: 1,
+      reps: '30s each leg',
+      videoFile: 'quad-hamstring-stretch.mp4',
+      notes: 'Hold each stretch gently; keep breathing throughout.',
+      targetMuscles: 'Quads, hamstrings, hip flexors',
+    },
+    fullBody: {
+      name: 'Full Body Cool-Down Stretch',
+      sets: 1,
+      reps: '90s',
+      videoFile: 'full-body-stretch.mp4',
+      notes: 'Stretch chest, back, quads and hamstrings — 30 seconds each.',
+      targetMuscles: 'Full body',
+    },
+  };
+
+  private exercises = {
+    benchPress: {
+      name: 'Bench Press',
+      sets: 4,
+      reps: '8-10',
+      videoFile: 'bench-press.mp4',
+      notes: 'Control the weight on the way down, explosive push up.',
+      targetMuscles: 'Chest, triceps, shoulders',
+    },
     pushUps: {
       name: 'Push-ups',
       sets: 3,
       reps: '10-12',
-      gifUrl: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdXRvOXA3bWdzenZ0ajg0cW5nM2ZpZ3l0cjZzcHd1dXQ2NXJ2cGFjYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/I3EsiwtybAcA2E8s0L/giphy.gif',
+      videoFile: 'push-ups.mp4',
       notes: 'Keep your elbows close to your body and your back straight.',
       targetMuscles: 'Chest, triceps, shoulders',
     },
-    squats: {
-      name: 'Squat',
+    overheadPress: {
+      name: 'Overhead Press',
+      sets: 3,
+      reps: '8-10',
+      videoFile: 'overhead-press.mp4',
+      notes: 'Brace your core; press the bar straight overhead without arching your back.',
+      targetMuscles: 'Shoulders, triceps',
+    },
+    tricepDips: {
+      name: 'Tricep Dips',
       sets: 3,
       reps: '10-12',
-      gifUrl: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExeXE0NWhtMm5zamt4b2RlbDNxMnhtNHNpbXB0N2VpcGh6eDVrNXBjbiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/u2RokWpQfDABa/giphy.gif',
-      notes: 'Do not let your knees extend beyond your toes; sit back through your hips.',
-      targetMuscles: 'Quadriceps femoris, gluteus maximus',
+      videoFile: 'tricep-dips.mp4',
+      notes: 'Keep elbows tucked; lower until upper arms are parallel to the floor.',
+      targetMuscles: 'Triceps, chest, shoulders',
     },
-
-    chestStretch: {
-      name: 'Chest Stretch',
-      sets: 1,
-      reps: '30s',
-      gifUrl: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExd2R4d3RpdzNvd2YwZGZidGo2cjZtbGlmNmFkYWZkM3B0b2N3eWlpZSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o6Zt2fX3y0a4wW3GU/giphy.gif',
-      notes: 'Feel the stretch in your pectoralis major muscles, and avoid shrugging your shoulders.',
-      targetMuscles: 'chest',
+    pullUps: {
+      name: 'Pull-ups',
+      sets: 3,
+      reps: '6-8',
+      videoFile: 'pull-ups.mp4',
+      notes: 'Pull your chest to the bar, control the descent.',
+      targetMuscles: 'Back, biceps',
+    },
+    barbellRow: {
+      name: 'Barbell Row',
+      sets: 4,
+      reps: '8-10',
+      videoFile: 'barbell-row.mp4',
+      notes: 'Hinge at the hips; pull the bar to your lower chest.',
+      targetMuscles: 'Upper back, lats, biceps',
+    },
+    dumbbellCurl: {
+      name: 'Dumbbell Bicep Curl',
+      sets: 3,
+      reps: '10-12',
+      videoFile: 'dumbbell-curl.mp4',
+      notes: 'Control the movement; no swinging.',
+      targetMuscles: 'Biceps',
+    },
+    squats: {
+      name: 'Squat',
+      sets: 4,
+      reps: '8-10',
+      videoFile: 'squats.mp4',
+      notes: 'Do not let your knees extend beyond your toes; sit back through your hips.',
+      targetMuscles: 'Quads, glutes',
+    },
+    deadlift: {
+      name: 'Deadlift',
+      sets: 3,
+      reps: '5-6',
+      videoFile: 'deadlift.mp4',
+      notes: 'Keep your back straight, push through your heels.',
+      targetMuscles: 'Hamstrings, glutes, back',
+    },
+    lunges: {
+      name: 'Walking Lunges',
+      sets: 3,
+      reps: '12 each leg',
+      videoFile: 'lunges.mp4',
+      notes: 'Keep your torso upright; step far enough that both knees reach 90 degrees.',
+      targetMuscles: 'Quads, glutes, hamstrings',
+    },
+    calfRaises: {
+      name: 'Calf Raises',
+      sets: 3,
+      reps: '15-20',
+      videoFile: 'calf-raises.mp4',
+      notes: 'Pause at the top for a full contraction.',
+      targetMuscles: 'Calves',
     },
   };
 
-  constructor() {}
+  private getRoutine(sessionType: string, intensityMultiplier: number): {
+    exercises: Exercise[];
+    warmUp: Exercise;
+    coolDown: Exercise;
+  } {
+    let exercises: Exercise[] = [];
+    let warmUp: Exercise = this.warmUps.general;
+    let coolDown: Exercise = this.coolDowns.fullBody;
 
-  getTodaysPlan(): Observable<DailyWorkoutPlan> {
-    const today: DailyWorkoutPlan = {
-      isRestDay: false,
-      warmUp: this.mockExercises.jumpingJacks,
-      exercises: [this.mockExercises.pushUps, this.mockExercises.squats],
-      coolDown: this.mockExercises.chestStretch,
-    };
-    return of(today).pipe(delay(300));
+    switch (sessionType) {
+      case 'Push':
+        exercises = [this.exercises.benchPress, this.exercises.overheadPress, this.exercises.pushUps, this.exercises.tricepDips];
+        warmUp = this.warmUps.upper;
+        coolDown = this.coolDowns.chest;
+        break;
+      case 'Pull':
+        exercises = [this.exercises.barbellRow, this.exercises.pullUps, this.exercises.dumbbellCurl];
+        warmUp = this.warmUps.upper;
+        coolDown = this.coolDowns.back;
+        break;
+      case 'Legs':
+        exercises = [this.exercises.squats, this.exercises.deadlift, this.exercises.lunges, this.exercises.calfRaises];
+        warmUp = this.warmUps.lower;
+        coolDown = this.coolDowns.legs;
+        break;
+      case 'Upper':
+        exercises = [this.exercises.benchPress, this.exercises.barbellRow, this.exercises.overheadPress, this.exercises.pullUps];
+        warmUp = this.warmUps.upper;
+        coolDown = this.coolDowns.chest;
+        break;
+      case 'Lower':
+        exercises = [this.exercises.squats, this.exercises.deadlift, this.exercises.lunges, this.exercises.calfRaises];
+        warmUp = this.warmUps.lower;
+        coolDown = this.coolDowns.legs;
+        break;
+      case 'FullBody':
+        exercises = [this.exercises.squats, this.exercises.benchPress, this.exercises.barbellRow, this.exercises.overheadPress];
+        warmUp = this.warmUps.general;
+        coolDown = this.coolDowns.fullBody;
+        break;
+    }
+
+    exercises = exercises.map(ex => ({
+      ...ex,
+      sets: ex.sets + Math.round(intensityMultiplier * 2),
+    }));
+
+    return { exercises, warmUp, coolDown };
   }
 
-  // Obtain this week's schedule (mock)
-  //Simulate users registering on Wednesday
-  getWeeklyPlan(): Observable<WeeklyWorkoutPlan[]> {
-    const week: WeeklyWorkoutPlan[] = [
-      // { day: 'Mon', dayShort: 'Mon', ... },
-      // { day: 'Tue', dayShort: 'Tue', ... },
-      {
-        day: 'Wed',
-        dayShort: 'Wed',
-        planTitle: 'Chest & Triceps',
-        plan: {
-          isRestDay: false,
-          warmUp: this.mockExercises.jumpingJacks,
-          exercises: [this.mockExercises.pushUps],
-          coolDown: this.mockExercises.chestStretch,
-        },
-      },
-      {
-        day: 'Thu',
-        dayShort: 'Thu',
-        planTitle: 'Back & Biceps',
-        plan: {
-          isRestDay: false,
-          warmUp: this.mockExercises.jumpingJacks,
-          exercises: [this.mockExercises.squats],
-          coolDown: this.mockExercises.chestStretch,
-        },
-      },
-      {
-        day: 'Fri',
-        dayShort: 'Fri',
-        planTitle: 'Day off',
-        plan: {
-          isRestDay: true,
-          warmUp: null,
-          exercises: [],
-          coolDown: null,
-        },
-      },
-      {
-        day: 'Sat',
-        dayShort: 'Sat',
-        planTitle: 'Legs & Shoulders',
-        plan: {
-          isRestDay: false,
-          warmUp: this.mockExercises.jumpingJacks,
-          exercises: [this.mockExercises.squats, this.mockExercises.pushUps],
-          coolDown: this.mockExercises.chestStretch,
-        },
-      },
-      {
-        day: 'Sun',
-        dayShort: 'Sun',
-        planTitle: 'Day off',
-        plan: {
-          isRestDay: true,
-          warmUp: null,
-          exercises: [],
-          coolDown: null,
-        },
-      },
-    ];
+  private schedules: Record<string, { title: string; session: string }[]> = {
+    PPL: [
+      { title: 'Rest', session: 'Rest' },
+      { title: 'Push Day', session: 'Push' },
+      { title: 'Pull Day', session: 'Pull' },
+      { title: 'Leg Day', session: 'Legs' },
+      { title: 'Push Day', session: 'Push' },
+      { title: 'Pull Day', session: 'Pull' },
+      { title: 'Rest', session: 'Rest' },
+    ],
+    UPPER_LOWER: [
+      { title: 'Rest', session: 'Rest' },
+      { title: 'Upper Body', session: 'Upper' },
+      { title: 'Lower Body', session: 'Lower' },
+      { title: 'Rest', session: 'Rest' },
+      { title: 'Upper Body', session: 'Upper' },
+      { title: 'Lower Body', session: 'Lower' },
+      { title: 'Rest', session: 'Rest' },
+    ],
+    FBW: [
+      { title: 'Rest', session: 'Rest' },
+      { title: 'Full Body', session: 'FullBody' },
+      { title: 'Rest', session: 'Rest' },
+      { title: 'Full Body', session: 'FullBody' },
+      { title: 'Rest', session: 'Rest' },
+      { title: 'Full Body', session: 'FullBody' },
+      { title: 'Rest', session: 'Rest' },
+    ],
+  };
 
-    return of(week).pipe(delay(500));
+  constructor(private planService: PlanService) {}
+
+  getTodaysPlan(): Observable<DailyWorkoutPlan> {
+    if (this.useMock) {
+      return of({
+        isRestDay: false,
+        warmUp: this.warmUps.general,
+        exercises: [this.exercises.pushUps, this.exercises.squats],
+        coolDown: this.coolDowns.fullBody,
+      } as DailyWorkoutPlan).pipe(delay(300));
+    } else {
+      const aiPlan = this.planService.getCurrentPlan();
+      if (aiPlan) {
+        return of(this.buildPlanFromAI(aiPlan, new Date().getDay())).pipe(delay(100));
+      } else {
+        return this.planService.generatePlan().pipe(
+          map(aiPlan => this.buildPlanFromAI(aiPlan, new Date().getDay()))
+        );
+      }
+    }
+  }
+
+  getWeeklyPlan(): Observable<WeeklyWorkoutPlan[]> {
+    if (this.useMock) {
+      return of([
+        { day: 'Wed' as const, dayShort: 'Wed', planTitle: 'Chest & Triceps', plan: { isRestDay: false, warmUp: this.warmUps.upper, exercises: [this.exercises.benchPress, this.exercises.pushUps], coolDown: this.coolDowns.chest } },
+        { day: 'Thu' as const, dayShort: 'Thu', planTitle: 'Back & Biceps', plan: { isRestDay: false, warmUp: this.warmUps.upper, exercises: [this.exercises.barbellRow, this.exercises.pullUps], coolDown: this.coolDowns.back } },
+        { day: 'Fri' as const, dayShort: 'Fri', planTitle: 'Day off', plan: { isRestDay: true, warmUp: null, exercises: [], coolDown: null } },
+        { day: 'Sat' as const, dayShort: 'Sat', planTitle: 'Legs', plan: { isRestDay: false, warmUp: this.warmUps.lower, exercises: [this.exercises.squats, this.exercises.deadlift], coolDown: this.coolDowns.legs } },
+        { day: 'Sun' as const, dayShort: 'Sun', planTitle: 'Day off', plan: { isRestDay: true, warmUp: null, exercises: [], coolDown: null } },
+      ]).pipe(delay(500));
+    } else {
+      const aiPlan = this.planService.getCurrentPlan();
+      if (aiPlan) {
+        return of(this.buildWeeklyPlanFromAI(aiPlan)).pipe(delay(100));
+      } else {
+        return this.planService.generatePlan().pipe(map(aiPlan => this.buildWeeklyPlanFromAI(aiPlan)));
+      }
+    }
+  }
+
+  private buildPlanFromAI(aiPlan: AIPlan, dayOfWeek: number): DailyWorkoutPlan {
+    const schedule = this.schedules[aiPlan.workoutType] || this.schedules['FBW'];
+    const dayInfo = schedule[dayOfWeek];
+
+    if (dayInfo.session === 'Rest') {
+      return { isRestDay: true, warmUp: null, exercises: [], coolDown: null, aiData: aiPlan };
+    }
+
+    const routine = this.getRoutine(dayInfo.session, aiPlan.workoutIntensity);
+    return { isRestDay: false, warmUp: routine.warmUp, exercises: routine.exercises, coolDown: routine.coolDown, aiData: aiPlan };
+  }
+
+  private buildWeeklyPlanFromAI(aiPlan: AIPlan): WeeklyWorkoutPlan[] {
+    const today = new Date().getDay();
+    const dayLabels: ('Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun')[] =
+      ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const schedule = this.schedules[aiPlan.workoutType] || this.schedules['FBW'];
+    const week: WeeklyWorkoutPlan[] = [];
+
+    for (let i = today; i <= 6; i++) {
+      week.push({ day: dayLabels[i], dayShort: dayLabels[i], planTitle: schedule[i].title, plan: this.buildPlanFromAI(aiPlan, i) });
+    }
+    return week;
   }
 }

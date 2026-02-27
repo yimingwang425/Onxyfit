@@ -19,6 +19,7 @@ export class Tab4Page implements OnInit, OnDestroy {
   displayName = 'User';
   email = '';
   profile: any = {};
+  aiPlanInfo: any = {};
 
   private animalEmojis = ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐷','🐵'];
 
@@ -47,6 +48,21 @@ export class Tab4Page implements OnInit, OnDestroy {
   ionViewWillEnter() {
     this.pickAvatar();
     this.loadProfile();
+    this.loadAIPlanInfo();
+  }
+
+  private loadAIPlanInfo() {
+    try {
+      const planStr = localStorage.getItem('current_ai_plan');
+      if (planStr) {
+        const plan = JSON.parse(planStr);
+        this.aiPlanInfo = {
+          workoutType: plan.workoutType || '',
+          calories: plan.caloriesKcal || '',
+          protein: plan.proteinG || '',
+        };
+      }
+    } catch { }
   }
 
   private pickAvatar() {

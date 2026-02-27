@@ -69,6 +69,9 @@ public class UserProfileResource {
         if (userProfileDTO.getId() != null) {
             throw new BadRequestAlertException("A new userProfile cannot already have an ID", ENTITY_NAME, "idexists");
         }
+        if (userProfileDTO.getCreatedAt() == null) {
+            userProfileDTO.setCreatedAt(java.time.Instant.now());
+        }
         userProfileDTO = userProfileService.save(userProfileDTO);
         return ResponseEntity.created(new URI("/api/user-profiles/" + userProfileDTO.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, userProfileDTO.getId().toString()))
@@ -145,27 +148,27 @@ public class UserProfileResource {
     }
 
     /**
- * {@code GET  /user-profiles} : get current user's profile.
- */
-@GetMapping("")
-public ResponseEntity<List<UserProfileDTO>> getAllUserProfiles(
-    @org.springdoc.core.annotations.ParameterObject Pageable pageable,
-    @RequestParam(name = "eagerload", required = false, defaultValue = "true") boolean eagerload
-) {
-    LOG.debug("REST request to get UserProfile for current user");
+     * {@code GET  /user-profiles} : get current user's profile.
+     */
+    @GetMapping("")
+    public ResponseEntity<List<UserProfileDTO>> getAllUserProfiles(
+      @org.springdoc.core.annotations.ParameterObject Pageable pageable,
+      @RequestParam(name = "eagerload", required = false, defaultValue = "true") boolean eagerload
+    ) {
+      LOG.debug("REST request to get UserProfile for current user");
 
-    String currentUserLogin = SecurityUtils.getCurrentUserLogin().orElse("");
+      String currentUserLogin = SecurityUtils.getCurrentUserLogin().orElse("");
 
-    Optional<com.yxw1268.fyp.domain.UserProfile> profile = 
-        userProfileRepository.findOneByUserLogin(currentUserLogin);
+      Optional<com.yxw1268.fyp.domain.UserProfile> profile = 
+          userProfileRepository.findOneByUserLogin(currentUserLogin);
 
-    List<UserProfileDTO> result = profile
+      List<UserProfileDTO> result = profile
         .map(userProfileMapper::toDto)
         .map(Collections::singletonList)
         .orElse(Collections.emptyList());
 
     return ResponseEntity.ok().body(result);
-}
+    }
 
     /**
      * {@code GET  /user-profiles/:id} : get the "id" userProfile.

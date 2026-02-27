@@ -54,6 +54,29 @@
 
   </div>
 
+  <div class="metrics-dashboard fade-in" *ngIf="aiPlanInfo.workoutType">
+    
+    <div class="metric-item">
+      <span class="label">Program</span>
+      <span class="value">{{ aiPlanInfo.workoutType }}</span>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="metric-item">
+      <span class="label">Daily Target</span>
+      <span class="value">{{ aiPlanInfo.calories }}<small>kcal</small></span>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="metric-item">
+      <span class="label">Protein</span>
+      <span class="value">{{ aiPlanInfo.protein }}<small>g</small></span>
+    </div>
+
+  </div>
+
   <div class="menu-section fade-in">
     <div class="section-title">Account</div>
     

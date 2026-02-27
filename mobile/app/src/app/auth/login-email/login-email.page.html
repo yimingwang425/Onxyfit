@@ -24,10 +24,18 @@
           ></ion-input>
         </ion-item>
       </form>
+
+      <div *ngIf="error" class="error-text">
+        <ion-text color="danger">{{ error }}</ion-text>
+      </div>
+
+      <div *ngIf="loading" style="text-align:center; margin-top:12px">
+        <ion-spinner name="crescent"></ion-spinner>
+      </div>
     </div>
 
     <div class="button-area">
-      <ion-button expand="block" (click)="next()" [disabled]="form.invalid">Next</ion-button>
+      <ion-button expand="block" (click)="next()" [disabled]="loading || form.invalid">Next</ion-button>
     </div>
   </div>
 </ion-content>

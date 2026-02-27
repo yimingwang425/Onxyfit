@@ -59,6 +59,18 @@ public class AccountResource {
     }
 
     /**
+     * {@code GET  /check-email/:email} : check if an email is already registered.
+     * Returns 200 if available, 409 if already taken
+     */
+    @GetMapping("/check-email/{email}")
+    public org.springframework.http.ResponseEntity<Void> checkEmailAvailable(@PathVariable String email) {
+        if (userRepository.findOneByLogin(email.toLowerCase()).isPresent()) {
+            return org.springframework.http.ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+        return org.springframework.http.ResponseEntity.ok().build();
+    }
+
+    /**
      * {@code GET  /activate} : activate the registered user.
      */
     @GetMapping("/activate")

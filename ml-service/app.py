@@ -27,12 +27,12 @@ le_goal = joblib.load(os.path.join(model_path, 'le_goal.pkl'))
 le_diet = joblib.load(os.path.join(model_path, 'le_diet.pkl'))
 le_metabolic = joblib.load(os.path.join(model_path, 'le_metabolic.pkl'))
 
-print("Models loaded")
+print("Models loaded successfully!")
 
 GROQ_API_KEY = '***REMOVED***'
 GROQ_MODEL = 'llama-3.1-8b-instant'
 
-# 0=Sun, 1=Mon 6=Sat
+# 0=Sunday, 1=Monday ... 6=Saturday
 WORKOUT_SCHEDULES = {
     'PPL': ['Rest', 'Push (Chest, Shoulders, Triceps)', 'Pull (Back, Biceps)',
             'Legs (Quads, Hamstrings, Glutes)', 'Push (Chest, Shoulders, Triceps)',
@@ -53,7 +53,6 @@ def generate_weekly_meal_plan(calories, protein, carbs, fat, diet_pref, workout_
     schedule = WORKOUT_SCHEDULES.get(workout_type, WORKOUT_SCHEDULES['FBW'])
     rest_calories = int(calories * 0.85)
 
-    # Build per-day calorie targets
     day_targets = []
     for i in range(7):
         is_rest = (schedule[i] == 'Rest')
@@ -129,7 +128,6 @@ STRICT RULES:
 
             weekly_plan = json.loads(clean_content)
 
-            # Validate
             days_found = [k for k in weekly_plan.keys() if k in ['0','1','2','3','4','5','6']]
             print(f"Weekly meal plan generated via Groq ({len(days_found)} days):")
             for d in sorted(days_found):
@@ -141,16 +139,17 @@ STRICT RULES:
             return weekly_plan
         else:
             print(f"Groq API error: {response.status_code}")
+            print(f"   Response: {response.text}")
             return None
 
     except requests.exceptions.Timeout:
-        print("Groq API request timed out (30s)")
+        print("timed out (30s)")
         return None
     except requests.exceptions.ConnectionError:
         print("Cannot connect to Groq API.")
         return None
     except json.JSONDecodeError as e:
-        print(f"JSON parse error: {e}")
+        print(f"error: {e}")
         return None
     except Exception as e:
         import traceback
@@ -206,7 +205,6 @@ def predict():
 
     print(f"Keras done: {calories} kcal, {protein}g protein, {workout_type}")
 
-    # Generate weekly meal plan via Groq API (Llama 3.1)
     weekly_meal_plan = generate_weekly_meal_plan(
         calories, protein, carbs, fat, diet, workout_type
     )
@@ -224,12 +222,60 @@ def predict():
         response['weeklyMealPlan'] = weekly_meal_plan
         print("Response includes weeklyMealPlan (7 days)")
     else:
-        print("Response WITHOUT weeklyMealPlan (Groq/Llama failed)")
+        print("Groq failed")
+
     return jsonify(response), 200
+
+
+@app.route('/api/insight', methods=['POST'])
+def generate_insight():
+    data = request.get_json() or {}
+
+    prompt = f"""You are a concise fitness coach. Based on this user's data, give ONE short personalized insight (1-2 sentences max).
+
+User context:
+- Today's workout: {data.get('workout', 'Unknown')}
+- Daily calorie target: {data.get('calories', 'Unknown')} kcal
+- Workout program: {data.get('workoutType', 'Unknown')}
+- Current mood: {data.get('mood', 'Not logged')}
+- Water intake: {data.get('water', 0)} cups today
+- Fitness goal: {data.get('goal', 'Unknown')}
+
+Rules:
+- Be specific and actionable, not generic
+- Reference their actual data (mood, workout type, water, etc.)
+- Keep it under 30 words
+- Do NOT use quotes or markdown
+- Just return the plain text insight, nothing else"""
+
+    try:
+        resp = requests.post(
+            'https://api.groq.com/openai/v1/chat/completions',
+            headers={
+                'Authorization': f'Bearer {GROQ_API_KEY}',
+                'Content-Type': 'application/json'
+            },
+            json={
+                'model': GROQ_MODEL,
+                'messages': [{'role': 'user', 'content': prompt}],
+                'temperature': 0.8,
+                'max_tokens': 100
+            },
+            timeout=10
+        )
+
+        if resp.status_code == 200:
+            result = resp.json()
+            insight = result['choices'][0]['message']['content'].strip()
+            return jsonify({'insight': insight}), 200
+        else:
+            return jsonify({'insight': 'Stay consistent with your plan today. Every session counts.'}), 200
+
+    except Exception as e:
+        print(f"Insight generation error: {e}")
+        return jsonify({'insight': 'Stay consistent with your plan today. Every session counts.'}), 200
 
 
 if __name__ == '__main__':
     print("\nFlask ML Service Starting")
-    print(f"LLM: Llama 3.1 via Groq API ({GROQ_MODEL})")
-    print("Server: http://localhost:5001")
     app.run(host='0.0.0.0', port=5001, debug=True)

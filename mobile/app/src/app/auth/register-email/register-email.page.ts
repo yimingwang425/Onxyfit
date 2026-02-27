@@ -16,8 +16,10 @@ import {
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
 import { RegisterService } from '../../services/register';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-register-email',
@@ -55,7 +57,8 @@ export class RegisterEmailPage {
   constructor(
     private fb: FormBuilder,
     private reg: RegisterService,
-    private router: Router
+    private router: Router,
+    private http: HttpClient
   ) {}
 
   async sendOtp() {
@@ -75,6 +78,25 @@ export class RegisterEmailPage {
     }
 
     this.loading = true;
+
+    try {
+      const res: any = await lastValueFrom(
+        this.http.get(`${environment.apiUrl}/check-email/${encodeURIComponent(email)}`)
+      );
+      if (res?.exists) {
+        this.loading = false;
+        this.error = 'This email is already registered. Please log in.';
+        return;
+      }
+    } catch (err: any) {
+      // 409 = email already exists
+      if (err.status === 409) {
+        this.loading = false;
+        this.error = 'This email is already registered. Please log in.';
+        return;
+      }
+    }
+
     try {
       const resp = await lastValueFrom(this.reg.sendOtp(email));
       this.loading = false;

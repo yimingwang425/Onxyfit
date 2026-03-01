@@ -127,3 +127,7 @@ jhipster:
 # ===================================================================
 
 # application:
+app:
+  ml-service:
+    url: https://onyxfit-ml.onrender.com
+

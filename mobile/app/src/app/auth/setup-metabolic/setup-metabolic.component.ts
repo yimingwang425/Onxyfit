@@ -12,6 +12,7 @@ import { addIcons } from 'ionicons';
 import { checkmarkCircle, informationCircleOutline } from 'ionicons/icons';
 import { UserProfileService } from '../../services/user-profile';
 import { AuthService } from '../../services/auth';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-setup-metabolic',
@@ -80,7 +81,7 @@ export class SetupMetabolicPage {
       try { finalProfile = JSON.parse(raw); } catch (e) {}
     }
 
-    this.authService.identity().subscribe({
+    this.authService.identity().pipe(take(1)).subscribe({
       next: (account) => {
         
         const payload = {

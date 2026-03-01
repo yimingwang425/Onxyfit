@@ -1,6 +1,7 @@
 package com.yxw1268.fyp.web.rest;
 
 import com.yxw1268.fyp.repository.UserProfileRepository;
+import com.yxw1268.fyp.repository.UserRepository;
 import com.yxw1268.fyp.security.SecurityUtils;
 import com.yxw1268.fyp.service.UserProfileService;
 import com.yxw1268.fyp.service.dto.UserProfileDTO;
@@ -45,14 +46,18 @@ public class UserProfileResource {
 
     private final UserProfileRepository userProfileRepository;
 
+    private final UserRepository userRepository;
+
     private final com.yxw1268.fyp.service.mapper.UserProfileMapper userProfileMapper;
 
     public UserProfileResource(
         UserProfileService userProfileService,
         UserProfileRepository userProfileRepository,
+        UserRepository userRepository,
         UserProfileMapper userProfileMapper) {
         this.userProfileService = userProfileService;
         this.userProfileRepository = userProfileRepository;
+        this.userRepository = userRepository;
         this.userProfileMapper = userProfileMapper;
     }
 
@@ -64,18 +69,68 @@ public class UserProfileResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("")
-    public ResponseEntity<UserProfileDTO> createUserProfile(@Valid @RequestBody UserProfileDTO userProfileDTO) throws URISyntaxException {
+    public ResponseEntity<UserProfileDTO> createUserProfile(@RequestBody UserProfileDTO userProfileDTO) throws URISyntaxException {
         LOG.debug("REST request to save UserProfile : {}", userProfileDTO);
+
+        // Get current user's ID
+        String currentLogin = SecurityUtils.getCurrentUserLogin().orElse("");
+        LOG.debug("Current user login: {}", currentLogin);
+
+        // Try to find existing profile by login OR by user ID in the DTO
+        Optional<com.yxw1268.fyp.domain.UserProfile> existing = Optional.empty();
+
+        // find by login
+        existing = userProfileRepository.findOneByUserLogin(currentLogin);
+        LOG.debug("findOneByUserLogin('{}') found: {}", currentLogin, existing.isPresent());
+
+        // if not found by login, try by user ID from DTO
+        if (existing.isEmpty() && userProfileDTO.getUser() != null && userProfileDTO.getUser().getId() != null) {
+            Long userId = userProfileDTO.getUser().getId();
+            existing = userProfileRepository.findAll().stream()
+                .filter(p -> p.getUser() != null && p.getUser().getId().equals(userId))
+                .findFirst();
+            LOG.debug("findByUserId({}) found: {}", userId, existing.isPresent());
+        }
+
+        // If profile exists, UPDATE instead of INSERT
+        if (existing.isPresent()) {
+            LOG.info("Profile already exists for user {}, updating", currentLogin);
+            com.yxw1268.fyp.domain.UserProfile existingProfile = existing.get();
+            userProfileDTO.setId(existingProfile.getId());
+            if (userProfileDTO.getCreatedAt() == null) {
+                userProfileDTO.setCreatedAt(existingProfile.getCreatedAt());
+            }
+            userProfileDTO = userProfileService.update(userProfileDTO);
+            return ResponseEntity.ok()
+                .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, userProfileDTO.getId().toString()))
+                .body(userProfileDTO);
+        }
+
+        // New profile: INSERT (with try-catch for race condition)
         if (userProfileDTO.getId() != null) {
             throw new BadRequestAlertException("A new userProfile cannot already have an ID", ENTITY_NAME, "idexists");
         }
         if (userProfileDTO.getCreatedAt() == null) {
             userProfileDTO.setCreatedAt(java.time.Instant.now());
         }
-        userProfileDTO = userProfileService.save(userProfileDTO);
-        return ResponseEntity.created(new URI("/api/user-profiles/" + userProfileDTO.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, userProfileDTO.getId().toString()))
-            .body(userProfileDTO);
+        try {
+            userProfileDTO = userProfileService.save(userProfileDTO);
+            return ResponseEntity.created(new URI("/api/user-profiles/" + userProfileDTO.getId()))
+                .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, userProfileDTO.getId().toString()))
+                .body(userProfileDTO);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // Race condition
+            LOG.warn("Duplicate key on insert, retrying as update for user {}", currentLogin);
+            Optional<com.yxw1268.fyp.domain.UserProfile> retry = userProfileRepository.findOneByUserLogin(currentLogin);
+            if (retry.isPresent()) {
+                com.yxw1268.fyp.domain.UserProfile existingProfile = retry.get();
+                userProfileDTO.setId(existingProfile.getId());
+                userProfileDTO.setCreatedAt(existingProfile.getCreatedAt());
+                userProfileDTO = userProfileService.update(userProfileDTO);
+                return ResponseEntity.ok().body(userProfileDTO);
+            }
+            throw new RuntimeException("Failed to save profile after retry", e);
+        }
     }
 
     /**
@@ -91,7 +146,7 @@ public class UserProfileResource {
     @PutMapping("/{id}")
     public ResponseEntity<UserProfileDTO> updateUserProfile(
         @PathVariable(value = "id", required = false) final Long id,
-        @Valid @RequestBody UserProfileDTO userProfileDTO
+        @RequestBody UserProfileDTO userProfileDTO
     ) throws URISyntaxException {
         LOG.debug("REST request to update UserProfile : {}, {}", id, userProfileDTO);
         if (userProfileDTO.getId() == null) {

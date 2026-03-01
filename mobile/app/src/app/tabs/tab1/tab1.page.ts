@@ -64,8 +64,8 @@ export class Tab1Page {
   @ViewChild('progressChartCanvas') private progressChartCanvas: ElementRef | undefined;
   private progressChart: Chart | undefined;
 
-  // Flask ML service URL
-  private flaskUrl = environment.apiUrl.replace(/:\d+\/api$/, ':5001');
+  // ML service URL
+  private mlUrl = (environment as any).mlUrl || 'http://localhost:5001';
 
   username = 'User';
   greeting = 'Hello';
@@ -204,7 +204,7 @@ export class Tab1Page {
       } catch { }
     }
 
-    this.http.post<{ insight: string }>(`${this.flaskUrl}/api/insight`, context)
+    this.http.post<{ insight: string }>(`${this.mlUrl}/api/insight`, context)
       .subscribe({
         next: (res) => {
           if (res.insight) {

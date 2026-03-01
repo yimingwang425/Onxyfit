@@ -99,6 +99,10 @@ export const routes: Routes = [
         path: 'notification',
         loadComponent: () => import('./auth/notification/notification.page').then( m => m.NotificationPage)
       },
+      {
+        path: 'delete-account',
+        loadComponent: () => import('./auth/delete-account/delete-account.page').then( m => m.DeleteAccountPage)
+      },
     ]
   },
 ];

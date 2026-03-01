@@ -2,6 +2,10 @@ package com.yxw1268.fyp.web.rest;
 
 import com.yxw1268.fyp.domain.User;
 import com.yxw1268.fyp.repository.UserRepository;
+import com.yxw1268.fyp.repository.UserProfileRepository;
+import com.yxw1268.fyp.repository.PlanRepository;
+import com.yxw1268.fyp.repository.ProgressLogRepository;
+import com.yxw1268.fyp.repository.OtpRecordRepository;
 import com.yxw1268.fyp.security.SecurityUtils;
 import com.yxw1268.fyp.service.MailService;
 import com.yxw1268.fyp.service.UserService;
@@ -16,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -40,10 +45,27 @@ public class AccountResource {
 
     private final MailService mailService;
 
-    public AccountResource(UserRepository userRepository, UserService userService, MailService mailService) {
+    private final UserProfileRepository userProfileRepository;
+    private final PlanRepository planRepository;
+    private final ProgressLogRepository progressLogRepository;
+    private final OtpRecordRepository otpRecordRepository;
+
+    public AccountResource(
+        UserRepository userRepository,
+        UserService userService,
+        MailService mailService,
+        UserProfileRepository userProfileRepository,
+        PlanRepository planRepository,
+        ProgressLogRepository progressLogRepository,
+        OtpRecordRepository otpRecordRepository
+    ) {
         this.userRepository = userRepository;
         this.userService = userService;
         this.mailService = mailService;
+        this.userProfileRepository = userProfileRepository;
+        this.planRepository = planRepository;
+        this.progressLogRepository = progressLogRepository;
+        this.otpRecordRepository = otpRecordRepository;
     }
 
     /**
@@ -153,6 +175,36 @@ public class AccountResource {
         if (!user.isPresent()) {
             throw new AccountResourceException("No user was found for this reset key");
         }
+    }
+
+    /**
+     * {@code DELETE /account} : delete the current user's account and all associated data.
+     * Deletion sequence：ProgressLog → Plan → UserProfile → OtpRecord → User
+     */
+    @DeleteMapping("/account")
+    @Transactional
+    public void deleteAccount() {
+        String userLogin = SecurityUtils.getCurrentUserLogin()
+            .orElseThrow(() -> new AccountResourceException("Current user login not found"));
+
+        LOG.info("User {} requested account deletion", userLogin);
+
+        userProfileRepository.findOneByUserLogin(userLogin).ifPresent(profile -> {
+            Long profileId = profile.getId();
+            progressLogRepository.deleteAllByProfileId(profileId);
+            planRepository.deleteAllByProfileId(profileId);
+            userProfileRepository.delete(profile);
+        });
+
+        userRepository.findOneByLogin(userLogin).ifPresent(user -> {
+            if (user.getEmail() != null) {
+                otpRecordRepository.deleteAllByEmail(user.getEmail());
+            }
+        });
+
+        userService.deleteUser(userLogin);
+
+        LOG.info("Account {} and all associated data deleted successfully", userLogin);
     }
 
     private static boolean isPasswordLengthInvalid(String password) {

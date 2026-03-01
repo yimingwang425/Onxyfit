@@ -1,19 +1,28 @@
 import { Injectable } from '@angular/core';
 import { of, Observable, throwError } from 'rxjs';
 import { delay, map } from 'rxjs/operators';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ChangeEmailService {
   
-  useMock = true; // false invoke the backend
+  useMock = false;
 
-  
-  private baseUrl = '/api'; // base url for backend
+  private baseUrl = environment.apiUrl; // uses environment apiUrl
 
   constructor(private http: HttpClient) {}
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('authenticationToken') || localStorage.getItem('auth_token');
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return headers;
+  }
 
   sendChangeEmailOtp(newEmail: string): Observable<{ message: string; expiresIn: number }> {
     if (this.useMock) {
@@ -29,8 +38,11 @@ export class ChangeEmailService {
       console.log('MOCK sendChangeEmailOtp -> otp:', otp);
       return of({ message: 'otp_sent', expiresIn }).pipe(delay(800));
     } else {
-      // backend: POST /api/account/change-email/request { newEmail }
-      return this.http.post<{ message: string; expiresIn: number }>(`${this.baseUrl}/account/change-email/request`, { newEmail });
+      return this.http.post<{ message: string; expiresIn: number }>(
+        `${this.baseUrl}/account/change-email/request`,
+        { newEmail },
+        { headers: this.getAuthHeaders() }
+      );
     }
   }
 
@@ -54,8 +66,11 @@ export class ChangeEmailService {
 
       return of({ verified: true, token: 'mock-change-email-token' }).pipe(delay(500));
     } else {
-      // backend: POST /api/account/change-email/verify { newEmail, otp }
-      return this.http.post<{ verified: boolean; token?: string }>(`${this.baseUrl}/account/change-email/verify`, { newEmail, otp });
+      return this.http.post<{ verified: boolean; token?: string }>(
+        `${this.baseUrl}/account/change-email/verify`,
+        { newEmail, otp },
+        { headers: this.getAuthHeaders() }
+      );
     }
   }
 }

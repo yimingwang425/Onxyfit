@@ -59,6 +59,10 @@ export class SettingsPage {
     this.router.navigate(['/auth/user-profile-setup'], { queryParams: { from: 'settings' } }).catch(()=>{});
   }
 
+  deleteAccount() {
+    this.router.navigate(['/auth/delete-account']).catch(()=>{});
+  }
+
   logout() {
     this.auth.logout();
     

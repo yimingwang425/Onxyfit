@@ -3,12 +3,14 @@ import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonLabel,
   IonInput, IonButton, IonText, IonSpinner,
   IonBackButton,
-  IonButtons
+  IonButtons,
+  AlertController
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ChangeEmailService } from '../../services/change-email';
+import { AuthService } from '../../services/auth';
 import { lastValueFrom } from 'rxjs';
 
 @Component({
@@ -41,7 +43,13 @@ export class ChangeEmailPage {
   resendSeconds = 0;
   private resendTimer?: any;
 
-  constructor(private fb: FormBuilder, private svc: ChangeEmailService, private router: Router) {}
+  constructor(
+    private fb: FormBuilder,
+    private svc: ChangeEmailService,
+    private router: Router,
+    private alertCtrl: AlertController,
+    private auth: AuthService
+  ) {}
 
   async sendOtp() {
     this.error = '';
@@ -58,7 +66,7 @@ export class ChangeEmailPage {
       this.step = 2;
       this.startResendCountdown(res.expiresIn ?? 300);
     } catch (e: any) {
-      this.error = e?.message ?? 'Failed to send OTP';
+      this.error = e?.error?.error ?? e?.message ?? 'Failed to send OTP';
     } finally { this.loading = false; }
   }
 
@@ -86,20 +94,19 @@ export class ChangeEmailPage {
         throw new Error('Verification failed. Please check the code and try again.');
       }
 
-      localStorage.setItem('registered_email', newEmail);
+      const alert = await this.alertCtrl.create({
+        header: 'Email Changed',
+        message: `Your email has been updated to ${newEmail}. Please log in again with your new email.`,
+        backdropDismiss: false,
+        buttons: [{
+          text: 'OK',
+          handler: () => {
+            this.auth.logout();
+          }
+        }]
+      });
+      await alert.present();
 
-      try {
-        const raw = localStorage.getItem('user_profile');
-        if (raw) {
-          const obj = JSON.parse(raw);
-          obj.email = newEmail;
-          localStorage.setItem('user_profile', JSON.stringify(obj));
-        }
-      } catch (e) {}
-
-      window.dispatchEvent(new CustomEvent('profile-updated', { detail: { email: newEmail } }));
-
-      await this.router.navigateByUrl('/tabs/tab4', { replaceUrl: true });
     } catch (e: any) {
       this.error = e?.message ?? 'Failed to verify OTP';
     } finally {

@@ -9,4 +9,7 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface OtpRecordRepository extends JpaRepository<OtpRecord, Long> {}
+public interface OtpRecordRepository extends JpaRepository<OtpRecord, Long> {
+
+    void deleteAllByEmail(String email);
+}

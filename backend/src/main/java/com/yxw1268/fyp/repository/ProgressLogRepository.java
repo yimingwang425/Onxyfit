@@ -9,4 +9,7 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface ProgressLogRepository extends JpaRepository<ProgressLog, Long> {}
+public interface ProgressLogRepository extends JpaRepository<ProgressLog, Long> {
+
+    void deleteAllByProfileId(Long profileId);
+}

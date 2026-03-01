@@ -9,4 +9,7 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface PlanRepository extends JpaRepository<Plan, Long> {}
+public interface PlanRepository extends JpaRepository<Plan, Long> {
+
+    void deleteAllByProfileId(Long profileId);
+}

@@ -31,6 +31,11 @@
         <ion-label>Personal information</ion-label>
         <ion-icon slot="end" name="chevron-forward" class="arrow-icon"></ion-icon>
       </ion-item>
+
+      <ion-item button detail="false" class="setting-item danger-item" (click)="deleteAccount()">
+        <ion-label color="danger">Delete your account</ion-label>
+        <ion-icon slot="end" name="chevron-forward" class="arrow-icon"></ion-icon>
+      </ion-item>
     </ion-list>
 
     <div class="logout-container">

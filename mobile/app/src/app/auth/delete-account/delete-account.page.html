@@ -1,0 +1,44 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/auth/settings" color="dark"></ion-back-button>
+    </ion-buttons>
+    <ion-title class="page-title">Delete Account</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="delete-container">
+
+    <div class="warning-icon">❗️</div>
+
+    <h2 class="title">This action is irreversible</h2>
+
+    <p class="description">
+      Deleting your account will permanently remove all your personal data, 
+      meal plans, workout plans, and progress logs. This cannot be undone.
+    </p>
+
+    <div class="confirm-section">
+      <p class="confirm-label">Type <strong>DELETE</strong> to confirm</p>
+      <ion-item lines="none" class="confirm-input-wrapper">
+        <ion-input
+          [(ngModel)]="confirmText"
+          placeholder="DELETE"
+          autocapitalize="characters"
+          [clearInput]="true"
+        ></ion-input>
+      </ion-item>
+    </div>
+
+    <ion-button
+      expand="block"
+      [disabled]="!canDelete || isDeleting"
+      (click)="onDelete()"
+      class="delete-btn"
+    >
+      {{ isDeleting ? 'Deleting...' : 'Delete my account' }}
+    </ion-button>
+
+  </div>
+</ion-content>

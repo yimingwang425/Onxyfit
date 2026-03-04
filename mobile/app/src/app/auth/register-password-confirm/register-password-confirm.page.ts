@@ -106,7 +106,7 @@ export class RegisterPasswordConfirmPage {
       localStorage.setItem('registered_email', regEmail);
       try { window.dispatchEvent(new CustomEvent('profile-updated', { detail: { email: regEmail } })); } catch {}
 
-      await this.router.navigateByUrl('/auth/setup-age', { replaceUrl: true });
+      await this.router.navigateByUrl('/auth/setup-name', { replaceUrl: true });
 
     } catch (err: any) {
       console.error('Failed to register or log in:', err);

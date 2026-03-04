@@ -1,9 +1,6 @@
 <ion-header>
   <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/auth/setup-age"></ion-back-button>
-    </ion-buttons>
-    <ion-title>Profile Setup (3/8)</ion-title>
+    <ion-title>Profile Setup (1/8)</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -11,20 +8,21 @@
   <div class="wizard-container">
     <div class="prompt-area">
       <ion-label>
-        <h2>What is your Height? (cm)</h2>
+        <h2>What's your preferred name?</h2>
       </ion-label>
 
       <form [formGroup]="form" (ngSubmit)="next()">
         <ion-item>
           <ion-input
-            type="number"
-            formControlName="heightCm"
-            placeholder="e.g., 175"
+            type="text"
+            formControlName="firstName"
+            placeholder="e.g., Alex"
+            autocapitalize="words"
           ></ion-input>
         </ion-item>
-        <div *ngIf="form.controls.heightCm.invalid && form.controls.heightCm.touched" class="error-text">
+        <div *ngIf="form.controls.firstName.invalid && form.controls.firstName.touched" class="error-text">
           <ion-text color="danger">
-            <small>Please enter a valid height.</small>
+            <small>Please enter your preferred name.</small>
           </ion-text>
         </div>
       </form>

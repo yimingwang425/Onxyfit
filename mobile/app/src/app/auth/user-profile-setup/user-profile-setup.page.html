@@ -11,6 +11,11 @@
   <form [formGroup]="form" (ngSubmit)="submit()">
 
     <ion-item lines="full">
+      <ion-label position="stacked">Display Name</ion-label>
+      <ion-input type="text" formControlName="displayName" placeholder="e.g. Alex" autocapitalize="words"></ion-input>
+    </ion-item>
+
+    <ion-item lines="full">
       <ion-label position="stacked">Age</ion-label>
       <ion-input type="number" formControlName="age" placeholder="e.g. 25"></ion-input>
     </ion-item>

@@ -19,6 +19,7 @@
   
   <div *ngIf="(currentSegment === 'today' && isLoadingToday) || (currentSegment === 'week' && isLoadingWeek)" class="loading-wrapper">
     <ion-spinner name="crescent"></ion-spinner>
+    <p class="loading-hint">The model is generating your plan based on your profile, please don't leave this page...</p>
   </div>
 
   <div [ngSwitch]="currentSegment" class="content-container">

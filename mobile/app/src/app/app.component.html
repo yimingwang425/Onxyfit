@@ -1,3 +1,9 @@
 <ion-app>
   <ion-router-outlet></ion-router-outlet>
 </ion-app>
+
+<div class="splash-screen" *ngIf="showSplash" [class.exit]="splashExit">
+  <div class="splash-logo">
+    <img src="assets/img/onyxfit-logo.png" alt="OnyxFit" />
+  </div>
+</div>

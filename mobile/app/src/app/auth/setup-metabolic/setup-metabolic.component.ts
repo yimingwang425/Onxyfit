@@ -51,13 +51,11 @@ export class SetupMetabolicPage {
   }
 
   async openMetabolicInfo() {
-    const msg = `
-      <p>We use the Mifflin-St Jeor equation to calculate your metabolic rate.</p>
-      <p><strong>Male:</strong> Uses standard male BMR constant (+5).</p>
-      <p><strong>Female:</strong> Uses standard female BMR constant (-161).</p>
-      <br/>
-      <small>Stored as Profile 1/2 in our database.</small>
-    `;
+    const msg =
+      'We use the Mifflin-St Jeor equation to calculate your metabolic rate.\n\n' +
+      'Male: Uses standard male BMR constant (+5).\n' +
+      'Female: Uses standard female BMR constant (−161).\n\n' +
+      'Stored as Profile 1/2 in the database.';
     const alert = await this.alertCtrl.create({
       header: 'Biological Sex',
       message: msg,

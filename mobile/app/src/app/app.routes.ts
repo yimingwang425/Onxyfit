@@ -64,9 +64,10 @@ export const routes: Routes = [
         path: 'password-reset-set',
         loadComponent: () => import('./auth/password-reset-set/password-reset-set.page').then( m => m.PasswordResetSetPage)
       },
-
-      // **** (修改点) 路由路径 ****
-      // (从 .page 改为 .component)
+      {
+        path: 'setup-name',
+        loadComponent: () => import('./auth/setup-name/setup-name.component').then( m => m.SetupNamePage)
+      },
       {
         path: 'setup-age',
         loadComponent: () => import('./auth/setup-age/setup-age.component').then( m => m.SetupAgePage)

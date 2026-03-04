@@ -1,6 +1,6 @@
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar>
-    <ion-title>{{ exercise?.name || 'Exercise Details' }}</ion-title>
+    <ion-title>{{ exercise?.name || 'Exercise' }}</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="dismiss()">
         <ion-icon slot="icon-only" name="close-circle-outline"></ion-icon>
@@ -10,9 +10,8 @@
 </ion-header>
 
 <ion-content>
-  <div class="video-container">
+  <div class="video-container" *ngIf="videoUrl">
     <video
-      *ngIf="videoUrl"
       [src]="videoUrl"
       autoplay
       loop
@@ -21,28 +20,25 @@
     </video>
   </div>
 
-  <div class="ion-padding">
-    <ion-item lines="none" class="sets-reps">
-      <ion-label>
-        <h2>{{ exercise?.sets }} Sets</h2>
-      </ion-label>
-      <ion-label slot="end">
-        <h2>{{ exercise?.reps }} Reps</h2>
-      </ion-label>
-    </ion-item>
+  <div class="content-body">
 
-    <ion-list-header>
-      <ion-label>Target Muscle Group</ion-label>
-    </ion-list-header>
-    <ion-chip color="primary">{{ exercise?.targetMuscles }}</ion-chip>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <span class="stat-value">{{ exercise?.sets || '-' }}</span>
+        <span class="stat-label">SETS</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-value">{{ exercise?.reps || '-' }}</span>
+        <span class="stat-label">REPS</span>
+      </div>
+    </div>
 
-    <ion-list-header>
-      <ion-label>Key Points</ion-label>
-    </ion-list-header>
-    <ion-item lines="none">
-      <ion-text class="notes-text">
-        {{ exercise?.notes }}
-      </ion-text>
-    </ion-item>
+    <div class="section-title">Target Muscle</div>
+    <span class="tag-pill">{{ exercise?.targetMuscles }}</span>
+
+    <div class="section-title" style="margin-top: 24px;">Key Points</div>
+    <p class="notes-text">{{ exercise?.notes }}</p>
+
   </div>
 </ion-content>

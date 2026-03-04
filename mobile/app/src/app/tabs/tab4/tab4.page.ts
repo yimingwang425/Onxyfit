@@ -94,22 +94,18 @@ export class Tab4Page implements OnInit, OnDestroy {
   private loadProfile() {
     const regEmail = localStorage.getItem('registered_email') || localStorage.getItem('auth_email') || '';
     this.email = regEmail;
-    this.displayName = regEmail ? regEmail.split('@')[0] : 'User';
-
-    // 调用后端接口
+    const savedName = localStorage.getItem('user_display_name');
+    this.displayName = savedName || (regEmail ? regEmail.split('@')[0] : 'User');
     this.userProfileService.getProfileData().subscribe({
-      // 【修改】明确指定参数类型为 any，解决 TS 报错
       next: (data: any) => {
         if (Array.isArray(data) && data.length > 0) {
           this.profile = data[0];
-          console.log('✅ Tab4: 成功从后端加载 Profile', this.profile);
         } else {
           this.profile = {};
         }
       },
-      // 【修改】明确指定参数类型为 any
       error: (err: any) => {
-        console.error('❌ Tab4: 加载 Profile 失败 (可能是 401 或网络问题)', err);
+        console.error('Tab4: Failed to load profile', err);
       }
     });
   }

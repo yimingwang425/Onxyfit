@@ -77,6 +77,9 @@ export class AuthService {
       localStorage.removeItem('user_avatar');
       localStorage.removeItem('has_confirmed_plan_start');
       localStorage.removeItem('_mock_change_email');
+      localStorage.removeItem('user_display_name');
+      localStorage.removeItem('weight_history');
+      localStorage.removeItem('current_ai_plan');
       
       this.router.navigateByUrl('/auth/welcome', { replaceUrl: true });
 

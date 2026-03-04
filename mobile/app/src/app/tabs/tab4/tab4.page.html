@@ -31,29 +31,6 @@
     </div>
   </div>
 
-  <div class="metrics-dashboard fade-in">
-    
-    <div class="metric-item">
-      <span class="label">Age</span>
-      <span class="value">{{ profile.age || '-' }}</span>
-    </div>
-    
-    <div class="divider"></div>
-    
-    <div class="metric-item">
-      <span class="label">Height</span>
-      <span class="value">{{ profile.heightCm || profile.height || '-' }}<small>cm</small></span>
-    </div>
-    
-    <div class="divider"></div>
-    
-    <div class="metric-item">
-      <span class="label">Weight</span>
-      <span class="value">{{ profile.weightKg || profile.weight || '-' }}<small>kg</small></span>
-    </div>
-
-  </div>
-
   <div class="metrics-dashboard fade-in" *ngIf="aiPlanInfo.workoutType">
     
     <div class="metric-item">

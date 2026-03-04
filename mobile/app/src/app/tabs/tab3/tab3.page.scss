@@ -19,8 +19,18 @@ ion-toolbar {
 .loading-wrapper {
   height: 60vh;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+}
+
+.loading-hint {
+  margin-top: 16px;
+  font-size: 0.85rem;
+  color: #999;
+  text-align: center;
+  padding: 0 32px;
+  line-height: 1.5;
 }
 
 .content-container {

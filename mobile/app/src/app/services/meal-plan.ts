@@ -151,12 +151,11 @@ export class MealPlanService {
   private buildPlanFromAI(aiPlan: AIPlan, dayOfWeek: number): DailyPlan {
 
     // get the weekly meal plan object
-    let weeklyMealPlan = (aiPlan as any).weeklyMealPlan || (aiPlan as any).mealPlan;
+    let weeklyMealPlan: any = null;
 
-    if (!weeklyMealPlan && (aiPlan as any).mealPlanJson) {
+    if (aiPlan.mealPlanJson) {
       try {
-        console.log('Parsing mealPlanJson from database');
-        weeklyMealPlan = JSON.parse((aiPlan as any).mealPlanJson);
+        weeklyMealPlan = JSON.parse(aiPlan.mealPlanJson);
       } catch (e) {
         console.error('Failed to parse mealPlanJson:', e);
       }
@@ -173,18 +172,6 @@ export class MealPlanService {
           lunch: this.convertLlamaMeal(dayPlan.lunch),
           dinner: this.convertLlamaMeal(dayPlan.dinner),
           snack: this.convertLlamaMeal(dayPlan.snack),
-          aiData: aiPlan,
-          aiSuggestedCalories: aiPlan.caloriesKcal
-        };
-      }
-
-      if (weeklyMealPlan.breakfast) {
-        console.log('Using old single-day format (backward compat)');
-        return {
-          breakfast: this.convertLlamaMeal(weeklyMealPlan.breakfast),
-          lunch: this.convertLlamaMeal(weeklyMealPlan.lunch),
-          dinner: this.convertLlamaMeal(weeklyMealPlan.dinner),
-          snack: this.convertLlamaMeal(weeklyMealPlan.snack),
           aiData: aiPlan,
           aiSuggestedCalories: aiPlan.caloriesKcal
         };

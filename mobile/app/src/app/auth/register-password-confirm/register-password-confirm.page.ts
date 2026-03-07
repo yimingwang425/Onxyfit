@@ -57,7 +57,7 @@ export class RegisterPasswordConfirmPage {
       return;
     }
 
-    const savedPw = (this.registerService as any).tempPassword
+    const savedPw = this.registerService.tempPassword
       || localStorage.getItem('temp_register_password') || '';
 
     const confirm = this.form.value.confirmPassword as string || '';
@@ -74,20 +74,14 @@ export class RegisterPasswordConfirmPage {
 
     this.loading = true;
 
-    const tempToken = (this.registerService as any).tempToken
-      || (this.registerService as any).tempToken$?.getValue?.() || localStorage.getItem('temp_register_token') || '';
+    const tempToken = this.registerService.tempToken$.getValue() || localStorage.getItem('temp_register_token') || '';
 
     try {
-      const completeFn = (this.registerService as any).completeRegistration;
-      
-      const maybeObs = completeFn.call(this.registerService, tempToken || '', savedPw);
-      await lastValueFrom(maybeObs);
+      await lastValueFrom(this.registerService.completeRegistration(tempToken || '', savedPw));
       
       console.log('Account registration successful! Now initiating automatic login to obtain the token...');
 
-      const regEmail = (this.registerService as any).email
-          || (this.registerService as any).email$?.getValue?.()
-          || localStorage.getItem('temp_register_email') || '';
+      const regEmail = this.registerService.email$.getValue() || localStorage.getItem('temp_register_email') || '';
       
       if (!regEmail) {
         throw new Error('Email missing for auto login');

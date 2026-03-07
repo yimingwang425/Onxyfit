@@ -157,12 +157,12 @@ export class UserProfileSetupPage implements OnInit {
 
   private patchForm(obj: any) {
     this.form.patchValue({
-      age: obj.age ?? obj.ageYears ?? null,
-      heightCm: obj.heightCm ?? obj.height_cm ?? obj.height ?? null,
-      weightKg: obj.weightKg ?? obj.weight_kg ?? obj.weight ?? null,
+      age: obj.age ?? null,
+      heightCm: obj.heightCm ?? null,
+      weightKg: obj.weightKg ?? null,
       activityLevel: obj.activityLevel ?? null,
       goal: obj.goal ?? null,
-      dietPref: obj.dietPref ?? obj.preference ?? obj.diet ?? null,
+      dietPref: obj.dietPref ?? null,
       metabolicProfile: obj.metabolicProfile ?? null
     });
   }

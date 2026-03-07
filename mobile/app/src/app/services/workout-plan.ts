@@ -308,14 +308,15 @@ export class WorkoutPlanService {
   }
 
   private buildPlanFromAI(aiPlan: AIPlan, dayOfWeek: number): DailyWorkoutPlan {
-    const schedule = this.schedules[aiPlan.workoutType] || this.schedules['FBW'];
+    const wt = aiPlan.workoutType ?? 'FBW';
+    const schedule = this.schedules[wt] ?? this.schedules['FBW'];
     const dayInfo = schedule[dayOfWeek];
 
     if (dayInfo.session === 'Rest') {
       return { isRestDay: true, warmUp: null, exercises: [], coolDown: null, aiData: aiPlan };
     }
 
-    const routine = this.getRoutine(dayInfo.session, aiPlan.workoutIntensity);
+    const routine = this.getRoutine(dayInfo.session, aiPlan.workoutIntensity ?? 0.5);
     return { isRestDay: false, warmUp: routine.warmUp, exercises: routine.exercises, coolDown: routine.coolDown, aiData: aiPlan };
   }
 
@@ -323,7 +324,8 @@ export class WorkoutPlanService {
     const today = new Date().getDay();
     const dayLabels: ('Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun')[] =
       ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const schedule = this.schedules[aiPlan.workoutType] || this.schedules['FBW'];
+    const wt = aiPlan.workoutType ?? 'FBW';
+    const schedule = this.schedules[wt] ?? this.schedules['FBW'];
     const week: WeeklyWorkoutPlan[] = [];
 
     for (let i = today; i <= 6; i++) {

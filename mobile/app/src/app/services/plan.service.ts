@@ -10,16 +10,13 @@ export interface AIPlan {
   proteinG: number;
   carbsG: number;
   fatG: number;
-  workoutType: 'FBW' | 'UPPER_LOWER' | 'PPL';
+  workoutType?: 'FBW' | 'UPPER_LOWER' | 'PPL' | 'CARDIO_MIX';
   workoutIntensity: number;
   source?: string;
   createdAt?: string;
-  mealPlan?: {
-    breakfast: any;
-    lunch: any;
-    dinner: any;
-    snack: any;
-  };
+  mealPlanJson?: string;
+  workoutPlanJson?: string;
+  weekStartDate?: string;
 }
 
 @Injectable({
@@ -31,7 +28,7 @@ export class PlanService {
   constructor(private http: HttpClient) {}
 
   generatePlan(): Observable<AIPlan> {
-    const token = localStorage.getItem('authenticationToken') || localStorage.getItem('auth_token');
+    const token = localStorage.getItem('authenticationToken');
     let headers = new HttpHeaders();
     if (token) {
       headers = headers.set('Authorization', `Bearer ${token}`);

@@ -44,7 +44,7 @@ export class Tab1Page {
   @ViewChild('weightChartCanvas') private weightChartCanvas: ElementRef | undefined;
 
   private weeklyChart: Chart | undefined;
-  private mlUrl = (environment as any).mlUrl || 'http://localhost:5001';
+  private mlUrl = environment.mlUrl;
 
   username = 'User';
   greeting = 'Hello';
@@ -138,7 +138,7 @@ export class Tab1Page {
       next: (data: any) => {
         const profile = Array.isArray(data) && data.length > 0 ? data[0] : data;
         if (!profile) return;
-        const w = parseFloat(profile.weightKg || profile.weight);
+        const w = parseFloat(profile.weightKg);
         if (isNaN(w) || w <= 0) return;
 
         const today = new Date().toISOString().split('T')[0];

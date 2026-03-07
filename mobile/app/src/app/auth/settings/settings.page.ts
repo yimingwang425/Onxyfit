@@ -55,6 +55,10 @@ export class SettingsPage {
     this.router.navigate(['/auth/change-email']).catch(()=>{});
   }
 
+  changePassword() {
+    this.router.navigate(['/auth/password-reset-email']).catch(()=>{});
+  }
+
   editPersonalInfo() {
     this.router.navigate(['/auth/user-profile-setup'], { queryParams: { from: 'settings' } }).catch(()=>{});
   }

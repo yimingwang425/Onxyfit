@@ -16,7 +16,7 @@ export class ChangeEmailService {
   constructor(private http: HttpClient) {}
 
   private getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem('authenticationToken') || localStorage.getItem('auth_token');
+    const token = localStorage.getItem('authenticationToken');
     let headers = new HttpHeaders();
     if (token) {
       headers = headers.set('Authorization', `Bearer ${token}`);

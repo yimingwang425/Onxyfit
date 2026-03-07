@@ -56,7 +56,7 @@ export class UserProfileService {
         })
       );
     } else {
-      const token = localStorage.getItem('authenticationToken') || localStorage.getItem('auth_token');
+      const token = localStorage.getItem('authenticationToken');
       let headers = new HttpHeaders();
       if (token) {
         headers = headers.set('Authorization', `Bearer ${token}`);
@@ -73,7 +73,7 @@ export class UserProfileService {
   }
 
   getProfileData(): Observable<any> {
-      const token = localStorage.getItem('authenticationToken') || localStorage.getItem('auth_token');
+      const token = localStorage.getItem('authenticationToken');
       let headers = new HttpHeaders();
       if (token) {
         headers = headers.set('Authorization', `Bearer ${token}`);
@@ -109,8 +109,8 @@ export class UserProfileService {
     if (!target) return 'No information available';
 
     const age = target.age;
-    const height = target.heightCm || target.height;
-    const weight = target.weightKg || target.weight;
+    const height = target.heightCm;
+    const weight = target.weightKg;
     const act = target.activityLevel;
     const goal = target.goal;
     const diet = target.dietPref;

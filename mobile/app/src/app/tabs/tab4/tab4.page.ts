@@ -66,7 +66,7 @@ export class Tab4Page implements OnInit, OnDestroy {
   }
 
   private pickAvatar() {
-    const email = localStorage.getItem('registered_email') || localStorage.getItem('auth_email') || '';
+    const email = localStorage.getItem('registered_email') || '';
     if (email) {
       const key = `user_avatar_${email}`;
       const saved = localStorage.getItem(key);
@@ -92,7 +92,7 @@ export class Tab4Page implements OnInit, OnDestroy {
   }
 
   private loadProfile() {
-    const regEmail = localStorage.getItem('registered_email') || localStorage.getItem('auth_email') || '';
+    const regEmail = localStorage.getItem('registered_email') || '';
     this.email = regEmail;
     const savedName = localStorage.getItem('user_display_name');
     this.displayName = savedName || (regEmail ? regEmail.split('@')[0] : 'User');

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { of, Observable } from 'rxjs';
-import { delay, map, switchMap } from 'rxjs/operators';
+import { delay, map } from 'rxjs/operators';
 import { PlanService, AIPlan } from './plan.service';
 
 export interface Meal {
@@ -218,7 +218,9 @@ export class MealPlanService {
 
     const week: WeeklyPlan[] = [];
 
-    for (let i = today; i <= 6; i++) {
+    const remaining = today === 0 ? 1 : 8 - today;
+    for (let offset = 0; offset < remaining; offset++) {
+      const i = (today + offset) % 7;
       const dayName = days[i];
       const isRestDay = (i === 0 || i === 6);
 

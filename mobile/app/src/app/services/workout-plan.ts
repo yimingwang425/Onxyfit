@@ -328,7 +328,9 @@ export class WorkoutPlanService {
     const schedule = this.schedules[wt] ?? this.schedules['FBW'];
     const week: WeeklyWorkoutPlan[] = [];
 
-    for (let i = today; i <= 6; i++) {
+    const remaining = today === 0 ? 1 : 8 - today;
+    for (let offset = 0; offset < remaining; offset++) {
+      const i = (today + offset) % 7;
       week.push({ day: dayLabels[i], dayShort: dayLabels[i], planTitle: schedule[i].title, plan: this.buildPlanFromAI(aiPlan, i) });
     }
     return week;

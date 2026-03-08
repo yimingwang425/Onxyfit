@@ -150,34 +150,6 @@ public class AccountResource {
     }
 
     /**
-     * {@code POST   /account/reset-password/init} : Send an email to reset the password of the user.
-     */
-    @PostMapping(path = "/account/reset-password/init")
-    public void requestPasswordReset(@RequestBody String mail) {
-        Optional<User> user = userService.requestPasswordReset(mail);
-        if (user.isPresent()) {
-            mailService.sendPasswordResetMail(user.orElseThrow());
-        } else {
-            LOG.warn("Password reset requested for non existing mail");
-        }
-    }
-
-    /**
-     * {@code POST   /account/reset-password/finish} : Finish to reset the password of the user.
-     */
-    @PostMapping(path = "/account/reset-password/finish")
-    public void finishPasswordReset(@RequestBody KeyAndPasswordVM keyAndPassword) {
-        if (isPasswordLengthInvalid(keyAndPassword.getNewPassword())) {
-            throw new InvalidPasswordException();
-        }
-        Optional<User> user = userService.completePasswordReset(keyAndPassword.getNewPassword(), keyAndPassword.getKey());
-
-        if (!user.isPresent()) {
-            throw new AccountResourceException("No user was found for this reset key");
-        }
-    }
-
-    /**
      * {@code DELETE /account} : delete the current user's account and all associated data.
      * Deletion sequence：ProgressLog → Plan → UserProfile → OtpRecord → User
      */

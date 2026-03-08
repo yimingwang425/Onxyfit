@@ -135,25 +135,16 @@ export class LoginPasswordPage implements OnInit {
 
   async forgotPassword() {
     if (!this.email) {
-      this.router.navigate(['/auth/password-reset-email']);
+      this.router.navigate(['/auth/password-reset-email']).then();
       return;
     }
 
-    const loading = await this.loadingCtrl.create({
-      message: 'Sending verification code...',
-      spinner: 'crescent',
-    });
-    await loading.present();
-
     this.passwordResetService.sendOtp(this.email).subscribe({
       next: () => {
-        loading.dismiss();
-        this.router.navigate(['/auth/password-reset-verify']);
+        this.router.navigate(['/auth/password-reset-verify']).then();
       },
-      error: (err: any) => {
-        loading.dismiss();
-        console.error('Failed to send reset OTP:', err);
-        this.showAlert('Failed to send', 'We are unable to send the verification code to your email address. Please try again later.');
+      error: () => {
+        this.showAlert('Failed to send', 'Unable to send verification code. Please try again.');
       }
     });
   }

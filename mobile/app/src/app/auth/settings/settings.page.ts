@@ -18,6 +18,7 @@ import {
 import { addIcons } from 'ionicons';
 import { chevronForward } from 'ionicons/icons';
 import { AuthService } from '../../services/auth';
+import { PasswordResetService } from '../../services/password-reset';
 
 @Component({
   selector: 'app-settings',
@@ -43,7 +44,7 @@ import { AuthService } from '../../services/auth';
 })
 export class SettingsPage {
   
-  constructor(private router: Router, private auth: AuthService) {
+  constructor(private router: Router, private auth: AuthService, private passwordResetService: PasswordResetService) {
     addIcons({ chevronForward });
   }
 
@@ -56,8 +57,21 @@ export class SettingsPage {
   }
 
   changePassword() {
-    this.router.navigate(['/auth/password-reset-email']).catch(()=>{});
+  const email = localStorage.getItem('registered_email');
+  if (!email) {
+    this.router.navigate(['/auth/password-reset-email']);
+    return;
   }
+
+  this.passwordResetService.sendOtp(email).subscribe({
+    next: () => {
+      this.router.navigate(['/auth/password-reset-verify']);
+    },
+    error: () => {
+      this.router.navigate(['/auth/password-reset-email']);
+    }
+  });
+}
 
   editPersonalInfo() {
     this.router.navigate(['/auth/user-profile-setup'], { queryParams: { from: 'settings' } }).catch(()=>{});

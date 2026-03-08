@@ -76,7 +76,7 @@ export class PasswordResetVerifyPage {
       },
       error: (err) => {
         this.isLoading = false;
-        this.errorMessage = err.message || 'Verification failed. Please try again.';
+        this.errorMessage = 'Verification failed. Please try again.';
       },
     });
   }

@@ -52,9 +52,8 @@ export class SetupMetabolicPage {
 
   async openMetabolicInfo() {
     const msg =
-      'We use the Mifflin-St Jeor equation to calculate your metabolic rate.\n\n' +
-      'Male: Uses standard male BMR constant (+5).\n' +
-      'Female: Uses standard female BMR constant (−161).\n\n' +
+      'We use the Harris-Benedict Formula to calculate your metabolic rate.\n\n' +
+      'The calculation formulas differ for male and female\n' +
       'Stored as Profile 1/2 in the database.';
     const alert = await this.alertCtrl.create({
       header: 'Biological Sex',

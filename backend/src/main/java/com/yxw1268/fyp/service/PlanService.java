@@ -132,20 +132,28 @@ public class PlanService {
      * Generate a plan for the current user.
      */
     public PlanDTO generatePlanForCurrentUser() {
-
         String currentUserLogin = SecurityUtils.getCurrentUserLogin()
             .orElseThrow(() -> new RuntimeException("No user logged in"));
-
+ 
         LOG.info("Current user: {}", currentUserLogin);
-
+ 
         UserProfile profile = userProfileRepository.findOneByUserLogin(currentUserLogin)
             .orElseThrow(() -> new RuntimeException("User profile not found"));
+ 
+        return generatePlanForProfile(profile);
+    }
 
-        LOG.info("User profile found: age={}, weight={}, goal={}",
-            profile.getAge(), profile.getWeightKg(), profile.getGoal());
-
+    /**
+     * Generate a plan for the specified UserProfile
+     */
+    public PlanDTO generatePlanForProfile(UserProfile profile) {
+        LOG.info("Generating plan for user profile: id={}, age={}, weight={}, goal={}",
+            profile.getId(), profile.getAge(), profile.getWeightKg(), profile.getGoal());
+ 
+        planRepository.deleteAllByProfileId(profile.getId());
+ 
         Map<String, Object> aiResult = callFlaskApi(profile);
-
+ 
         Plan plan = new Plan();
         plan.setProfile(profile);
         plan.setCaloriesKcal((Integer) aiResult.get("caloriesKcal"));
@@ -158,17 +166,9 @@ public class PlanService {
         plan.setWorkoutIntensity(BigDecimal.valueOf(((Number) aiResult.get("workoutIntensity")).doubleValue()));
         plan.setSource("AI_MODEL");
         plan.setCreatedAt(Instant.now());
-
-        // Store weekly meal plan or single meal plan
-        Object mealPlanData = null;
-        if (aiResult.containsKey("weeklyMealPlan")) {
-            mealPlanData = aiResult.get("weeklyMealPlan");
-            LOG.info("Weekly meal plan received (7 days)");
-        } else if (aiResult.containsKey("mealPlan")) {
-            mealPlanData = aiResult.get("mealPlan");
-            LOG.info("Single-day meal plan received (legacy format)");
-        }
-
+ 
+        Object mealPlanData = aiResult.get("weeklyMealPlan");
+ 
         if (mealPlanData != null) {
             try {
                 String mealPlanJson = objectMapper.writeValueAsString(mealPlanData);
@@ -178,19 +178,19 @@ public class PlanService {
                 LOG.warn("Failed to serialize meal plan: {}", e.getMessage());
             }
         }
-
+ 
         plan = planRepository.save(plan);
-
+ 
         LOG.info("Plan saved: id={}, calories={}, workout={}",
             plan.getId(), plan.getCaloriesKcal(), plan.getWorkoutType());
-
+ 
         PlanDTO planDTO = planMapper.toDto(plan);
-
+ 
         if (mealPlanData != null) {
             planDTO.setMealPlan(mealPlanData);
             LOG.info("Added meal plan data to response DTO");
         }
-
+ 
         return planDTO;
     }
 
@@ -220,15 +220,6 @@ public class PlanService {
 
             if (response.getStatusCode().is2xxSuccessful()) {
                 Map<String, Object> body = response.getBody();
-                LOG.info("Flask API response: calories={}, workout={}",
-                    body.get("caloriesKcal"), body.get("workoutType"));
-
-                if (body.containsKey("weeklyMealPlan")) {
-                    LOG.info("Weekly meal plan received from Llama 3.1 via Groq");
-                } else if (body.containsKey("mealPlan")) {
-                    LOG.info("Single meal plan received from Llama 3");
-                }
-
                 return body;
             } else {
                 throw new RuntimeException("Flask API returned status: " + response.getStatusCode());

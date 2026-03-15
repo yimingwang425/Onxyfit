@@ -222,12 +222,11 @@ export class MealPlanService {
     for (let offset = 0; offset < remaining; offset++) {
       const i = (today + offset) % 7;
       const dayName = days[i];
-      const isRestDay = (i === 0 || i === 6);
 
       week.push({
         day: dayName,
         dayShort: dayName,
-        plan: isRestDay ? null : this.buildPlanFromAI(aiPlan, i)
+        plan: this.buildPlanFromAI(aiPlan, i)
       });
     }
 

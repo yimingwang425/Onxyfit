@@ -95,12 +95,6 @@
           </div>
         </div>
 
-        <div *ngIf="!selectedDayPlan" class="empty-state">
-          <ion-icon name="restaurant"></ion-icon>
-          <h3>Free Day</h3>
-          <p>Eat intuitively and stay hydrated.</p>
-        </div>
-        
         <div *ngIf="selectedDayPlan" class="plan-list">
           <div class="date-header">
             <span class="sub-label">Plan for {{ weeklyPlan[selectedDayIndex].day }}</span>

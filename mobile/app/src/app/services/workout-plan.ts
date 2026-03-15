@@ -250,9 +250,9 @@ export class WorkoutPlanService {
       { title: 'Rest', session: 'Rest' },
       { title: 'Upper Body', session: 'Upper' },
       { title: 'Lower Body', session: 'Lower' },
-      { title: 'Rest', session: 'Rest' },
       { title: 'Upper Body', session: 'Upper' },
       { title: 'Lower Body', session: 'Lower' },
+      { title: 'Rest', session: 'Rest' },
       { title: 'Rest', session: 'Rest' },
     ],
     FBW: [

@@ -47,17 +47,12 @@ ion-toolbar {
   
   &.small { margin-top: 40px; }
   
-  .rest-icon-circle {
-    width: 80px; height: 80px;
-    background: #F0F0F0;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 24px;
-    color: #000;
-    font-size: 2rem;
+  > ion-icon {
+    font-size: 2.5rem;
+    color: #666;
+    margin-bottom: 16px;
   }
   
-  h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; }
   h3 { font-size: 1.2rem; font-weight: 700; color: #333; }
   p { color: #888; max-width: 240px; line-height: 1.5; }
 }

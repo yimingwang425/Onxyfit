@@ -28,11 +28,9 @@
       <div *ngIf="!isLoadingToday && todaysPlan">
         
         <div *ngIf="todaysPlan.isRestDay" class="rest-day-state">
-          <div class="rest-icon-circle">
-            <ion-icon name="moon"></ion-icon>
-          </div>
-          <h2>Recovery Day</h2>
-          <p>Your muscles grow when you rest. Take a break today.</p>
+          <ion-icon name="moon-outline"></ion-icon>
+          <h3>Rest Day</h3>
+          <p>Recover and prepare for tomorrow.</p>
         </div>
         
         <div *ngIf="!todaysPlan.isRestDay">

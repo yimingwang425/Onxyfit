@@ -117,7 +117,7 @@ public class ChangeEmailController {
             return ResponseEntity.badRequest().body(Map.of("verified", false, "error", "No OTP found"));
         }
 
-        OtpRecord record = recordOpt.get();
+        OtpRecord record = recordOpt.orElseThrow();
 
         if (Instant.now().isAfter(record.getExpiryTime())) {
             return ResponseEntity.badRequest().body(Map.of("verified", false, "error", "OTP expired"));
@@ -133,7 +133,7 @@ public class ChangeEmailController {
         // Update user's login AND email in database
         Optional<User> userOpt = userRepository.findOneByLogin(currentLogin);
         if (userOpt.isPresent()) {
-            User user = userOpt.get();
+            User user = userOpt.orElseThrow();
             Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE)).evict(currentLogin);
             if (user.getEmail() != null) {
                 Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE)).evict(user.getEmail());

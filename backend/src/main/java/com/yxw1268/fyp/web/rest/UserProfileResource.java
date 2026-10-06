@@ -95,7 +95,7 @@ public class UserProfileResource {
         // If profile exists, UPDATE instead of INSERT
         if (existing.isPresent()) {
             LOG.info("Profile already exists for user {}, updating", currentLogin);
-            com.yxw1268.fyp.domain.UserProfile existingProfile = existing.get();
+            com.yxw1268.fyp.domain.UserProfile existingProfile = existing.orElseThrow();
             userProfileDTO.setId(existingProfile.getId());
             if (userProfileDTO.getCreatedAt() == null) {
                 userProfileDTO.setCreatedAt(existingProfile.getCreatedAt());
@@ -123,7 +123,7 @@ public class UserProfileResource {
             LOG.warn("Duplicate key on insert, retrying as update for user {}", currentLogin);
             Optional<com.yxw1268.fyp.domain.UserProfile> retry = userProfileRepository.findOneByUserLogin(currentLogin);
             if (retry.isPresent()) {
-                com.yxw1268.fyp.domain.UserProfile existingProfile = retry.get();
+                com.yxw1268.fyp.domain.UserProfile existingProfile = retry.orElseThrow();
                 userProfileDTO.setId(existingProfile.getId());
                 userProfileDTO.setCreatedAt(existingProfile.getCreatedAt());
                 userProfileDTO = userProfileService.update(userProfileDTO);

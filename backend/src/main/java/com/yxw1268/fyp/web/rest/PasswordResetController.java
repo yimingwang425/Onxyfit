@@ -126,7 +126,7 @@ public class PasswordResetController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", "No OTP found"));
         }
 
-        OtpRecord record = recordOpt.get();
+        OtpRecord record = recordOpt.orElseThrow();
 
         if (Instant.now().isAfter(record.getExpiryTime())) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", "OTP expired"));
@@ -175,7 +175,7 @@ public class PasswordResetController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Invalid reset token"));
         }
 
-        OtpRecord tokenRecord = tokenOpt.get();
+        OtpRecord tokenRecord = tokenOpt.orElseThrow();
 
         if (Instant.now().isAfter(tokenRecord.getExpiryTime())) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Reset token expired"));
@@ -186,7 +186,7 @@ public class PasswordResetController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", "User not found"));
         }
 
-        User user = userOpt.get();
+        User user = userOpt.orElseThrow();
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.saveAndFlush(user);
         log.info("Password hash updated for user {}", email);

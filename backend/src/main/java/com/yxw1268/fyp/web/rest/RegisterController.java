@@ -109,7 +109,7 @@ public class RegisterController {
             return ResponseEntity.badRequest().body(Map.of("error", "No OTP found"));
         }
 
-        OtpRecord record = recordOpt.get();
+        OtpRecord record = recordOpt.orElseThrow();
 
         if (Instant.now().isAfter(record.getExpiryTime())) {
             return ResponseEntity.status(400).body(Map.of("error", "OTP expired"));

@@ -9,7 +9,7 @@
     "devServerPort": 4200,
     "entities": ["OtpRecord", "UserProfile", "Plan", "ProgressLog"],
     "jhipsterVersion": "8.11.0",
-    "jwtSecretKey": "***REMOVED***",
+    "jwtSecretKey": "CHANGE_ME_SET_VIA_SECRET_ENV",
     "languages": ["en"],
     "lastLiquibaseTimestamp": 1764442851000,
     "monorepository": true,

@@ -10,3 +10,7 @@ __pycache__/
 
 .DS_Store
 
+
+# local reference copies of the deployment repos
+deploy-ref/
+before_depoly/

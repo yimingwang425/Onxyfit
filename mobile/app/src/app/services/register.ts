@@ -49,7 +49,8 @@ export class RegisterService {
         login: email,
         email: email,
         password: password,
-        langKey: 'en'
+        langKey: 'en',
+        tempToken: tempToken
       };
 
       return this.http.post(`${this.API_URL}/register`, payload).pipe(

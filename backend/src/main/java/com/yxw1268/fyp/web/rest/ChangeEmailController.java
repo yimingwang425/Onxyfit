@@ -1,134 +1,94 @@
 package com.yxw1268.fyp.web.rest;
 
-import com.yxw1268.fyp.domain.OtpRecord;
 import com.yxw1268.fyp.domain.User;
 import com.yxw1268.fyp.repository.UserRepository;
 import com.yxw1268.fyp.security.SecurityUtils;
-import com.yxw1268.fyp.service.OtpRecordService;
+import com.yxw1268.fyp.service.OtpService;
+import com.yxw1268.fyp.service.OtpService.Purpose;
+import com.yxw1268.fyp.service.OtpService.VerifyResult;
+import com.yxw1268.fyp.service.ResendMailClient;
 import org.springframework.cache.CacheManager;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Random;
 
 @RestController
 @RequestMapping("/api/account/change-email")
 public class ChangeEmailController {
 
     private final Logger log = LoggerFactory.getLogger(ChangeEmailController.class);
-    private final OtpRecordService otpRecordService;
+    private final OtpService otpService;
+    private final ResendMailClient mailClient;
     private final UserRepository userRepository;
     private final CacheManager cacheManager;
 
-    private static final String RESEND_API_KEY = System.getenv("RESEND_API_KEY") != null
-        ? System.getenv("RESEND_API_KEY") : "";
-
-    public ChangeEmailController(OtpRecordService otpRecordService, UserRepository userRepository, CacheManager cacheManager) {
-        this.otpRecordService = otpRecordService;
+    public ChangeEmailController(
+        OtpService otpService,
+        ResendMailClient mailClient,
+        UserRepository userRepository,
+        CacheManager cacheManager
+    ) {
+        this.otpService = otpService;
+        this.mailClient = mailClient;
         this.userRepository = userRepository;
         this.cacheManager = cacheManager;
     }
 
-    private void sendEmailViaResend(String toEmail, String subject, String htmlContent) {
-        try {
-            String jsonBody = String.format(
-                "{\"from\":\"OnyxFit <system@onyx-fit.app>\",\"to\":[\"%s\"],\"subject\":\"%s\",\"html\":\"%s\"}",
-                toEmail,
-                subject,
-                htmlContent.replace("\"", "\\\"")
-            );
-
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://api.resend.com/emails"))
-                .header("Authorization", "Bearer " + RESEND_API_KEY)
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-                .build();
-
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            log.info("Resend API response: {} - {}", response.statusCode(), response.body());
-        } catch (Exception e) {
-            log.error("Failed to send email via Resend", e);
-        }
-    }
-
     @PostMapping("/request")
     public ResponseEntity<Map<String, Object>> requestChangeEmail(@RequestBody Map<String, String> body) {
-        String newEmail = body.get("newEmail");
+        String newEmail = OtpService.normalizeEmail(body.get("newEmail"));
         String currentLogin = SecurityUtils.getCurrentUserLogin().orElse("");
         log.info("Change email request from user {} to new email {}", currentLogin, newEmail);
 
+        if (!OtpService.isValidEmail(newEmail)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid email address"));
+        }
+
         // Check if email is already registered (check both login and email columns)
         Optional<User> existingByEmail = userRepository.findOneByEmailIgnoreCase(newEmail);
-        Optional<User> existingByLogin = userRepository.findOneByLogin(newEmail.toLowerCase());
+        Optional<User> existingByLogin = userRepository.findOneByLogin(newEmail);
         if (existingByEmail.isPresent() || existingByLogin.isPresent()) {
             return ResponseEntity.badRequest().body(Map.of("error", "This email is already registered"));
         }
 
-        String otp = String.format("%06d", new Random().nextInt(999999));
+        Optional<String> otp = otpService.issueOtp(newEmail, Purpose.CHANGE_EMAIL);
+        if (otp.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(
+                Map.of("error", "A code was just sent. Please wait a minute before requesting another.")
+            );
+        }
 
-        OtpRecord record = new OtpRecord();
-        record.setEmail(newEmail);
-        record.setOtpCode(otp);
-        record.setVerified(false);
-        record.setExpiryTime(Instant.now().plus(10, ChronoUnit.MINUTES));
-        otpRecordService.save(record);
+        mailClient.sendOtp(
+            newEmail,
+            "OnyxFit - Change Email Verification",
+            "You requested to change your email. Your verification code is:",
+            otp.orElseThrow()
+        );
 
-        String subject = "OnyxFit - Change Email Verification";
-        String content = "<html><body>" +
-                "<h3>Hello!</h3>" +
-                "<p>You requested to change your email. Your verification code is:</p>" +
-                "<h1>" + otp + "</h1>" +
-                "<p>This code will expire in 10 minutes.</p>" +
-                "</body></html>";
-
-        sendEmailViaResend(newEmail, subject, content);
-        log.info("Change email OTP for {}: {}", newEmail, otp);
-
-        return ResponseEntity.ok(Map.of("message", "otp_sent", "expiresIn", 600));
+        return ResponseEntity.ok(Map.of("message", "otp_sent", "expiresIn", OtpService.OTP_TTL.toSeconds()));
     }
 
     @PostMapping("/verify")
     public ResponseEntity<Map<String, Object>> verifyChangeEmail(@RequestBody Map<String, String> body) {
-        String newEmail = body.get("newEmail");
-        String otp = body.get("otp");
+        String newEmail = OtpService.normalizeEmail(body.get("newEmail"));
         String currentLogin = SecurityUtils.getCurrentUserLogin().orElse("");
         log.info("Verify change email OTP for user {} to {}", currentLogin, newEmail);
 
-        List<OtpRecord> records = otpRecordService.findAll();
-        Optional<OtpRecord> recordOpt = records.stream()
-            .filter(r -> r.getEmail().equalsIgnoreCase(newEmail))
-            .max((r1, r2) -> r1.getExpiryTime().compareTo(r2.getExpiryTime()));
-
-        if (recordOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("verified", false, "error", "No OTP found"));
+        VerifyResult result = otpService.verifyOtp(newEmail, Purpose.CHANGE_EMAIL, body.get("otp"));
+        if (result != VerifyResult.OK) {
+            return ResponseEntity.badRequest().body(Map.of("verified", false, "error", RegisterController.describe(result)));
         }
 
-        OtpRecord record = recordOpt.orElseThrow();
-
-        if (Instant.now().isAfter(record.getExpiryTime())) {
-            return ResponseEntity.badRequest().body(Map.of("verified", false, "error", "OTP expired"));
+        // Someone else may have taken the address since the code was requested
+        if (userRepository.findOneByEmailIgnoreCase(newEmail).isPresent() || userRepository.findOneByLogin(newEmail).isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("verified", false, "error", "This email is already registered"));
         }
-
-        if (!record.getOtpCode().equals(otp)) {
-            return ResponseEntity.badRequest().body(Map.of("verified", false, "error", "Invalid OTP"));
-        }
-
-        record.setVerified(true);
-        otpRecordService.save(record);
 
         // Update user's login AND email in database
         Optional<User> userOpt = userRepository.findOneByLogin(currentLogin);
@@ -138,11 +98,11 @@ public class ChangeEmailController {
             if (user.getEmail() != null) {
                 Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE)).evict(user.getEmail());
             }
-            user.setLogin(newEmail.toLowerCase());
-            user.setEmail(newEmail.toLowerCase());
+            user.setLogin(newEmail);
+            user.setEmail(newEmail);
             userRepository.saveAndFlush(user);
-            Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE)).evict(newEmail.toLowerCase());
-            Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE)).evict(newEmail.toLowerCase());
+            Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE)).evict(newEmail);
+            Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE)).evict(newEmail);
             log.info("User {} login and email updated to {}", currentLogin, newEmail);
         }
 

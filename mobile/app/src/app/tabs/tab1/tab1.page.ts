@@ -44,7 +44,6 @@ export class Tab1Page {
   @ViewChild('weightChartCanvas') private weightChartCanvas: ElementRef | undefined;
 
   private weeklyChart: Chart | undefined;
-  private mlUrl = environment.mlUrl;
 
   username = 'User';
   greeting = 'Hello';
@@ -393,7 +392,7 @@ export class Tab1Page {
         context.workout = (schedules[plan.workoutType] || schedules['FBW'])[new Date().getDay()];
       } catch { }
     }
-    this.http.post<{ insight: string }>(`${this.mlUrl}/api/insight`, context)
+    this.http.post<{ insight: string }>(`${environment.apiUrl}/insight`, context)
     .subscribe({
       next: (res) => { 
         if (res.insight) this.aiTip = res.insight; 

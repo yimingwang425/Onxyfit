@@ -39,6 +39,12 @@ public class OtpRecord implements Serializable {
     @Column(name = "verified")
     private Boolean verified;
 
+    @Column(name = "purpose")
+    private String purpose;
+
+    @Column(name = "attempts")
+    private Integer attempts;
+
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
     public Long getId() {
@@ -106,6 +112,22 @@ public class OtpRecord implements Serializable {
         this.verified = verified;
     }
 
+    public String getPurpose() {
+        return this.purpose;
+    }
+
+    public void setPurpose(String purpose) {
+        this.purpose = purpose;
+    }
+
+    public Integer getAttempts() {
+        return this.attempts;
+    }
+
+    public void setAttempts(Integer attempts) {
+        this.attempts = attempts;
+    }
+
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here
 
     @Override
@@ -131,9 +153,9 @@ public class OtpRecord implements Serializable {
         return "OtpRecord{" +
             "id=" + getId() +
             ", email='" + getEmail() + "'" +
-            ", otpCode='" + getOtpCode() + "'" +
             ", expiryTime='" + getExpiryTime() + "'" +
             ", verified='" + getVerified() + "'" +
+            ", purpose='" + getPurpose() + "'" +
             "}";
     }
 }

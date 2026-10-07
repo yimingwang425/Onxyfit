@@ -125,3 +125,5 @@ jhipster:
 app:
   ml-service:
     url: http://localhost:5001
+    # Shared secret sent to the ML service; must match ML_SERVICE_TOKEN on that service
+    token: ${ML_SERVICE_TOKEN:}

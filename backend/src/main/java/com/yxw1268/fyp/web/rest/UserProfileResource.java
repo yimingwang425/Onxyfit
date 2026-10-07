@@ -1,9 +1,13 @@
 package com.yxw1268.fyp.web.rest;
 
+import com.yxw1268.fyp.domain.User;
+import com.yxw1268.fyp.domain.UserProfile;
 import com.yxw1268.fyp.repository.UserProfileRepository;
 import com.yxw1268.fyp.repository.UserRepository;
+import com.yxw1268.fyp.security.AuthoritiesConstants;
 import com.yxw1268.fyp.security.SecurityUtils;
 import com.yxw1268.fyp.service.UserProfileService;
+import com.yxw1268.fyp.service.dto.UserDTO;
 import com.yxw1268.fyp.service.dto.UserProfileDTO;
 import com.yxw1268.fyp.service.mapper.UserProfileMapper;
 import com.yxw1268.fyp.web.rest.errors.BadRequestAlertException;
@@ -20,8 +24,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.PaginationUtil;
@@ -72,30 +78,17 @@ public class UserProfileResource {
     public ResponseEntity<UserProfileDTO> createUserProfile(@RequestBody UserProfileDTO userProfileDTO) throws URISyntaxException {
         LOG.debug("REST request to save UserProfile : {}", userProfileDTO);
 
-        // Get current user's ID
-        String currentLogin = SecurityUtils.getCurrentUserLogin().orElse("");
-        LOG.debug("Current user login: {}", currentLogin);
+        // A profile always belongs to the authenticated user, whatever the request body says
+        User currentUser = currentUser();
+        String currentLogin = currentUser.getLogin();
+        userProfileDTO.setUser(new UserDTO(currentUser));
 
-        // Try to find existing profile by login OR by user ID in the DTO
-        Optional<com.yxw1268.fyp.domain.UserProfile> existing = Optional.empty();
-
-        // find by login
-        existing = userProfileRepository.findOneByUserLogin(currentLogin);
-        LOG.debug("findOneByUserLogin('{}') found: {}", currentLogin, existing.isPresent());
-
-        // if not found by login, try by user ID from DTO
-        if (existing.isEmpty() && userProfileDTO.getUser() != null && userProfileDTO.getUser().getId() != null) {
-            Long userId = userProfileDTO.getUser().getId();
-            existing = userProfileRepository.findAll().stream()
-                .filter(p -> p.getUser() != null && p.getUser().getId().equals(userId))
-                .findFirst();
-            LOG.debug("findByUserId({}) found: {}", userId, existing.isPresent());
-        }
+        Optional<UserProfile> existing = userProfileRepository.findOneByUserLogin(currentLogin);
 
         // If profile exists, UPDATE instead of INSERT
         if (existing.isPresent()) {
             LOG.info("Profile already exists for user {}, updating", currentLogin);
-            com.yxw1268.fyp.domain.UserProfile existingProfile = existing.orElseThrow();
+            UserProfile existingProfile = existing.orElseThrow();
             userProfileDTO.setId(existingProfile.getId());
             if (userProfileDTO.getCreatedAt() == null) {
                 userProfileDTO.setCreatedAt(existingProfile.getCreatedAt());
@@ -121,9 +114,9 @@ public class UserProfileResource {
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
             // Race condition
             LOG.warn("Duplicate key on insert, retrying as update for user {}", currentLogin);
-            Optional<com.yxw1268.fyp.domain.UserProfile> retry = userProfileRepository.findOneByUserLogin(currentLogin);
+            Optional<UserProfile> retry = userProfileRepository.findOneByUserLogin(currentLogin);
             if (retry.isPresent()) {
-                com.yxw1268.fyp.domain.UserProfile existingProfile = retry.orElseThrow();
+                UserProfile existingProfile = retry.orElseThrow();
                 userProfileDTO.setId(existingProfile.getId());
                 userProfileDTO.setCreatedAt(existingProfile.getCreatedAt());
                 userProfileDTO = userProfileService.update(userProfileDTO);
@@ -156,8 +149,13 @@ public class UserProfileResource {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
-        if (!userProfileRepository.existsById(id)) {
-            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        UserProfile existing = findAccessibleProfile(id).orElseThrow(() ->
+            new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound")
+        );
+        // The owner of a profile can't be changed
+        userProfileDTO.setUser(new UserDTO(existing.getUser()));
+        if (userProfileDTO.getCreatedAt() == null) {
+            userProfileDTO.setCreatedAt(existing.getCreatedAt());
         }
 
         userProfileDTO = userProfileService.update(userProfileDTO);
@@ -190,9 +188,11 @@ public class UserProfileResource {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
-        if (!userProfileRepository.existsById(id)) {
+        if (findAccessibleProfile(id).isEmpty()) {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
+        // The owner of a profile can't be changed (null fields are left untouched)
+        userProfileDTO.setUser(null);
 
         Optional<UserProfileDTO> result = userProfileService.partialUpdate(userProfileDTO);
 
@@ -214,7 +214,7 @@ public class UserProfileResource {
 
       String currentUserLogin = SecurityUtils.getCurrentUserLogin().orElse("");
 
-      Optional<com.yxw1268.fyp.domain.UserProfile> profile = 
+      Optional<UserProfile> profile = 
           userProfileRepository.findOneByUserLogin(currentUserLogin);
 
       List<UserProfileDTO> result = profile
@@ -234,7 +234,7 @@ public class UserProfileResource {
     @GetMapping("/{id}")
     public ResponseEntity<UserProfileDTO> getUserProfile(@PathVariable("id") Long id) {
         LOG.debug("REST request to get UserProfile : {}", id);
-        Optional<UserProfileDTO> userProfileDTO = userProfileService.findOne(id);
+        Optional<UserProfileDTO> userProfileDTO = findAccessibleProfile(id).map(userProfileMapper::toDto);
         return ResponseUtil.wrapOrNotFound(userProfileDTO);
     }
 
@@ -247,9 +247,30 @@ public class UserProfileResource {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUserProfile(@PathVariable("id") Long id) {
         LOG.debug("REST request to delete UserProfile : {}", id);
+        if (findAccessibleProfile(id).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
         userProfileService.delete(id);
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
+    }
+
+    private User currentUser() {
+        return SecurityUtils.getCurrentUserLogin()
+            .flatMap(userRepository::findOneByLogin)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+    }
+
+    /**
+     * The profile with this id, if it exists and the current user may access it:
+     * users only see their own profile, admins see any.
+     */
+    private Optional<UserProfile> findAccessibleProfile(Long id) {
+        String currentLogin = SecurityUtils.getCurrentUserLogin().orElse("");
+        boolean isAdmin = SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN);
+        return userProfileRepository
+            .findOneWithToOneRelationships(id)
+            .filter(profile -> isAdmin || (profile.getUser() != null && currentLogin.equals(profile.getUser().getLogin())));
     }
 }

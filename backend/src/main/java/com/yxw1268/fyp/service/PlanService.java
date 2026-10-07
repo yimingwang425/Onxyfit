@@ -15,17 +15,10 @@ import java.util.Map;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 /**
  * Service Implementation for managing {@link com.yxw1268.fyp.domain.Plan}.
@@ -39,25 +32,19 @@ public class PlanService {
     private final PlanRepository planRepository;
     private final UserProfileRepository userProfileRepository;
     private final PlanMapper planMapper;
-    private final RestTemplate restTemplate;
+    private final MlServiceClient mlServiceClient;
     private final ObjectMapper objectMapper;
-
-    @Value("${app.ml-service.url}")
-    private String mlServiceUrl;
 
     public PlanService(
         PlanRepository planRepository,
         UserProfileRepository userProfileRepository,
-        PlanMapper planMapper
+        PlanMapper planMapper,
+        MlServiceClient mlServiceClient
     ) {
         this.planRepository = planRepository;
         this.userProfileRepository = userProfileRepository;
         this.planMapper = planMapper;
-
-        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(10000);
-        factory.setReadTimeout(120000);
-        this.restTemplate = new RestTemplate(factory);
+        this.mlServiceClient = mlServiceClient;
 
         this.objectMapper = new ObjectMapper();
     }
@@ -105,6 +92,17 @@ public class PlanService {
     public Page<PlanDTO> findAll(Pageable pageable) {
         LOG.debug("Request to get all Plans");
         return planRepository.findAll(pageable)
+            .map(planMapper::toDto)
+            .map(this::convertJsonToObject);
+    }
+
+    /**
+     * Get the plans belonging to one user.
+     */
+    @Transactional(readOnly = true)
+    public Page<PlanDTO> findAllForUser(String login, Pageable pageable) {
+        LOG.debug("Request to get Plans of user {}", login);
+        return planRepository.findAllByProfile_User_Login(login, pageable)
             .map(planMapper::toDto)
             .map(this::convertJsonToObject);
     }
@@ -198,10 +196,6 @@ public class PlanService {
      * Call Flask ML service API.
      */
     private Map<String, Object> callFlaskApi(UserProfile profile) {
-        String url = mlServiceUrl + "/api/predict";
-
-        LOG.info("Calling Flask API: {}", url);
-
         Map<String, Object> request = new HashMap<>();
         request.put("age", profile.getAge());
         request.put("heightCm", profile.getHeightCm());
@@ -211,19 +205,8 @@ public class PlanService {
         request.put("dietPref", profile.getDietPref().name());
         request.put("metabolicProfile", profile.getMetabolicProfile().name());
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
-
         try {
-            ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
-
-            if (response.getStatusCode().is2xxSuccessful()) {
-                Map<String, Object> body = response.getBody();
-                return body;
-            } else {
-                throw new RuntimeException("Flask API returned status: " + response.getStatusCode());
-            }
+            return mlServiceClient.predict(request);
         } catch (Exception e) {
             LOG.error("Failed to call Flask API: {}", e.getMessage());
             throw new RuntimeException("Failed to generate AI plan", e);

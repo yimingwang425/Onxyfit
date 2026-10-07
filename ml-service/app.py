@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
 import numpy as np
 import joblib
+import hmac
 import os
 import tensorflow as tf
 import requests
@@ -10,7 +10,24 @@ import json
 keras = tf.keras
 
 app = Flask(__name__)
-CORS(app)
+
+# Only the backend may call this service: it must send the shared secret in X-Internal-Token.
+# No CORS headers are set, so browsers can't call it directly either.
+ML_SERVICE_TOKEN = os.environ.get('ML_SERVICE_TOKEN', '')
+
+
+@app.before_request
+def require_internal_token():
+    if request.path == '/health':
+        return None
+    if not ML_SERVICE_TOKEN:
+        print("ML_SERVICE_TOKEN is not set; rejecting request")
+        return jsonify({"error": "service not configured"}), 503
+    supplied = request.headers.get('X-Internal-Token', '')
+    if not hmac.compare_digest(supplied.encode('utf-8'), ML_SERVICE_TOKEN.encode('utf-8')):
+        return jsonify({"error": "unauthorized"}), 401
+    return None
+
 
 model_path = os.path.dirname(os.path.abspath(__file__))
 

@@ -11,6 +11,8 @@ import com.yxw1268.fyp.domain.User;
 import com.yxw1268.fyp.repository.AuthorityRepository;
 import com.yxw1268.fyp.repository.UserRepository;
 import com.yxw1268.fyp.security.AuthoritiesConstants;
+import com.yxw1268.fyp.service.OtpService;
+import com.yxw1268.fyp.service.OtpService.Purpose;
 import com.yxw1268.fyp.service.UserService;
 import com.yxw1268.fyp.service.dto.AdminUserDTO;
 import com.yxw1268.fyp.service.dto.PasswordChangeDTO;
@@ -56,6 +58,9 @@ class AccountResourceIT {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private OtpService otpService;
 
     @Autowired
     private MockMvc restAccountMockMvc;
@@ -131,7 +136,7 @@ class AccountResourceIT {
     @Transactional
     void testRegisterValid() throws Exception {
         ManagedUserVM validUser = new ManagedUserVM();
-        validUser.setLogin("test-register-valid");
+        validUser.setLogin("test-register-valid@example.com");
         validUser.setPassword("password");
         validUser.setFirstName("Alice");
         validUser.setLastName("Test");
@@ -139,15 +144,16 @@ class AccountResourceIT {
         validUser.setImageUrl("http://placehold.it/50x50");
         validUser.setLangKey(Constants.DEFAULT_LANGUAGE);
         validUser.setAuthorities(Collections.singleton(AuthoritiesConstants.USER));
-        assertThat(userRepository.findOneByLogin("test-register-valid")).isEmpty();
+        validUser.setTempToken(otpService.issueToken(validUser.getEmail(), Purpose.REGISTER_TOKEN, RegisterController.REGISTER_TOKEN_TTL));
+        assertThat(userRepository.findOneByLogin("test-register-valid@example.com")).isEmpty();
 
         restAccountMockMvc
             .perform(post("/api/register").contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(validUser)))
             .andExpect(status().isCreated());
 
-        assertThat(userRepository.findOneByLogin("test-register-valid")).isPresent();
+        assertThat(userRepository.findOneByLogin("test-register-valid@example.com")).isPresent();
 
-        userService.deleteUser("test-register-valid");
+        userService.deleteUser("test-register-valid@example.com");
     }
 
     @Test
@@ -345,7 +351,7 @@ class AccountResourceIT {
     @Transactional
     void testRegisterAdminIsIgnored() throws Exception {
         ManagedUserVM validUser = new ManagedUserVM();
-        validUser.setLogin("badguy");
+        validUser.setLogin("badguy@example.com");
         validUser.setPassword("password");
         validUser.setFirstName("Bad");
         validUser.setLastName("Guy");
@@ -354,18 +360,19 @@ class AccountResourceIT {
         validUser.setImageUrl("http://placehold.it/50x50");
         validUser.setLangKey(Constants.DEFAULT_LANGUAGE);
         validUser.setAuthorities(Collections.singleton(AuthoritiesConstants.ADMIN));
+        validUser.setTempToken(otpService.issueToken(validUser.getEmail(), Purpose.REGISTER_TOKEN, RegisterController.REGISTER_TOKEN_TTL));
 
         restAccountMockMvc
             .perform(post("/api/register").contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(validUser)))
             .andExpect(status().isCreated());
 
-        Optional<User> userDup = userRepository.findOneWithAuthoritiesByLogin("badguy");
+        Optional<User> userDup = userRepository.findOneWithAuthoritiesByLogin("badguy@example.com");
         assertThat(userDup).isPresent();
         assertThat(userDup.orElseThrow().getAuthorities())
             .hasSize(1)
             .containsExactly(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
 
-        userService.deleteUser("badguy");
+        userService.deleteUser("badguy@example.com");
     }
 
     @Test

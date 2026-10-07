@@ -13,6 +13,7 @@ import com.yxw1268.fyp.IntegrationTest;
 import com.yxw1268.fyp.domain.ProgressLog;
 import com.yxw1268.fyp.domain.UserProfile;
 import com.yxw1268.fyp.repository.ProgressLogRepository;
+import com.yxw1268.fyp.security.AuthoritiesConstants;
 import com.yxw1268.fyp.service.dto.ProgressLogDTO;
 import com.yxw1268.fyp.service.mapper.ProgressLogMapper;
 import jakarta.persistence.EntityManager;
@@ -38,7 +39,8 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @IntegrationTest
 @AutoConfigureMockMvc
-@WithMockUser
+// Generic CRUD is exercised as an admin; per-user access rules are covered by SecurityHardeningIT
+@WithMockUser(authorities = AuthoritiesConstants.ADMIN)
 class ProgressLogResourceIT {
 
     private static final LocalDate DEFAULT_LOG_DATE = LocalDate.ofEpochDay(0L);

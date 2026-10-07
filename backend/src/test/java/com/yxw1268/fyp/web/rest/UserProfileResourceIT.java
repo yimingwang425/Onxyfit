@@ -19,6 +19,7 @@ import com.yxw1268.fyp.domain.enumeration.Goal;
 import com.yxw1268.fyp.domain.enumeration.MetabolicProfile;
 import com.yxw1268.fyp.repository.UserProfileRepository;
 import com.yxw1268.fyp.repository.UserRepository;
+import com.yxw1268.fyp.security.AuthoritiesConstants;
 import com.yxw1268.fyp.service.UserProfileService;
 import com.yxw1268.fyp.service.dto.UserProfileDTO;
 import com.yxw1268.fyp.service.mapper.UserProfileMapper;
@@ -50,7 +51,8 @@ import org.springframework.transaction.annotation.Transactional;
 @IntegrationTest
 @ExtendWith(MockitoExtension.class)
 @AutoConfigureMockMvc
-@WithMockUser
+// Generic CRUD is exercised as an admin; per-user access rules are covered by SecurityHardeningIT
+@WithMockUser(authorities = AuthoritiesConstants.ADMIN)
 class UserProfileResourceIT {
 
     private static final Integer DEFAULT_AGE = 10;

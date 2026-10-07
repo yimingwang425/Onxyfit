@@ -90,6 +90,10 @@ jhipster:
 # ===================================================================
 
 # application:
+app:
+  ml-service:
+    url: http://localhost:5001
+    token: test-token
 management:
   health:
     mail:

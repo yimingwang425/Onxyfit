@@ -89,6 +89,19 @@ public class ProgressLogService {
     }
 
     /**
+     * Get the progressLogs belonging to one user.
+     *
+     * @param login the login of the owner.
+     * @param pageable the pagination information.
+     * @return the list of entities.
+     */
+    @Transactional(readOnly = true)
+    public Page<ProgressLogDTO> findAllForUser(String login, Pageable pageable) {
+        LOG.debug("Request to get ProgressLogs of user {}", login);
+        return progressLogRepository.findAllByProfile_User_Login(login, pageable).map(progressLogMapper::toDto);
+    }
+
+    /**
      * Get one progressLog by id.
      *
      * @param id the id of the entity.

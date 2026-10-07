@@ -104,7 +104,7 @@ export class RegisterEmailPage {
     } catch (err: any) {
       console.error('sendOtp error', err);
       this.loading = false;
-      this.error = (err && err.message) ? err.message : 'Failed to send verification code. Please try again.';
+      this.error = err?.error?.error ?? err?.message ?? 'Failed to send verification code. Please try again.';
     }
   }
 }

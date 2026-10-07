@@ -1,8 +1,13 @@
 package com.yxw1268.fyp.web.rest;
 
+import com.yxw1268.fyp.repository.PlanRepository;
 import com.yxw1268.fyp.repository.ProgressLogRepository;
+import com.yxw1268.fyp.repository.UserProfileRepository;
+import com.yxw1268.fyp.security.AuthoritiesConstants;
+import com.yxw1268.fyp.security.SecurityUtils;
 import com.yxw1268.fyp.service.ProgressLogService;
 import com.yxw1268.fyp.service.dto.ProgressLogDTO;
+import com.yxw1268.fyp.service.dto.UserProfileDTO;
 import com.yxw1268.fyp.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -17,8 +22,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.PaginationUtil;
@@ -42,9 +49,20 @@ public class ProgressLogResource {
 
     private final ProgressLogRepository progressLogRepository;
 
-    public ProgressLogResource(ProgressLogService progressLogService, ProgressLogRepository progressLogRepository) {
+    private final UserProfileRepository userProfileRepository;
+
+    private final PlanRepository planRepository;
+
+    public ProgressLogResource(
+        ProgressLogService progressLogService,
+        ProgressLogRepository progressLogRepository,
+        UserProfileRepository userProfileRepository,
+        PlanRepository planRepository
+    ) {
         this.progressLogService = progressLogService;
         this.progressLogRepository = progressLogRepository;
+        this.userProfileRepository = userProfileRepository;
+        this.planRepository = planRepository;
     }
 
     /**
@@ -60,6 +78,7 @@ public class ProgressLogResource {
         if (progressLogDTO.getId() != null) {
             throw new BadRequestAlertException("A new progressLog cannot already have an ID", ENTITY_NAME, "idexists");
         }
+        bindToCurrentUser(progressLogDTO);
         progressLogDTO = progressLogService.save(progressLogDTO);
         return ResponseEntity.created(new URI("/api/progress-logs/" + progressLogDTO.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, progressLogDTO.getId().toString()))
@@ -89,9 +108,10 @@ public class ProgressLogResource {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
-        if (!progressLogRepository.existsById(id)) {
+        if (!canAccess(id)) {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
+        bindToCurrentUser(progressLogDTO);
 
         progressLogDTO = progressLogService.update(progressLogDTO);
         return ResponseEntity.ok()
@@ -123,8 +143,13 @@ public class ProgressLogResource {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
-        if (!progressLogRepository.existsById(id)) {
+        if (!canAccess(id)) {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+        if (!isAdmin()) {
+            // A log can't be moved to another profile (null fields are left untouched)
+            progressLogDTO.setProfile(null);
+            requireOwnPlan(progressLogDTO);
         }
 
         Optional<ProgressLogDTO> result = progressLogService.partialUpdate(progressLogDTO);
@@ -136,7 +161,7 @@ public class ProgressLogResource {
     }
 
     /**
-     * {@code GET  /progress-logs} : get all the progressLogs.
+     * {@code GET  /progress-logs} : get the current user's progressLogs (all of them for an admin).
      *
      * @param pageable the pagination information.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of progressLogs in body.
@@ -144,7 +169,9 @@ public class ProgressLogResource {
     @GetMapping("")
     public ResponseEntity<List<ProgressLogDTO>> getAllProgressLogs(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
         LOG.debug("REST request to get a page of ProgressLogs");
-        Page<ProgressLogDTO> page = progressLogService.findAll(pageable);
+        Page<ProgressLogDTO> page = isAdmin()
+            ? progressLogService.findAll(pageable)
+            : progressLogService.findAllForUser(currentLogin(), pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
@@ -158,7 +185,7 @@ public class ProgressLogResource {
     @GetMapping("/{id}")
     public ResponseEntity<ProgressLogDTO> getProgressLog(@PathVariable("id") Long id) {
         LOG.debug("REST request to get ProgressLog : {}", id);
-        Optional<ProgressLogDTO> progressLogDTO = progressLogService.findOne(id);
+        Optional<ProgressLogDTO> progressLogDTO = canAccess(id) ? progressLogService.findOne(id) : Optional.empty();
         return ResponseUtil.wrapOrNotFound(progressLogDTO);
     }
 
@@ -171,9 +198,55 @@ public class ProgressLogResource {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProgressLog(@PathVariable("id") Long id) {
         LOG.debug("REST request to delete ProgressLog : {}", id);
+        if (!canAccess(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
         progressLogService.delete(id);
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
+    }
+
+    private static boolean isAdmin() {
+        return SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN);
+    }
+
+    private static String currentLogin() {
+        return SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+    }
+
+    /** Users may only touch logs attached to their own profile. */
+    private boolean canAccess(Long progressLogId) {
+        return isAdmin()
+            ? progressLogRepository.existsById(progressLogId)
+            : progressLogRepository.existsByIdAndProfile_User_Login(progressLogId, currentLogin());
+    }
+
+    /**
+     * A log always belongs to the profile of the authenticated user, whatever the request body says,
+     * and may only reference one of that user's plans.
+     */
+    private void bindToCurrentUser(ProgressLogDTO progressLogDTO) {
+        if (isAdmin()) {
+            return;
+        }
+        Long profileId = userProfileRepository
+            .findOneByUserLogin(currentLogin())
+            .orElseThrow(() -> new BadRequestAlertException("Current user has no profile", ENTITY_NAME, "noprofile"))
+            .getId();
+        UserProfileDTO profile = new UserProfileDTO();
+        profile.setId(profileId);
+        progressLogDTO.setProfile(profile);
+        requireOwnPlan(progressLogDTO);
+    }
+
+    private void requireOwnPlan(ProgressLogDTO progressLogDTO) {
+        if (
+            progressLogDTO.getPlan() != null &&
+            progressLogDTO.getPlan().getId() != null &&
+            !planRepository.existsByIdAndProfile_User_Login(progressLogDTO.getPlan().getId(), currentLogin())
+        ) {
+            throw new BadRequestAlertException("Plan not found", ENTITY_NAME, "plannotfound");
+        }
     }
 }

@@ -1,68 +1,41 @@
 package com.yxw1268.fyp.web.rest;
 
-import com.yxw1268.fyp.domain.OtpRecord;
-import com.yxw1268.fyp.domain.User;
 import com.yxw1268.fyp.repository.UserRepository;
-import com.yxw1268.fyp.service.OtpRecordService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.transaction.annotation.Transactional;
+import com.yxw1268.fyp.service.OtpService;
+import com.yxw1268.fyp.service.OtpService.Purpose;
+import com.yxw1268.fyp.service.OtpService.VerifyResult;
+import com.yxw1268.fyp.service.ResendMailClient;
+import com.yxw1268.fyp.service.UserService;
+import com.yxw1268.fyp.web.rest.vm.ManagedUserVM;
+import java.time.Duration;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Random;
-import java.util.UUID;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/account/reset-password")
 public class PasswordResetController {
 
+    private static final Duration RESET_TOKEN_TTL = Duration.ofMinutes(15);
+
     private final Logger log = LoggerFactory.getLogger(PasswordResetController.class);
-    private final OtpRecordService otpRecordService;
+    private final OtpService otpService;
+    private final ResendMailClient mailClient;
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final UserService userService;
 
-    private static final String RESEND_API_KEY = System.getenv("RESEND_API_KEY") != null
-        ? System.getenv("RESEND_API_KEY") : "";
-
-    public PasswordResetController(OtpRecordService otpRecordService, UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.otpRecordService = otpRecordService;
+    public PasswordResetController(
+        OtpService otpService,
+        ResendMailClient mailClient,
+        UserRepository userRepository,
+        UserService userService
+    ) {
+        this.otpService = otpService;
+        this.mailClient = mailClient;
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
-
-    private void sendEmailViaResend(String toEmail, String subject, String htmlContent) {
-        try {
-            String jsonBody = String.format(
-                "{\"from\":\"OnyxFit <system@onyx-fit.app>\",\"to\":[\"%s\"],\"subject\":\"%s\",\"html\":\"%s\"}",
-                toEmail,
-                subject,
-                htmlContent.replace("\"", "\\\"")
-            );
-
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://api.resend.com/emails"))
-                .header("Authorization", "Bearer " + RESEND_API_KEY)
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-                .build();
-
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            log.info("Resend API response: {} - {}", response.statusCode(), response.body());
-        } catch (Exception e) {
-            log.error("Failed to send email via Resend", e);
-        }
+        this.userService = userService;
     }
 
     /**
@@ -71,38 +44,25 @@ public class PasswordResetController {
      */
     @PostMapping("/init")
     public ResponseEntity<Map<String, Object>> initPasswordReset(@RequestBody Map<String, String> body) {
-        String email = body.get("email");
-        log.info("Password reset request for email: {}", email);
+        String email = OtpService.normalizeEmail(body.get("email"));
+        log.debug("Password reset request for email: {}", email);
 
-        //Check if email exists
-        Optional<User> userOpt = userRepository.findOneByEmailIgnoreCase(email);
-        if (userOpt.isEmpty()) {
-            log.warn("Password reset requested for non-existent email: {}", email);
-            return ResponseEntity.ok(Map.of("message", "otp_sent", "expiresIn", 600));
+        // Same response whether or not the email exists or a code was just sent,
+        // so this endpoint can't be used to probe for accounts.
+        if (OtpService.isValidEmail(email) && userRepository.findOneByEmailIgnoreCase(email).isPresent()) {
+            otpService
+                .issueOtp(email, Purpose.PASSWORD_RESET)
+                .ifPresent(otp ->
+                    mailClient.sendOtp(
+                        email,
+                        "OnyxFit - Password Reset Verification",
+                        "You requested to reset your password. Your verification code is:",
+                        otp
+                    )
+                );
         }
 
-        String otp = String.format("%06d", new Random().nextInt(999999));
-
-        OtpRecord record = new OtpRecord();
-        record.setEmail(email);
-        record.setOtpCode(otp);
-        record.setVerified(false);
-        record.setExpiryTime(Instant.now().plus(10, ChronoUnit.MINUTES));
-        otpRecordService.save(record);
-
-        String subject = "OnyxFit - Password Reset Verification";
-        String content = "<html><body>" +
-                "<h3>Hello!</h3>" +
-                "<p>You requested to reset your password. Your verification code is:</p>" +
-                "<h1>" + otp + "</h1>" +
-                "<p>This code will expire in 10 minutes.</p>" +
-                "<p>If you did not request this, please ignore this email.</p>" +
-                "</body></html>";
-
-        sendEmailViaResend(email, subject, content);
-        log.info("Password reset OTP for {}: {}", email, otp);
-
-        return ResponseEntity.ok(Map.of("message", "otp_sent", "expiresIn", 600));
+        return ResponseEntity.ok(Map.of("message", "otp_sent", "expiresIn", OtpService.OTP_TTL.toSeconds()));
     }
 
     /**
@@ -111,45 +71,15 @@ public class PasswordResetController {
      */
     @PostMapping("/verify")
     public ResponseEntity<Map<String, Object>> verifyResetOtp(@RequestBody Map<String, String> body) {
-        String email = body.get("email");
-        String otp = body.get("otp");
-        log.info("Verify password reset OTP for {}", email);
+        String email = OtpService.normalizeEmail(body.get("email"));
+        log.debug("Verify password reset OTP for {}", email);
 
-        List<OtpRecord> records = otpRecordService.findAll();
-        Optional<OtpRecord> recordOpt = records.stream()
-            .filter(r -> r.getEmail().equalsIgnoreCase(email))
-            .filter(r -> r.getOtpCode().length() == 6)
-            .filter(r -> !Boolean.TRUE.equals(r.getVerified()))
-            .max((r1, r2) -> r1.getExpiryTime().compareTo(r2.getExpiryTime()));
-
-        if (recordOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "No OTP found"));
+        VerifyResult result = otpService.verifyOtp(email, Purpose.PASSWORD_RESET, body.get("otp"));
+        if (result != VerifyResult.OK) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", RegisterController.describe(result)));
         }
 
-        OtpRecord record = recordOpt.orElseThrow();
-
-        if (Instant.now().isAfter(record.getExpiryTime())) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "OTP expired"));
-        }
-
-        if (!record.getOtpCode().equals(otp)) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Invalid OTP"));
-        }
-
-        record.setVerified(true);
-        otpRecordService.save(record);
-
-        //Generate a reset token
-        String resetToken = UUID.randomUUID().toString();
-        log.info("Password reset token generated for {}: {}", email, resetToken);
-
-        OtpRecord tokenRecord = new OtpRecord();
-        tokenRecord.setEmail(email);
-        tokenRecord.setOtpCode(resetToken);
-        tokenRecord.setVerified(false);
-        tokenRecord.setExpiryTime(Instant.now().plus(15, ChronoUnit.MINUTES));
-        otpRecordService.save(tokenRecord);
-
+        String resetToken = otpService.issueToken(email, Purpose.PASSWORD_RESET_TOKEN, RESET_TOKEN_TTL);
         return ResponseEntity.ok(Map.of("success", true, "resetToken", resetToken));
     }
 
@@ -158,42 +88,26 @@ public class PasswordResetController {
      * Set new password using reset token
      */
     @PostMapping("/finish")
-    @Transactional
     public ResponseEntity<Map<String, Object>> finishPasswordReset(@RequestBody Map<String, String> body) {
-        String resetToken = body.get("resetToken");
+        String email = OtpService.normalizeEmail(body.get("email"));
         String newPassword = body.get("newPassword");
-        String email = body.get("email");
-        log.info("Finish password reset for {}", email);
+        log.debug("Finish password reset for {}", email);
 
-        //Find the token record
-        List<OtpRecord> records = otpRecordService.findAll();
-        Optional<OtpRecord> tokenOpt = records.stream()
-            .filter(r -> r.getEmail().equalsIgnoreCase(email) && r.getOtpCode().equals(resetToken))
-            .findFirst();
-
-        if (tokenOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Invalid reset token"));
+        if (
+            newPassword == null ||
+            newPassword.length() < ManagedUserVM.PASSWORD_MIN_LENGTH ||
+            newPassword.length() > ManagedUserVM.PASSWORD_MAX_LENGTH
+        ) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Invalid password"));
         }
 
-        OtpRecord tokenRecord = tokenOpt.orElseThrow();
-
-        if (Instant.now().isAfter(tokenRecord.getExpiryTime())) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Reset token expired"));
+        if (!otpService.consumeToken(email, Purpose.PASSWORD_RESET_TOKEN, body.get("resetToken"))) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Invalid or expired reset token"));
         }
 
-        Optional<User> userOpt = userRepository.findOneByEmailIgnoreCase(email);
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "User not found"));
+        if (userService.resetPasswordByEmail(email, newPassword).isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Invalid or expired reset token"));
         }
-
-        User user = userOpt.orElseThrow();
-        user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.saveAndFlush(user);
-        log.info("Password hash updated for user {}", email);
-
-        //Clean up token
-        tokenRecord.setVerified(true);
-        otpRecordService.save(tokenRecord);
 
         log.info("Password successfully reset for {}", email);
         return ResponseEntity.ok(Map.of("success", true));

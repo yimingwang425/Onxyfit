@@ -15,6 +15,9 @@ public class ManagedUserVM extends AdminUserDTO {
     @Size(min = PASSWORD_MIN_LENGTH, max = PASSWORD_MAX_LENGTH)
     private String password;
 
+    /** Token returned by POST /api/register/verify-otp, proving the email was verified. */
+    private String tempToken;
+
     public ManagedUserVM() {
         // Empty constructor needed for Jackson.
     }
@@ -25,6 +28,14 @@ public class ManagedUserVM extends AdminUserDTO {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getTempToken() {
+        return tempToken;
+    }
+
+    public void setTempToken(String tempToken) {
+        this.tempToken = tempToken;
     }
 
     // prettier-ignore

@@ -108,7 +108,7 @@ export class ChangeEmailPage {
       await alert.present();
 
     } catch (e: any) {
-      this.error = e?.message ?? 'Failed to verify OTP';
+      this.error = e?.error?.error ?? e?.message ?? 'Failed to verify OTP';
     } finally {
       this.loading = false;
     }

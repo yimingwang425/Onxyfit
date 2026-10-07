@@ -135,6 +135,21 @@ public class UserService {
         return newUser;
     }
 
+    /**
+     * Set a new password for the user with this email, once the caller has proven ownership of it.
+     */
+    public Optional<User> resetPasswordByEmail(String email, String newPassword) {
+        return userRepository
+            .findOneByEmailIgnoreCase(email)
+            .map(user -> {
+                user.setPassword(passwordEncoder.encode(newPassword));
+                user.setResetKey(null);
+                user.setResetDate(null);
+                this.clearUserCaches(user);
+                return user;
+            });
+    }
+
     private boolean removeNonActivatedUser(User existingUser) {
         if (existingUser.isActivated()) {
             return false;

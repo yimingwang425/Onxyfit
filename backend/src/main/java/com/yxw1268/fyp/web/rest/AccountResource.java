@@ -8,6 +8,8 @@ import com.yxw1268.fyp.repository.ProgressLogRepository;
 import com.yxw1268.fyp.repository.OtpRecordRepository;
 import com.yxw1268.fyp.security.SecurityUtils;
 import com.yxw1268.fyp.service.MailService;
+import com.yxw1268.fyp.service.OtpService;
+import com.yxw1268.fyp.service.OtpService.Purpose;
 import com.yxw1268.fyp.service.UserService;
 import com.yxw1268.fyp.service.dto.AdminUserDTO;
 import com.yxw1268.fyp.service.dto.PasswordChangeDTO;
@@ -49,6 +51,7 @@ public class AccountResource {
     private final PlanRepository planRepository;
     private final ProgressLogRepository progressLogRepository;
     private final OtpRecordRepository otpRecordRepository;
+    private final OtpService otpService;
 
     public AccountResource(
         UserRepository userRepository,
@@ -57,7 +60,8 @@ public class AccountResource {
         UserProfileRepository userProfileRepository,
         PlanRepository planRepository,
         ProgressLogRepository progressLogRepository,
-        OtpRecordRepository otpRecordRepository
+        OtpRecordRepository otpRecordRepository,
+        OtpService otpService
     ) {
         this.userRepository = userRepository;
         this.userService = userService;
@@ -66,6 +70,7 @@ public class AccountResource {
         this.planRepository = planRepository;
         this.progressLogRepository = progressLogRepository;
         this.otpRecordRepository = otpRecordRepository;
+        this.otpService = otpService;
     }
 
     /**
@@ -77,7 +82,16 @@ public class AccountResource {
         if (isPasswordLengthInvalid(managedUserVM.getPassword())) {
             throw new InvalidPasswordException();
         }
-        User user = userService.registerUser(managedUserVM, managedUserVM.getPassword());
+        // The login is the email address, and that address must have just been verified by OTP.
+        String email = OtpService.normalizeEmail(managedUserVM.getEmail());
+        if (!email.equals(OtpService.normalizeEmail(managedUserVM.getLogin()))) {
+            throw new BadRequestAlertException("Login must be the email address", "userManagement", "loginnotemail");
+        }
+        if (!otpService.isTokenValid(email, Purpose.REGISTER_TOKEN, managedUserVM.getTempToken())) {
+            throw new BadRequestAlertException("Email address has not been verified", "userManagement", "emailnotverified");
+        }
+        userService.registerUser(managedUserVM, managedUserVM.getPassword());
+        otpService.consumeToken(email, Purpose.REGISTER_TOKEN, managedUserVM.getTempToken());
     }
 
     /**

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        OtpRecord: scope each code to the flow it was issued for and count failed attempts.
+    -->
+    <changeSet id="20261007000000-1" author="yxw1268">
+        <addColumn tableName="otp_record">
+            <column name="purpose" type="varchar(32)">
+                <constraints nullable="true" />
+            </column>
+            <column name="attempts" type="integer">
+                <constraints nullable="true" />
+            </column>
+        </addColumn>
+        <createIndex tableName="otp_record" indexName="idx_otp_record_email_purpose">
+            <column name="email"/>
+            <column name="purpose"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

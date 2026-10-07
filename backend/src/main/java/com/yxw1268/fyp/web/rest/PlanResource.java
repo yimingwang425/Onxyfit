@@ -1,6 +1,8 @@
 package com.yxw1268.fyp.web.rest;
 
 import com.yxw1268.fyp.repository.PlanRepository;
+import com.yxw1268.fyp.security.AuthoritiesConstants;
+import com.yxw1268.fyp.security.SecurityUtils;
 import com.yxw1268.fyp.service.PlanService;
 import com.yxw1268.fyp.service.dto.PlanDTO;
 import com.yxw1268.fyp.web.rest.errors.BadRequestAlertException;
@@ -17,8 +19,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.PaginationUtil;
@@ -48,9 +53,10 @@ public class PlanResource {
     }
 
     /**
-     * {@code POST  /plans} : Create a new plan.
+     * {@code POST  /plans} : Create a new plan. Admin only: users get their plans from {@code /plans/generate}.
      */
     @PostMapping("")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<PlanDTO> createPlan(@Valid @RequestBody PlanDTO planDTO) throws URISyntaxException {
         LOG.debug("REST request to save Plan : {}", planDTO);
         if (planDTO.getId() != null) {
@@ -66,6 +72,7 @@ public class PlanResource {
      * {@code PUT  /plans/:id} : Updates an existing plan.
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<PlanDTO> updatePlan(
         @PathVariable(value = "id", required = false) final Long id,
         @Valid @RequestBody PlanDTO planDTO
@@ -92,6 +99,7 @@ public class PlanResource {
      * {@code PATCH  /plans/:id} : Partial updates given fields of an existing plan.
      */
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<PlanDTO> partialUpdatePlan(
         @PathVariable(value = "id", required = false) final Long id,
         @NotNull @RequestBody PlanDTO planDTO
@@ -117,12 +125,12 @@ public class PlanResource {
     }
 
     /**
-     * {@code GET  /plans} : get all the plans.
+     * {@code GET  /plans} : get the current user's plans (all plans for an admin).
      */
     @GetMapping("")
     public ResponseEntity<List<PlanDTO>> getAllPlans(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
         LOG.debug("REST request to get a page of Plans");
-        Page<PlanDTO> page = planService.findAll(pageable);
+        Page<PlanDTO> page = isAdmin() ? planService.findAll(pageable) : planService.findAllForUser(currentLogin(), pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
@@ -133,7 +141,7 @@ public class PlanResource {
     @GetMapping("/{id}")
     public ResponseEntity<PlanDTO> getPlan(@PathVariable("id") Long id) {
         LOG.debug("REST request to get Plan : {}", id);
-        Optional<PlanDTO> planDTO = planService.findOne(id);
+        Optional<PlanDTO> planDTO = canAccess(id) ? planService.findOne(id) : Optional.empty();
         return ResponseUtil.wrapOrNotFound(planDTO);
     }
 
@@ -143,6 +151,9 @@ public class PlanResource {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePlan(@PathVariable("id") Long id) {
         LOG.debug("REST request to delete Plan : {}", id);
+        if (!canAccess(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
         planService.delete(id);
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
@@ -166,5 +177,20 @@ public class PlanResource {
             LOG.error("Failed to generate AI plan", e);
             throw new RuntimeException("Failed to generate AI plan: " + e.getMessage());
         }
+    }
+
+    private static boolean isAdmin() {
+        return SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN);
+    }
+
+    private static String currentLogin() {
+        return SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+    }
+
+    /** Users may only touch plans attached to their own profile. */
+    private boolean canAccess(Long planId) {
+        return isAdmin()
+            ? planRepository.existsById(planId)
+            : planRepository.existsByIdAndProfile_User_Login(planId, currentLogin());
     }
 }

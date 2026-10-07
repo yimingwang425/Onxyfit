@@ -19,6 +19,8 @@ import { addIcons } from 'ionicons';
 import { chevronForward } from 'ionicons/icons';
 import { AuthService } from '../../services/auth';
 import { PasswordResetService } from '../../services/password-reset';
+import { AlertController } from '@ionic/angular';
+import { ALLERGY_DISCLAIMER, HEALTH_DISCLAIMER } from '../../services/dietary';
 
 @Component({
   selector: 'app-settings',
@@ -44,8 +46,22 @@ import { PasswordResetService } from '../../services/password-reset';
 })
 export class SettingsPage {
   
-  constructor(private router: Router, private auth: AuthService, private passwordResetService: PasswordResetService) {
+  constructor(
+    private router: Router,
+    private auth: AuthService,
+    private passwordResetService: PasswordResetService,
+    private alertCtrl: AlertController
+  ) {
     addIcons({ chevronForward });
+  }
+
+  async showHealthDisclaimer() {
+    const alert = await this.alertCtrl.create({
+      header: 'Health disclaimer',
+      message: `${HEALTH_DISCLAIMER}\n\n${ALLERGY_DISCLAIMER}`,
+      buttons: ['OK']
+    });
+    await alert.present();
   }
 
   goToNotifications() {

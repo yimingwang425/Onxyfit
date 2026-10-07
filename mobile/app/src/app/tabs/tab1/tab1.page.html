@@ -9,6 +9,13 @@
       <div style="text-transform:uppercase; font-size:0.75rem; font-weight:700; letter-spacing:0.05em; margin-bottom:8px;">AI Insight</div>
       <p style="color:#fff; font-size:0.95rem; line-height:1.4; margin:0;">{{ aiTip }}</p>
     </div>
+    <div class="reasons-card" *ngIf="planReasons.length > 0">
+      <div class="reasons-title">This week's plan</div>
+      <ul>
+        <li *ngFor="let reason of planReasons">{{ reason }}</li>
+      </ul>
+    </div>
+
     <div class="twin-cards">
       <div class="mini-card" (click)="openWeeklyDetail()">
         <div class="mini-header">
@@ -36,7 +43,7 @@
         </div>
         <div *ngIf="weightHistory.length === 0" class="mini-body empty">
           <ion-icon name="scale-outline" class="empty-icon"></ion-icon>
-          <span class="mini-label">No data yet</span>
+          <span class="mini-label">Log your weight below</span>
         </div>
       </div>
     </div>
@@ -44,6 +51,26 @@
     <div style="font-size:1.1rem; font-weight:800; margin:0 0 16px 0; text-align:left;">Track Today</div>
 
     <div class="track-grid">
+      <div class="track-card" (click)="toggleWorkoutDone()">
+        <div class="track-top">
+          <div class="track-icon workout"><ion-icon name="barbell-outline"></ion-icon></div>
+          <button class="add-btn" (click)="$event.stopPropagation(); toggleWorkoutDone()"><ion-icon name="add"></ion-icon></button>
+        </div>
+        <span class="track-value" *ngIf="workoutDoneToday">Done</span>
+        <span class="track-value placeholder" *ngIf="!workoutDoneToday">{{ todayIsTrainingDay ? 'Not done yet' : 'Rest day' }}</span>
+        <span class="track-label">Workout</span>
+      </div>
+
+      <div class="track-card" (click)="logWeight()">
+        <div class="track-top">
+          <div class="track-icon weight"><ion-icon name="scale-outline"></ion-icon></div>
+          <button class="add-btn" (click)="$event.stopPropagation(); logWeight()"><ion-icon name="add"></ion-icon></button>
+        </div>
+        <span class="track-value" *ngIf="weightLoggedToday">{{ currentWeight }}<small> kg</small></span>
+        <span class="track-value placeholder" *ngIf="!weightLoggedToday">Not logged</span>
+        <span class="track-label">Weight</span>
+      </div>
+
       <div class="track-card" (click)="logMood()">
         <div class="track-top">
           <div class="track-icon mood"><ion-icon name="happy-outline"></ion-icon></div>

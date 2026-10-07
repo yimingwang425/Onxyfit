@@ -1,3 +1,4 @@
+import { ALLERGY_DISCLAIMER } from '../../services/dietary';
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -41,6 +42,8 @@ import { Meal } from '../../services/meal-plan';
   ],
 })
 export class MealDetailComponent implements OnInit {
+  allergyDisclaimer = ALLERGY_DISCLAIMER;
+
   @Input() meal!: Meal;
 
   constructor(private modalCtrl: ModalController) {

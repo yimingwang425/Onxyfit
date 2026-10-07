@@ -76,6 +76,14 @@
             </div>
           </div>
 
+          <button type="button" class="done-btn" [class.done]="workoutDone" [disabled]="savingWorkout" (click)="toggleWorkoutDone()">
+            <ion-icon [name]="workoutDone ? 'checkmark-circle' : 'checkmark-circle-outline'"></ion-icon>
+            <span>{{ workoutDone ? 'Workout done' : 'Mark workout as done' }}</span>
+          </button>
+          <p class="done-hint">
+            {{ workoutDone ? 'Tap again to undo.' : 'Checking in lets next week\'s plan adapt to what you actually do.' }}
+          </p>
+
         </div>
       </div>
     </div>
@@ -143,6 +151,8 @@
 
       </div>
     </div>
+
+    <p class="disclaimer-note">{{ disclaimer }}</p>
 
   </div>
 </ion-content>

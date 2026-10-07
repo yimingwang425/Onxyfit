@@ -6,6 +6,7 @@ import com.yxw1268.fyp.repository.UserProfileRepository;
 import com.yxw1268.fyp.repository.UserRepository;
 import com.yxw1268.fyp.security.AuthoritiesConstants;
 import com.yxw1268.fyp.security.SecurityUtils;
+import com.yxw1268.fyp.service.DietaryRestrictions;
 import com.yxw1268.fyp.service.UserProfileService;
 import com.yxw1268.fyp.service.dto.UserDTO;
 import com.yxw1268.fyp.service.dto.UserProfileDTO;
@@ -93,6 +94,7 @@ public class UserProfileResource {
             if (userProfileDTO.getCreatedAt() == null) {
                 userProfileDTO.setCreatedAt(existingProfile.getCreatedAt());
             }
+            applyDietaryRestrictions(userProfileDTO, existingProfile);
             userProfileDTO = userProfileService.update(userProfileDTO);
             return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, userProfileDTO.getId().toString()))
@@ -106,6 +108,7 @@ public class UserProfileResource {
         if (userProfileDTO.getCreatedAt() == null) {
             userProfileDTO.setCreatedAt(java.time.Instant.now());
         }
+        applyDietaryRestrictions(userProfileDTO, null);
         try {
             userProfileDTO = userProfileService.save(userProfileDTO);
             return ResponseEntity.created(new URI("/api/user-profiles/" + userProfileDTO.getId()))
@@ -157,6 +160,7 @@ public class UserProfileResource {
         if (userProfileDTO.getCreatedAt() == null) {
             userProfileDTO.setCreatedAt(existing.getCreatedAt());
         }
+        applyDietaryRestrictions(userProfileDTO, existing);
 
         userProfileDTO = userProfileService.update(userProfileDTO);
         return ResponseEntity.ok()
@@ -193,6 +197,7 @@ public class UserProfileResource {
         }
         // The owner of a profile can't be changed (null fields are left untouched)
         userProfileDTO.setUser(null);
+        applyDietaryRestrictions(userProfileDTO, null);
 
         Optional<UserProfileDTO> result = userProfileService.partialUpdate(userProfileDTO);
 
@@ -254,6 +259,27 @@ public class UserProfileResource {
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
+    }
+
+    /**
+     * Clean up the allergy and foods-to-avoid fields. For these and the cooking effort, a missing
+     * (null) field means the client didn't send it, in which case the stored value is kept rather
+     * than silently cleared.
+     */
+    private static void applyDietaryRestrictions(UserProfileDTO dto, UserProfile existing) {
+        if (dto.getAllergies() != null) {
+            dto.setAllergies(DietaryRestrictions.normalizeAllergies(dto.getAllergies()));
+        } else if (existing != null) {
+            dto.setAllergies(existing.getAllergies());
+        }
+        if (dto.getCookingEffort() == null && existing != null) {
+            dto.setCookingEffort(existing.getCookingEffort());
+        }
+        if (dto.getFoodDislikes() != null) {
+            dto.setFoodDislikes(DietaryRestrictions.normalizeDislikes(dto.getFoodDislikes()));
+        } else if (existing != null) {
+            dto.setFoodDislikes(existing.getFoodDislikes());
+        }
     }
 
     private User currentUser() {

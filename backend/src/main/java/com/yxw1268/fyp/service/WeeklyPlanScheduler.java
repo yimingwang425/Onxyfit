@@ -43,7 +43,10 @@ public class WeeklyPlanScheduler {
                 success++;
             } catch (Exception e) {
                 failed++;
+                LOG.error("Weekly plan regeneration failed for profile {}", profile.getId(), e);
             }
         }
+
+        LOG.info("=== Weekly plan regeneration finished: {} succeeded, {} failed ===", success, failed);
     }
 }

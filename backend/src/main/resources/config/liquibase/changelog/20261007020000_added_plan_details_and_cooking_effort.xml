@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Plan: per-day targets, explanations and adaptive state as JSON.
+        UserProfile: how much cooking the user is willing to do.
+        ProgressLog: lookups by profile and date for the daily check-in.
+    -->
+    <changeSet id="20261007020000-1" author="yxw1268">
+        <addColumn tableName="plan">
+            <column name="details_json" type="${clobType}">
+                <constraints nullable="true" />
+            </column>
+        </addColumn>
+        <addColumn tableName="user_profile">
+            <column name="cooking_effort" type="varchar(32)">
+                <constraints nullable="true" />
+            </column>
+        </addColumn>
+        <createIndex tableName="progress_log" indexName="idx_progress_log_profile_date">
+            <column name="profile_id"/>
+            <column name="log_date"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

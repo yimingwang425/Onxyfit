@@ -1,5 +1,6 @@
 package com.yxw1268.fyp.web.rest;
 
+import com.yxw1268.fyp.domain.UserProfile;
 import com.yxw1268.fyp.repository.PlanRepository;
 import com.yxw1268.fyp.repository.ProgressLogRepository;
 import com.yxw1268.fyp.repository.UserProfileRepository;
@@ -11,8 +12,11 @@ import com.yxw1268.fyp.service.dto.UserProfileDTO;
 import com.yxw1268.fyp.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -41,6 +45,10 @@ public class ProgressLogResource {
     private static final Logger LOG = LoggerFactory.getLogger(ProgressLogResource.class);
 
     private static final String ENTITY_NAME = "progressLog";
+
+    private static final BigDecimal MIN_WEIGHT_KG = BigDecimal.valueOf(20);
+    private static final BigDecimal MAX_WEIGHT_KG = BigDecimal.valueOf(400);
+    private static final int MAX_RECENT_DAYS = 180;
 
     @Value("${jhipster.clientApp.name}")
     private String applicationName;
@@ -177,6 +185,46 @@ public class ProgressLogResource {
     }
 
     /**
+     * {@code PUT  /progress-logs/today} : record today's check-in for the current user.
+     * Send only what changed: a weight, whether the workout was completed, or both.
+     */
+    @PutMapping("/today")
+    public ResponseEntity<ProgressLogDTO> checkInToday(@RequestBody CheckInVM checkIn) {
+        if (checkIn.weightKg() == null && checkIn.completedWorkout() == null) {
+            throw new BadRequestAlertException("Nothing to log", ENTITY_NAME, "emptycheckin");
+        }
+        if (
+            checkIn.weightKg() != null &&
+            (checkIn.weightKg().compareTo(MIN_WEIGHT_KG) < 0 || checkIn.weightKg().compareTo(MAX_WEIGHT_KG) > 0)
+        ) {
+            throw new BadRequestAlertException("Weight out of range", ENTITY_NAME, "weightrange");
+        }
+
+        // The client's calendar day, as long as it is plausibly "today" somewhere in the world
+        LocalDate serverToday = LocalDate.now(ZoneOffset.UTC);
+        LocalDate date = checkIn.logDate() == null ? serverToday : checkIn.logDate();
+        if (date.isBefore(serverToday.minusDays(1)) || date.isAfter(serverToday.plusDays(1))) {
+            throw new BadRequestAlertException("Check-ins are for today only", ENTITY_NAME, "daterange");
+        }
+
+        return ResponseEntity.ok(progressLogService.checkIn(currentProfile(), date, checkIn.weightKg(), checkIn.completedWorkout()));
+    }
+
+    /**
+     * {@code GET  /progress-logs/recent} : the current user's check-ins of the last {@code days} days, oldest first.
+     */
+    @GetMapping("/recent")
+    public List<ProgressLogDTO> getRecentCheckIns(@RequestParam(name = "days", defaultValue = "28") int days) {
+        int window = Math.max(1, Math.min(days, MAX_RECENT_DAYS));
+        return userProfileRepository
+            .findOneByUserLogin(currentLogin())
+            .map(profile -> progressLogService.findSince(profile.getId(), LocalDate.now(ZoneOffset.UTC).minusDays(window)))
+            .orElse(List.of());
+    }
+
+    public record CheckInVM(LocalDate logDate, BigDecimal weightKg, Boolean completedWorkout) {}
+
+    /**
      * {@code GET  /progress-logs/:id} : get the "id" progressLog.
      *
      * @param id the id of the progressLogDTO to retrieve.
@@ -230,14 +278,17 @@ public class ProgressLogResource {
         if (isAdmin()) {
             return;
         }
-        Long profileId = userProfileRepository
-            .findOneByUserLogin(currentLogin())
-            .orElseThrow(() -> new BadRequestAlertException("Current user has no profile", ENTITY_NAME, "noprofile"))
-            .getId();
+        Long profileId = currentProfile().getId();
         UserProfileDTO profile = new UserProfileDTO();
         profile.setId(profileId);
         progressLogDTO.setProfile(profile);
         requireOwnPlan(progressLogDTO);
+    }
+
+    private UserProfile currentProfile() {
+        return userProfileRepository
+            .findOneByUserLogin(currentLogin())
+            .orElseThrow(() -> new BadRequestAlertException("Current user has no profile", ENTITY_NAME, "noprofile"));
     }
 
     private void requireOwnPlan(ProgressLogDTO progressLogDTO) {

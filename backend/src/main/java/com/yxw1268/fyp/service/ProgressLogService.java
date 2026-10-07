@@ -1,9 +1,15 @@
 package com.yxw1268.fyp.service;
 
 import com.yxw1268.fyp.domain.ProgressLog;
+import com.yxw1268.fyp.domain.UserProfile;
 import com.yxw1268.fyp.repository.ProgressLogRepository;
+import com.yxw1268.fyp.repository.UserProfileRepository;
 import com.yxw1268.fyp.service.dto.ProgressLogDTO;
 import com.yxw1268.fyp.service.mapper.ProgressLogMapper;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +31,14 @@ public class ProgressLogService {
 
     private final ProgressLogMapper progressLogMapper;
 
-    public ProgressLogService(ProgressLogRepository progressLogRepository, ProgressLogMapper progressLogMapper) {
+    private final UserProfileRepository userProfileRepository;
+
+    public ProgressLogService(
+        ProgressLogRepository progressLogRepository,
+        ProgressLogMapper progressLogMapper,
+        UserProfileRepository userProfileRepository
+    ) {
+        this.userProfileRepository = userProfileRepository;
         this.progressLogRepository = progressLogRepository;
         this.progressLogMapper = progressLogMapper;
     }
@@ -99,6 +112,45 @@ public class ProgressLogService {
     public Page<ProgressLogDTO> findAllForUser(String login, Pageable pageable) {
         LOG.debug("Request to get ProgressLogs of user {}", login);
         return progressLogRepository.findAllByProfile_User_Login(login, pageable).map(progressLogMapper::toDto);
+    }
+
+    /**
+     * Record a check-in for one day, creating that day's log or updating it. Fields left null keep
+     * their stored value. A logged weight also becomes the profile's current weight.
+     */
+    public ProgressLogDTO checkIn(UserProfile profile, LocalDate date, BigDecimal weightKg, Boolean completedWorkout) {
+        ProgressLog log = progressLogRepository
+            .findFirstByProfileIdAndLogDateOrderByIdAsc(profile.getId(), date)
+            .orElseGet(() -> {
+                ProgressLog created = new ProgressLog();
+                created.setProfile(profile);
+                created.setLogDate(date);
+                created.setCompletedWorkout(false);
+                created.setCreatedAt(Instant.now());
+                return created;
+            });
+
+        if (weightKg != null) {
+            log.setWeightKg(weightKg);
+            profile.setWeightKg(weightKg);
+            userProfileRepository.save(profile);
+        }
+        if (completedWorkout != null) {
+            log.setCompletedWorkout(completedWorkout);
+        }
+        return progressLogMapper.toDto(progressLogRepository.save(log));
+    }
+
+    /**
+     * The check-ins of a profile from the given day on, oldest first.
+     */
+    @Transactional(readOnly = true)
+    public List<ProgressLogDTO> findSince(Long profileId, LocalDate from) {
+        return progressLogRepository
+            .findAllByProfileIdAndLogDateGreaterThanEqualOrderByLogDateAsc(profileId, from)
+            .stream()
+            .map(progressLogMapper::toDto)
+            .toList();
     }
 
     /**

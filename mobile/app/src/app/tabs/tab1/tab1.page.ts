@@ -20,11 +20,14 @@ import {
   analyticsOutline, 
   scaleOutline,
   addOutline, 
-  calendarOutline
+  calendarOutline,
+  barbellOutline
 } from 'ionicons/icons';
 import { Chart } from 'chart.js/auto';
 import { environment } from '../../../environments/environment';
 import { UserProfileService } from '../../services/user-profile';
+import { PlanService } from '../../services/plan.service';
+import { CheckIn, ProgressService, localDateString } from '../../services/progress.service';
 
 @Component({
   selector: 'app-tab1',
@@ -57,6 +60,14 @@ export class Tab1Page {
   currentWeight = '';
   waterDots = new Array(8);
 
+  /** Why this week's plan looks the way it does, from the server. */
+  planReasons: string[] = [];
+  /** Check-ins of the last weeks, oldest first. */
+  private checkIns: CheckIn[] = [];
+  workoutDoneToday = false;
+  todayIsTrainingDay = false;
+  weightLoggedToday = false;
+
   showWeeklyOverlay = false;
   showWeightOverlay = false;
 
@@ -77,7 +88,9 @@ export class Tab1Page {
   constructor(
     private alertCtrl: AlertController,
     private http: HttpClient,
-    private userProfileService: UserProfileService 
+    private userProfileService: UserProfileService,
+    private planService: PlanService,
+    private progressService: ProgressService
   ) {
     addIcons({
       informationCircleOutline, 
@@ -89,7 +102,7 @@ export class Tab1Page {
       trendingUpOutline, 
       analyticsOutline, 
       scaleOutline,
-      calendarOutline, 'add': addOutline
+      calendarOutline, 'add': addOutline, barbellOutline
     });
   }
 
@@ -117,6 +130,7 @@ export class Tab1Page {
     this.loadProgressFromAIPlan();
     this.loadWeightHistory();
     this.loadAIInsight();
+    this.loadPlanAndCheckIns();
     if (this.currentMood) this.moodEmoji = this.moodEmojiMap[this.currentMood] || '';
   }
 
@@ -225,21 +239,125 @@ export class Tab1Page {
     setTimeout(() => this.drawWeeklyDoughnut(), 50);
   }
 
+  /** Which days of the week (0 = Sunday) have a training session in the current plan. */
+  private trainingDays(): boolean[] {
+    const plan = this.planService.getCurrentPlan();
+    if (!plan) return [];
+    if (plan.details?.days?.length === 7) {
+      return plan.details.days.map(d => d.training);
+    }
+    const schedules: Record<string, boolean[]> = {
+      'PPL': [false, true, true, true, true, true, false],
+      'UPPER_LOWER': [false, true, true, true, true, false, false],
+      'FBW': [false, true, false, true, false, true, false],
+    };
+    return schedules[plan.workoutType || 'FBW'] || schedules['FBW'];
+  }
+
+  /** Days of this week (Sunday to today) on which a workout was checked in as done. */
   private computeWeekDays() {
-    const planStr = localStorage.getItem('current_ai_plan');
-    if (!planStr) { this.weekDayDone = new Array(7).fill(false); return; }
-    try {
-      const plan = JSON.parse(planStr);
-      const wt = plan.workoutType || 'FBW';
-      const schedules: Record<string, boolean[]> = {
-        'PPL': [false, true, true, true, true, true, false],
-        'UPPER_LOWER': [false, true, true, false, true, true, false],
-        'FBW': [false, true, false, true, false, true, false],
-      };
-      const schedule = schedules[wt] || schedules['FBW'];
-      const today = new Date().getDay();
-      this.weekDayDone = schedule.map((t, i) => t && i < today);
-    } catch { this.weekDayDone = new Array(7).fill(false); }
+    const done = new Array(7).fill(false);
+    const today = new Date();
+    for (let dow = 0; dow <= today.getDay(); dow++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - (today.getDay() - dow));
+      const key = localDateString(date);
+      done[dow] = this.checkIns.some(c => c.logDate === key && c.completedWorkout);
+    }
+    this.weekDayDone = done;
+  }
+
+  /** Pull this week's plan and the user's check-ins from the server, then refresh what depends on them. */
+  private loadPlanAndCheckIns() {
+    this.planService.syncFromServer().subscribe({
+      next: () => this.applyPlan(),
+      error: () => { }
+    });
+    this.applyPlan();
+
+    this.progressService.recent(90).subscribe({
+      next: (logs) => {
+        this.checkIns = logs;
+        const today = localDateString();
+        const todays = logs.find(l => l.logDate === today);
+        this.workoutDoneToday = !!todays?.completedWorkout;
+        this.weightLoggedToday = todays?.weightKg != null;
+        this.loadProgressFromAIPlan();
+
+        const weights = logs.filter(l => l.weightKg != null).map(l => ({ date: l.logDate, weight: Number(l.weightKg) }));
+        if (weights.length > 0) {
+          this.weightHistory = weights.slice(-30);
+          this.currentWeight = weights[weights.length - 1].weight.toFixed(1);
+          localStorage.setItem('weight_history', JSON.stringify(this.weightHistory));
+          setTimeout(() => this.drawSparkline(), 100);
+        }
+      },
+      error: () => { }
+    });
+  }
+
+  private applyPlan() {
+    const plan = this.planService.getCurrentPlan();
+    this.planReasons = plan?.details?.reasons ?? [];
+    this.todayIsTrainingDay = this.trainingDays()[new Date().getDay()] ?? false;
+    this.loadProgressFromAIPlan();
+  }
+
+  toggleWorkoutDone() {
+    const done = !this.workoutDoneToday;
+    this.progressService.checkIn({ completedWorkout: done }).subscribe({
+      next: (log) => {
+        this.workoutDoneToday = log.completedWorkout;
+        this.upsertCheckIn(log);
+        this.loadProgressFromAIPlan();
+      },
+      error: () => this.showSaveError()
+    });
+  }
+
+  async logWeight() {
+    const alert = await this.alertCtrl.create({
+      header: 'Log your weight',
+      message: 'Weigh yourself at the same time of day, ideally in the morning. A few weigh-ins a week is enough for your plan to adapt.',
+      inputs: [
+        { name: 'weight', type: 'number', min: 20, max: 400, placeholder: 'kg', value: this.currentWeight || '' }
+      ],
+      buttons: [
+        { text: 'Cancel' },
+        { text: 'Save', handler: (data: { weight: string }) => {
+            const weight = Math.round(parseFloat(data.weight) * 10) / 10;
+            if (isNaN(weight) || weight < 20 || weight > 400) return false;
+            this.progressService.checkIn({ weightKg: weight }).subscribe({
+              next: (log) => {
+                this.weightLoggedToday = true;
+                this.upsertCheckIn(log);
+                const history = this.weightHistory.filter(e => e.date !== log.logDate);
+                history.push({ date: log.logDate, weight });
+                this.weightHistory = history.slice(-30);
+                this.currentWeight = weight.toFixed(1);
+                localStorage.setItem('weight_history', JSON.stringify(this.weightHistory));
+                setTimeout(() => this.drawSparkline(), 100);
+              },
+              error: () => this.showSaveError()
+            });
+            return true;
+        }},
+      ],
+    });
+    await alert.present();
+  }
+
+  private upsertCheckIn(log: CheckIn) {
+    this.checkIns = [...this.checkIns.filter(c => c.logDate !== log.logDate), log];
+  }
+
+  private async showSaveError() {
+    const alert = await this.alertCtrl.create({
+      header: 'Not saved',
+      message: 'Could not save your check-in. Please check your connection and try again.',
+      buttons: ['OK']
+    });
+    await alert.present();
   }
 
   private drawWeeklyDoughnut() {
@@ -337,36 +455,15 @@ export class Tab1Page {
     this.greeting = h < 12 ? 'Good Morning' : h < 18 ? 'Good Afternoon' : 'Good Evening';
   }
 
+  /** Workouts checked in as done this week, out of the sessions the plan schedules. */
   private loadProgressFromAIPlan() {
-    const planStr = localStorage.getItem('current_ai_plan');
-    if (!planStr) { 
-      this.progressData = { completed: 0, total: 0 }; 
-      return; 
+    const total = this.trainingDays().filter(d => d).length;
+    if (total === 0) {
+      this.progressData = { completed: 0, total: 0 };
+      return;
     }
-
-    try {
-      const plan = JSON.parse(planStr);
-      const wt = plan.workoutType || 'FBW';
-
-      const schedules: Record<string, boolean[]> = {
-        'PPL': [false, true, true, true, true, true, false],
-        'UPPER_LOWER': [false, true, true, false, true, true, false],
-        'FBW': [false, true, false, true, false, true, false],
-      };
-
-      const schedule = schedules[wt] || schedules['FBW'];
-      const total = schedule.filter(d => d).length;
-
-      const today = new Date().getDay(); // 0=Sun ... 6=Sat
-      let completed = 0;
-      for (let i = 1; i < today; i++) { 
-        if (schedule[i]) completed++; 
-      }
-
-      this.progressData = { completed, total };
-    } catch { 
-      this.progressData = { completed: 0, total: 0 }; 
-    }
+    this.computeWeekDays();
+    this.progressData = { completed: this.weekDayDone.filter(d => d).length, total };
   }
 
   private loadAIInsight() {
@@ -389,7 +486,8 @@ export class Tab1Page {
           'UPPER_LOWER': ['Rest', 'Upper Body', 'Lower Body', 'Rest', 'Upper Body', 'Lower Body', 'Rest'],
           'FBW': ['Rest', 'Full Body', 'Rest', 'Full Body', 'Rest', 'Full Body', 'Rest'],
         };
-        context.workout = (schedules[plan.workoutType] || schedules['FBW'])[new Date().getDay()];
+        context.workout = plan.details?.days?.[new Date().getDay()]?.session
+          ?? (schedules[plan.workoutType] || schedules['FBW'])[new Date().getDay()];
       } catch { }
     }
     this.http.post<{ insight: string }>(`${environment.apiUrl}/insight`, context)

@@ -74,6 +74,26 @@
       <ion-text>Please select a diet preference.</ion-text>
     </div>
 
+    <ion-item lines="full">
+      <ion-label position="stacked">Cooking</ion-label>
+      <ion-select formControlName="cookingEffort">
+        <ion-select-option *ngFor="let o of cookingOptions" [value]="o.value">{{ o.label }} ({{ o.hint }})</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item lines="full">
+      <ion-label position="stacked">Food allergies</ion-label>
+      <ion-select formControlName="allergies" [multiple]="true" placeholder="None">
+        <ion-select-option *ngFor="let o of allergenOptions" [value]="o.value">{{ o.label }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item lines="full">
+      <ion-label position="stacked">Foods to avoid (optional)</ion-label>
+      <ion-input type="text" formControlName="foodDislikes" maxlength="200" placeholder="e.g. mushrooms, cilantro"></ion-input>
+    </ion-item>
+    <ion-note class="allergy-note">{{ allergyDisclaimer }} Changing these creates a new meal plan.</ion-note>
+
     <ion-item lines="none">
       <ion-label position="stacked">
         Biological Sex

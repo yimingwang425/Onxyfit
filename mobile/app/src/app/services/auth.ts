@@ -80,6 +80,8 @@ export class AuthService {
       localStorage.removeItem('user_display_name');
       localStorage.removeItem('weight_history');
       localStorage.removeItem('current_ai_plan');
+      localStorage.removeItem('plan_synced_on');
+      localStorage.removeItem('plan_regenerate');
       
       this.router.navigateByUrl('/auth/welcome', { replaceUrl: true });
 

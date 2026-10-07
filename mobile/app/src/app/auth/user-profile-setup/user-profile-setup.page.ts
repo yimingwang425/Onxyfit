@@ -24,6 +24,8 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { UserProfileService } from '../../services/user-profile';
 import { AuthService } from '../../services/auth';
+import { PlanService } from '../../services/plan.service';
+import { ALLERGEN_OPTIONS, ALLERGY_DISCLAIMER, COOKING_EFFORT_OPTIONS, parseAllergies } from '../../services/dietary';
 import { addIcons } from 'ionicons';
 import { informationCircleOutline } from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
@@ -63,7 +65,10 @@ export class UserProfileSetupPage implements OnInit {
     activityLevel: [null as string | null, [Validators.required]],
     goal: [null as string | null, [Validators.required]],
     dietPref: [null as string | null, [Validators.required]],
-    metabolicProfile: [null as string | null, [Validators.required]]
+    metabolicProfile: [null as string | null, [Validators.required]],
+    cookingEffort: ['SIMPLE' as string],
+    allergies: [[] as string[]],
+    foodDislikes: ['', [Validators.maxLength(200)]]
   });
 
   loading = false;
@@ -93,6 +98,10 @@ export class UserProfileSetupPage implements OnInit {
     { value: 'NO_PREFERENCE', label: 'No preference' }
   ];
 
+  cookingOptions = COOKING_EFFORT_OPTIONS;
+  allergenOptions = ALLERGEN_OPTIONS;
+  allergyDisclaimer = ALLERGY_DISCLAIMER;
+
   metabolicOptions = [
     { value: 'PROFILE_1', label: 'Male' },
     { value: 'PROFILE_2', label: 'Female' }
@@ -102,6 +111,7 @@ export class UserProfileSetupPage implements OnInit {
     private fb: FormBuilder,
     private userProfileService: UserProfileService,
     private authService: AuthService,
+    private planService: PlanService,
     private router: Router,
     private route: ActivatedRoute,
     private alertCtrl: AlertController,
@@ -163,7 +173,10 @@ export class UserProfileSetupPage implements OnInit {
       activityLevel: obj.activityLevel ?? null,
       goal: obj.goal ?? null,
       dietPref: obj.dietPref ?? null,
-      metabolicProfile: obj.metabolicProfile ?? null
+      metabolicProfile: obj.metabolicProfile ?? null,
+      cookingEffort: obj.cookingEffort ?? 'SIMPLE',
+      allergies: parseAllergies(obj.allergies),
+      foodDislikes: obj.foodDislikes ?? ''
     });
   }
 
@@ -200,10 +213,19 @@ export class UserProfileSetupPage implements OnInit {
 
       this.trackWeightChange();
 
-      const { displayName, ...profileFields } = this.form.value;
+      const { displayName, allergies, foodDislikes, ...profileFields } = this.form.value;
+      const newAllergies = (allergies ?? []).join(',');
+      const newDislikes = (foodDislikes ?? '').trim();
+      const restrictionsChanged =
+        parseAllergies(this.fullProfile.allergies).join(',') !== parseAllergies(newAllergies).join(',') ||
+        (this.fullProfile.foodDislikes ?? '').trim().toLowerCase() !== newDislikes.toLowerCase() ||
+        (this.fullProfile.cookingEffort ?? 'SIMPLE') !== (profileFields.cookingEffort ?? 'SIMPLE');
+
       const payload = {
         ...this.fullProfile,
         ...profileFields,
+        allergies: newAllergies,
+        foodDislikes: newDislikes,
         user: { 
           id: account.id, 
           login: account.login 
@@ -214,6 +236,11 @@ export class UserProfileSetupPage implements OnInit {
       console.log('Submitting Profile:', payload);
 
       await firstValueFrom(this.userProfileService.saveProfile(payload));
+
+      // The current meal plan was built for the old food preferences: drop it so a new one is generated
+      if (restrictionsChanged) {
+        this.planService.clearPlan();
+      }
 
       window.dispatchEvent(new CustomEvent('profile-updated'));
 

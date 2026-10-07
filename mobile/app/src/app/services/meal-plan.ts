@@ -19,6 +19,8 @@ export interface DailyPlan {
   snack: Meal;
   aiData?: AIPlan;
   aiSuggestedCalories?: number;
+  /** True when no meals could be generated for this day; the meal slots are placeholders. */
+  unavailable?: boolean;
 }
 
 export interface WeeklyPlan {
@@ -80,6 +82,14 @@ export class MealPlanService {
     },
   };
 
+  private unavailableMeal: Meal = {
+    name: 'Not available',
+    calories: 0,
+    macros: { p: 0, c: 0, f: 0 },
+    ingredients: [],
+    recipe: ['We could not generate this meal. Please try generating your plan again.'],
+  };
+
   constructor(private planService: PlanService) {}
 
   getTodaysPlan(): Observable<DailyPlan> {
@@ -92,15 +102,7 @@ export class MealPlanService {
       };
       return of(today).pipe(delay(300));
     } else {
-      const aiPlan = this.planService.getCurrentPlan();
-      const todayDow = new Date().getDay(); // 0=Sun ... 6=Sat
-      if (aiPlan) {
-        return of(this.buildPlanFromAI(aiPlan, todayDow)).pipe(delay(100));
-      } else {
-        return this.planService.generatePlan().pipe(
-          map(aiPlan => this.buildPlanFromAI(aiPlan, todayDow))
-        );
-      }
+      return this.planService.loadPlan().pipe(map(aiPlan => this.buildPlanFromAI(aiPlan, new Date().getDay())));
     }
   }
 
@@ -133,14 +135,7 @@ export class MealPlanService {
       ];
       return of(week).pipe(delay(500));
     } else {
-      const aiPlan = this.planService.getCurrentPlan();
-      if (aiPlan) {
-        return of(this.buildWeeklyPlanFromAI(aiPlan)).pipe(delay(100));
-      } else {
-        return this.planService.generatePlan().pipe(
-          map(aiPlan => this.buildWeeklyPlanFromAI(aiPlan))
-        );
-      }
+      return this.planService.loadPlan().pipe(map(aiPlan => this.buildWeeklyPlanFromAI(aiPlan)));
     }
   }
 
@@ -173,20 +168,33 @@ export class MealPlanService {
           dinner: this.convertLlamaMeal(dayPlan.dinner),
           snack: this.convertLlamaMeal(dayPlan.snack),
           aiData: aiPlan,
-          aiSuggestedCalories: aiPlan.caloriesKcal
+          aiSuggestedCalories: aiPlan.details?.days?.[dayOfWeek]?.calories ?? aiPlan.caloriesKcal
         };
       }
     }
 
-    console.log('No Llama meals found, using MOCK data');
+    // No generated meals for this day. Sample meals must not stand in for them:
+    // they ignore the user's allergies (peanut butter, dairy, fish...).
+    console.warn('No generated meals found for day', dayOfWeek);
     return {
-      breakfast: this.mockMeals.oats,
-      lunch: this.mockMeals.chickenSalad,
-      dinner: this.mockMeals.salmonRice,
-      snack: this.mockMeals.proteinShake,
+      breakfast: this.unavailableMeal,
+      lunch: this.unavailableMeal,
+      dinner: this.unavailableMeal,
+      snack: this.unavailableMeal,
       aiData: aiPlan,
-      aiSuggestedCalories: aiPlan.caloriesKcal
+      aiSuggestedCalories: aiPlan.details?.days?.[dayOfWeek]?.calories ?? aiPlan.caloriesKcal,
+      unavailable: true
     };
+  }
+
+  /** Whether the plan on this device has been checked against the server today. */
+  hasFreshPlan(): boolean {
+    return this.planService.isSyncedToday();
+  }
+
+  /** Throw away the stored plan so the next load generates a new one. */
+  discardPlan(): void {
+    this.planService.clearPlan();
   }
 
   private convertLlamaMeal(llamaMeal: any): Meal {

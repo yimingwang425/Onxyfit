@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HEALTH_DISCLAIMER } from '../../services/dietary';
 import { ProfileCheckModalComponent } from '../../components/profile-check-modal/profile-check-modal.component';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonSegment, IonSegmentButton,
@@ -9,11 +10,12 @@ import {
   AlertController, NavController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { barbellOutline, moonOutline } from 'ionicons/icons';
+import { barbellOutline, moonOutline, checkmarkCircle, checkmarkCircleOutline } from 'ionicons/icons';
 
 import { WorkoutPlanService, DailyWorkoutPlan, WeeklyWorkoutPlan, Exercise } from '../../services/workout-plan';
 import { WorkoutDetailComponent } from '../../components/workout-detail/workout-detail.component';
 import { UserProfileService } from '../../services/user-profile';
+import { ProgressService, localDateString } from '../../services/progress.service';
 
 @Component({
   selector: 'app-tab3',
@@ -28,27 +30,71 @@ import { UserProfileService } from '../../services/user-profile';
   ],
 })
 export class Tab3Page implements OnInit {
+  disclaimer = HEALTH_DISCLAIMER;
+
   currentSegment = 'today';
   isLoadingToday = false;
   isLoadingWeek = false;
   todaysPlan: DailyWorkoutPlan | null = null;
   weeklyPlan: WeeklyWorkoutPlan[] = [];
   selectedDayIndex: number = 0;
+  /** Whether today's workout has been checked in as done. */
+  workoutDone = false;
+  savingWorkout = false;
 
   constructor(
     private workoutPlanService: WorkoutPlanService,
     private modalCtrl: ModalController,
     private alertCtrl: AlertController,
     private navCtrl: NavController,
-    private profileService: UserProfileService
+    private profileService: UserProfileService,
+    private progressService: ProgressService
   ) {
-    addIcons({ barbellOutline, moonOutline });
+    addIcons({ barbellOutline, moonOutline, checkmarkCircle, checkmarkCircleOutline });
   }
 
   ngOnInit() {}
 
   ionViewWillEnter() {
+    // This week's plan may have replaced the one on screen
+    if (!this.workoutPlanService.hasFreshPlan()) {
+      this.todaysPlan = null;
+      this.weeklyPlan = [];
+    }
     this.checkProfileAndLoad();
+    this.loadTodaysCheckIn();
+  }
+
+  private loadTodaysCheckIn() {
+    this.progressService.recent(2).subscribe({
+      next: (logs) => {
+        const today = localDateString();
+        this.workoutDone = logs.some(l => l.logDate === today && l.completedWorkout);
+      },
+      error: () => { }
+    });
+  }
+
+  /** Check today's workout in as done, or undo that. */
+  toggleWorkoutDone() {
+    if (this.savingWorkout) return;
+    const done = !this.workoutDone;
+    this.savingWorkout = true;
+    this.progressService.checkIn({ completedWorkout: done }).subscribe({
+      next: (log) => {
+        this.workoutDone = log.completedWorkout;
+        this.savingWorkout = false;
+      },
+      error: async () => {
+        this.savingWorkout = false;
+        const alert = await this.alertCtrl.create({
+          header: 'Not saved',
+          message: 'Could not save your workout. Please check your connection and try again.',
+          buttons: ['OK']
+        });
+        await alert.present();
+      }
+    });
   }
 
   async checkProfileAndLoad() {

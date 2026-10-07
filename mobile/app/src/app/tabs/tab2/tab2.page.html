@@ -24,11 +24,17 @@
   <div [ngSwitch]="currentSegment" class="content-container">
 
     <div *ngSwitchCase="'today'">
-      <div *ngIf="!isLoadingToday && todaysPlan" class="plan-list fade-in">
+      <div *ngIf="!isLoadingToday && todaysPlan" class="plan-list fade-in" [class.no-meals]="todaysPlan.unavailable">
         
         <div class="date-header">
           <span class="sub-label">Today's Menu</span>
         </div>
+
+        <div class="unavailable-box" *ngIf="todaysPlan.unavailable">
+          <p>We couldn't generate meals that fit your profile this time, so no meals are shown.</p>
+          <button type="button" class="retry-btn" (click)="regenerate()">Try again</button>
+        </div>
+
 
         <div class="meal-card" (click)="openMealDetails(todaysPlan!.breakfast)">
           <div class="meal-icon-box">
@@ -95,10 +101,16 @@
           </div>
         </div>
 
-        <div *ngIf="selectedDayPlan" class="plan-list">
+        <div *ngIf="selectedDayPlan" class="plan-list" [class.no-meals]="selectedDayPlan.unavailable">
           <div class="date-header">
             <span class="sub-label">Plan for {{ weeklyPlan[selectedDayIndex].day }}</span>
           </div>
+
+          <div class="unavailable-box" *ngIf="selectedDayPlan.unavailable">
+            <p>We couldn't generate meals that fit your profile this time, so no meals are shown.</p>
+            <button type="button" class="retry-btn" (click)="regenerate()">Try again</button>
+          </div>
+
 
           <div class="meal-card" (click)="openMealDetails(selectedDayPlan.breakfast)">
             <div class="meal-icon-box">
@@ -150,6 +162,8 @@
         </div>
       </div>
     </div>
+
+    <p class="disclaimer-note" *ngIf="todaysPlan || weeklyPlan.length > 0">{{ disclaimer }}</p>
 
   </div>
 </ion-content>

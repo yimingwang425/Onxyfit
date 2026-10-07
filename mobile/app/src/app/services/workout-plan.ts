@@ -277,15 +277,13 @@ export class WorkoutPlanService {
         coolDown: this.coolDowns.fullBody,
       } as DailyWorkoutPlan).pipe(delay(300));
     } else {
-      const aiPlan = this.planService.getCurrentPlan();
-      if (aiPlan) {
-        return of(this.buildPlanFromAI(aiPlan, new Date().getDay())).pipe(delay(100));
-      } else {
-        return this.planService.generatePlan().pipe(
-          map(aiPlan => this.buildPlanFromAI(aiPlan, new Date().getDay()))
-        );
-      }
+      return this.planService.loadPlan().pipe(map(aiPlan => this.buildPlanFromAI(aiPlan, new Date().getDay())));
     }
+  }
+
+  /** Whether the plan on this device has been checked against the server today. */
+  hasFreshPlan(): boolean {
+    return this.planService.isSyncedToday();
   }
 
   getWeeklyPlan(): Observable<WeeklyWorkoutPlan[]> {
@@ -298,12 +296,7 @@ export class WorkoutPlanService {
         { day: 'Sun' as const, dayShort: 'Sun', planTitle: 'Day off', plan: { isRestDay: true, warmUp: null, exercises: [], coolDown: null } },
       ]).pipe(delay(500));
     } else {
-      const aiPlan = this.planService.getCurrentPlan();
-      if (aiPlan) {
-        return of(this.buildWeeklyPlanFromAI(aiPlan)).pipe(delay(100));
-      } else {
-        return this.planService.generatePlan().pipe(map(aiPlan => this.buildWeeklyPlanFromAI(aiPlan)));
-      }
+      return this.planService.loadPlan().pipe(map(aiPlan => this.buildWeeklyPlanFromAI(aiPlan)));
     }
   }
 

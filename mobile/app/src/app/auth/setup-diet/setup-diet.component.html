@@ -24,6 +24,51 @@
         </div>
       </div>
 
+      <div class="restrictions">
+        <h3>How much do you want to cook?</h3>
+        <p class="hint">We only suggest meals you can realistically make.</p>
+        <div class="chip-list">
+          <button
+            type="button"
+            *ngFor="let c of cookingOptions"
+            class="chip"
+            [class.selected]="cookingEffort === c.value"
+            [attr.aria-pressed]="cookingEffort === c.value"
+            [title]="c.hint"
+            (click)="cookingEffort = c.value"
+          >
+            {{ c.label }}
+          </button>
+        </div>
+
+        <h3>Any food allergies?</h3>
+        <p class="hint">Select all that apply. We keep these out of your meal plan.</p>
+        <div class="chip-list">
+          <button
+            type="button"
+            *ngFor="let a of allergenOptions"
+            class="chip"
+            [class.selected]="selectedAllergies.includes(a.value)"
+            [attr.aria-pressed]="selectedAllergies.includes(a.value)"
+            (click)="toggleAllergy(a.value)"
+          >
+            {{ a.label }}
+          </button>
+        </div>
+
+        <h3>Foods to avoid <span class="optional">(optional)</span></h3>
+        <input
+          class="text-field"
+          type="text"
+          maxlength="200"
+          placeholder="e.g. mushrooms, cilantro"
+          [value]="foodDislikes"
+          (input)="onDislikesInput($event)"
+        />
+
+        <p class="hint disclaimer">{{ allergyDisclaimer }}</p>
+      </div>
+
       <form [formGroup]="form" style="display: none;">
         <input formControlName="dietPref">
       </form>

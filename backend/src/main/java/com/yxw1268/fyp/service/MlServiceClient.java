@@ -23,7 +23,7 @@ public class MlServiceClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(MlServiceClient.class);
 
-    private final RestTemplate predictTemplate = restTemplate(10_000, 120_000);
+    private final RestTemplate mealPlanTemplate = restTemplate(10_000, 120_000);
     private final RestTemplate insightTemplate = restTemplate(5_000, 15_000);
 
     private final String baseUrl;
@@ -37,8 +37,9 @@ public class MlServiceClient {
         }
     }
 
-    public Map<String, Object> predict(Map<String, Object> request) {
-        return post(predictTemplate, "/api/predict", request);
+    /** Ask for a week of meals that meet the given targets. */
+    public Map<String, Object> mealPlan(Map<String, Object> request) {
+        return post(mealPlanTemplate, "/api/meal-plan", request);
     }
 
     public Map<String, Object> insight(Map<String, Object> request) {

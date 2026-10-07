@@ -136,6 +136,15 @@ public class PlanResource {
     }
 
     /**
+     * {@code GET  /plans/current} : get the plan the current user is on, or 404 if none was generated yet.
+     */
+    @GetMapping("/current")
+    public ResponseEntity<PlanDTO> getCurrentPlan() {
+        LOG.debug("REST request to get the current Plan");
+        return ResponseUtil.wrapOrNotFound(planService.findCurrentForUser(currentLogin()));
+    }
+
+    /**
      * {@code GET  /plans/:id} : get the "id" plan.
      */
     @GetMapping("/{id}")

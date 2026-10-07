@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { delay, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { allergyLabels } from './dietary';
 
 export type UserProfileDto = {
   id?: number;
@@ -13,6 +14,11 @@ export type UserProfileDto = {
   goal: 'LOSE' | 'MAINTAIN' | 'GAIN';
   dietPref: 'BALANCED' | 'HIGH_PROTEIN' | 'VEGETARIAN' | 'NO_PREFERENCE';
   metabolicProfile?: 'PROFILE_1' | 'PROFILE_2'; 
+  cookingEffort?: 'MINIMAL' | 'SIMPLE' | 'ENTHUSIAST';
+  /** Comma-separated allergen codes, e.g. 'PEANUT,DAIRY' */
+  allergies?: string;
+  /** Comma-separated foods to keep out of the meal plan */
+  foodDislikes?: string;
   createdAt?: string;
   user?: any;
 };
@@ -122,6 +128,8 @@ export class UserProfileService {
       Activity: ${act || '-'}
       Goal: ${goal || '-'}
       Diet: ${diet || '-'}
+      Allergies: ${allergyLabels(target.allergies) || 'None'}
+      Avoid: ${target.foodDislikes || '-'}
     `;
   }
 }

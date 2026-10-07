@@ -1,6 +1,7 @@
 package com.yxw1268.fyp.service.dto;
 
 import com.yxw1268.fyp.domain.enumeration.ActivityLevel;
+import com.yxw1268.fyp.domain.enumeration.CookingEffort;
 import com.yxw1268.fyp.domain.enumeration.DietPref;
 import com.yxw1268.fyp.domain.enumeration.Goal;
 import com.yxw1268.fyp.domain.enumeration.MetabolicProfile;
@@ -45,6 +46,14 @@ public class UserProfileDTO implements Serializable {
 
     @NotNull
     private Instant createdAt;
+
+    private CookingEffort cookingEffort;
+
+    @Size(max = 255)
+    private String allergies;
+
+    @Size(max = 500)
+    private String foodDislikes;
 
     @NotNull
     private UserDTO user;
@@ -113,6 +122,30 @@ public class UserProfileDTO implements Serializable {
         this.metabolicProfile = metabolicProfile;
     }
 
+    public CookingEffort getCookingEffort() {
+        return cookingEffort;
+    }
+
+    public void setCookingEffort(CookingEffort cookingEffort) {
+        this.cookingEffort = cookingEffort;
+    }
+
+    public String getAllergies() {
+        return allergies;
+    }
+
+    public void setAllergies(String allergies) {
+        this.allergies = allergies;
+    }
+
+    public String getFoodDislikes() {
+        return foodDislikes;
+    }
+
+    public void setFoodDislikes(String foodDislikes) {
+        this.foodDislikes = foodDislikes;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
@@ -163,6 +196,8 @@ public class UserProfileDTO implements Serializable {
             ", dietPref='" + getDietPref() + "'" +
             ", metabolicProfile='" + getMetabolicProfile() + "'" +
             ", createdAt='" + getCreatedAt() + "'" +
+            ", allergies='" + getAllergies() + "'" +
+            ", foodDislikes='" + getFoodDislikes() + "'" +
             ", user=" + getUser() +
             "}";
     }

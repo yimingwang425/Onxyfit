@@ -58,6 +58,12 @@ public class PlanDTO implements Serializable {
 
     private LocalDate weekStartDate;
 
+    @Lob
+    private String detailsJson;
+
+    /** {@link #detailsJson} parsed, for clients. */
+    private Object details;
+
     @NotNull
     private UserProfileDTO profile;
 
@@ -163,6 +169,22 @@ public class PlanDTO implements Serializable {
 
     public void setProfile(UserProfileDTO profile) {
         this.profile = profile;
+    }
+
+    public String getDetailsJson() {
+        return detailsJson;
+    }
+
+    public void setDetailsJson(String detailsJson) {
+        this.detailsJson = detailsJson;
+    }
+
+    public Object getDetails() {
+        return details;
+    }
+
+    public void setDetails(Object details) {
+        this.details = details;
     }
 
     public Object getMealPlan() {

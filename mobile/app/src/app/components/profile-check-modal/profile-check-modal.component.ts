@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ModalController, IonContent, IonButton, IonIcon, IonText } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
+import { ALLERGY_DISCLAIMER, HEALTH_DISCLAIMER } from '../../services/dietary';
 import { alertCircleOutline, checkmarkCircleOutline, createOutline } from 'ionicons/icons';
 
 @Component({
@@ -17,6 +18,8 @@ export class ProfileCheckModalComponent implements OnInit {
   @Input() missingFields: string[] = [];
   
   @Input() summary: string = '';
+
+  disclaimer = `${HEALTH_DISCLAIMER} ${ALLERGY_DISCLAIMER}`;
 
   constructor(private modalCtrl: ModalController) {
     addIcons({ alertCircleOutline, checkmarkCircleOutline, createOutline });

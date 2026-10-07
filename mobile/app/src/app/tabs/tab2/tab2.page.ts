@@ -15,6 +15,7 @@ import {
 import { MealPlanService, DailyPlan, WeeklyPlan, Meal } from '../../services/meal-plan';
 import { MealDetailComponent } from '../../components/meal-detail/meal-detail.component';
 import { UserProfileService } from '../../services/user-profile';
+import { ALLERGY_DISCLAIMER, HEALTH_DISCLAIMER_SHORT } from '../../services/dietary';
 
 @Component({
   selector: 'app-tab2',
@@ -34,6 +35,7 @@ export class Tab2Page implements OnInit {
   todaysPlan: DailyPlan | null = null;
   weeklyPlan: WeeklyPlan[] = [];
   selectedDayIndex: number = 0;
+  disclaimer = `${HEALTH_DISCLAIMER_SHORT} ${ALLERGY_DISCLAIMER}`;
 
   constructor(
     private mealPlanService: MealPlanService,
@@ -47,7 +49,21 @@ export class Tab2Page implements OnInit {
   ngOnInit() {}
 
   ionViewWillEnter() {
+    // The stored plan was dropped (e.g. allergies changed) or may have been replaced by this
+    // week's plan on the server: forget what is on screen so it is loaded again
+    if (!this.mealPlanService.hasFreshPlan()) {
+      this.todaysPlan = null;
+      this.weeklyPlan = [];
+    }
     this.checkProfileAndLoad();
+  }
+
+  /** Ask for a fresh plan after a generation that produced no meals. */
+  regenerate() {
+    this.mealPlanService.discardPlan();
+    this.todaysPlan = null;
+    this.weeklyPlan = [];
+    this.loadData();
   }
 
   async checkProfileAndLoad() {

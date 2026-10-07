@@ -40,6 +40,8 @@ ion-content { --background: #FAFAFA; }
   ion-icon { font-size: 1.1rem; }
   &.mood { background: #FFF5E6; color: #FF9F0A; }
   &.water { background: #EDF8FF; color: #0A84FF; }
+  &.workout { background: #EFEFEF; color: #000; }
+  &.weight { background: #EAF7EE; color: #1E8E3E; }
 }
 .add-btn {
   width: 28px; height: 28px; border-radius: 50%; background: #F4F5F8; border: none;
@@ -116,4 +118,15 @@ ion-content { --background: #FAFAFA; }
   background: #000; color: #fff; border: none; border-radius: 16px;
   font-size: 1rem; font-weight: 700;
   &:active { opacity: 0.8; }
+}
+.reasons-card {
+  background: #fff; border-radius: 20px; padding: 16px 20px; margin-bottom: 16px;
+  border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  .reasons-title {
+    text-transform: uppercase; font-size: 0.75rem; font-weight: 700;
+    letter-spacing: 0.05em; color: #000; margin-bottom: 8px;
+  }
+  ul { margin: 0; padding-left: 18px; }
+  li { font-size: 0.85rem; line-height: 1.45; color: #555; margin-bottom: 6px; }
+  li:last-child { margin-bottom: 0; }
 }

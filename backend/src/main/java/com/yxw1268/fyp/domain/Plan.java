@@ -74,6 +74,10 @@ public class Plan implements Serializable {
     @Column(name = "workout_plan_json", columnDefinition = "TEXT")
     private String workoutPlanJson;
 
+    /** {@link com.yxw1268.fyp.service.plan.PlanDetails} as JSON. */
+    @Column(name = "details_json", columnDefinition = "TEXT")
+    private String detailsJson;
+
     @ManyToOne(optional = false)
     @NotNull
     @JsonIgnoreProperties(value = { "user" }, allowSetters = true)
@@ -222,6 +226,14 @@ public class Plan implements Serializable {
 
     public void setMealPlanJson(String mealPlanJson) {
         this.mealPlanJson = mealPlanJson;
+    }
+
+    public String getDetailsJson() {
+        return this.detailsJson;
+    }
+
+    public void setDetailsJson(String detailsJson) {
+        this.detailsJson = detailsJson;
     }
 
     public String getWorkoutPlanJson() {

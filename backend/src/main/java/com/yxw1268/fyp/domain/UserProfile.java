@@ -1,6 +1,7 @@
 package com.yxw1268.fyp.domain;
 
 import com.yxw1268.fyp.domain.enumeration.ActivityLevel;
+import com.yxw1268.fyp.domain.enumeration.CookingEffort;
 import com.yxw1268.fyp.domain.enumeration.DietPref;
 import com.yxw1268.fyp.domain.enumeration.Goal;
 import com.yxw1268.fyp.domain.enumeration.MetabolicProfile;
@@ -68,6 +69,20 @@ public class UserProfile implements Serializable {
     @NotNull
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "cooking_effort")
+    private CookingEffort cookingEffort;
+
+    /** Comma-separated {@link com.yxw1268.fyp.domain.enumeration.Allergen} codes. */
+    @Size(max = 255)
+    @Column(name = "allergies")
+    private String allergies;
+
+    /** Comma-separated foods the user doesn't want in their meal plan. */
+    @Size(max = 500)
+    @Column(name = "food_dislikes", length = 500)
+    private String foodDislikes;
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @NotNull
@@ -206,6 +221,30 @@ public class UserProfile implements Serializable {
         return this;
     }
 
+    public CookingEffort getCookingEffort() {
+        return this.cookingEffort;
+    }
+
+    public void setCookingEffort(CookingEffort cookingEffort) {
+        this.cookingEffort = cookingEffort;
+    }
+
+    public String getAllergies() {
+        return this.allergies;
+    }
+
+    public void setAllergies(String allergies) {
+        this.allergies = allergies;
+    }
+
+    public String getFoodDislikes() {
+        return this.foodDislikes;
+    }
+
+    public void setFoodDislikes(String foodDislikes) {
+        this.foodDislikes = foodDislikes;
+    }
+
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here
 
     @Override
@@ -238,6 +277,8 @@ public class UserProfile implements Serializable {
             ", dietPref='" + getDietPref() + "'" +
             ", metabolicProfile='" + getMetabolicProfile() + "'" +
             ", createdAt='" + getCreatedAt() + "'" +
+            ", allergies='" + getAllergies() + "'" +
+            ", foodDislikes='" + getFoodDislikes() + "'" +
             "}";
     }
 }

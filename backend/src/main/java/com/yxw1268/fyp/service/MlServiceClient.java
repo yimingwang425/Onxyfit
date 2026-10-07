@@ -24,7 +24,8 @@ public class MlServiceClient {
     private static final Logger LOG = LoggerFactory.getLogger(MlServiceClient.class);
 
     private final RestTemplate mealPlanTemplate = restTemplate(10_000, 120_000);
-    private final RestTemplate insightTemplate = restTemplate(5_000, 15_000);
+    private final RestTemplate swapTemplate = restTemplate(10_000, 75_000);
+    private final RestTemplate quickTemplate = restTemplate(10_000, 25_000);
 
     private final String baseUrl;
     private final String token;
@@ -42,8 +43,14 @@ public class MlServiceClient {
         return post(mealPlanTemplate, "/api/meal-plan", request);
     }
 
-    public Map<String, Object> insight(Map<String, Object> request) {
-        return post(insightTemplate, "/api/insight", request);
+    /** Sort a message to the assistant into one of the intents it handles. */
+    public Map<String, Object> assistantIntent(Map<String, Object> request) {
+        return post(quickTemplate, "/api/assistant/intent", request);
+    }
+
+    /** Ask for one meal to replace another. */
+    public Map<String, Object> mealSwap(Map<String, Object> request) {
+        return post(swapTemplate, "/api/meal-swap", request);
     }
 
     @SuppressWarnings("unchecked")

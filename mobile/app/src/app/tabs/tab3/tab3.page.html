@@ -22,6 +22,11 @@
     <p class="loading-hint">The model is generating your plan based on your profile, please don't leave this page...</p>
   </div>
 
+  <div class="load-error" *ngIf="loadError && !isLoadingToday && !isLoadingWeek">
+    <p>Your plan couldn't be loaded. Check your connection and try again.</p>
+    <button type="button" (click)="loadData()">Try again</button>
+  </div>
+
   <div [ngSwitch]="currentSegment" class="content-container">
 
     <div *ngSwitchCase="'today'" class="fade-in">
@@ -36,6 +41,21 @@
         <div *ngIf="!todaysPlan.isRestDay">
           <div class="session-header">
             <span class="sub-label">Today's Session</span>
+          </div>
+
+          <div class="ease-note" *ngIf="easeOffered && !workoutDone && easeChoice === null">
+            <p>You said you're feeling tired or stressed today. Would you like a lighter session, with one set less per exercise? It counts just the same.</p>
+            <div class="ease-actions">
+              <button type="button" class="primary" (click)="chooseEase('lighter')">Lighter today</button>
+              <button type="button" (click)="chooseEase('full')">Keep as planned</button>
+            </div>
+          </div>
+          <div class="ease-note" *ngIf="easeOffered && easeChoice === 'lighter'">
+            <p>Lighter session: one set less per exercise.</p>
+            <button type="button" class="ease-undo" *ngIf="!workoutDone" (click)="chooseEase('full')">Do the full session instead</button>
+          </div>
+          <div class="ease-note quiet" *ngIf="easeOffered && easeChoice === 'full' && !workoutDone">
+            <button type="button" class="ease-undo" (click)="chooseEase('lighter')">Switch to a lighter session</button>
           </div>
 
           <div class="section-block">
@@ -59,7 +79,7 @@
               <div class="ex-number">{{ i + 1 }}</div>
               <div class="ex-content">
                 <span class="ex-name">{{ ex.name }}</span>
-                <span class="ex-meta">{{ ex.sets }} sets × {{ ex.reps }} reps</span>
+                <span class="ex-meta">{{ setsToday(ex) }} sets × {{ ex.reps }} reps</span>
               </div>
               <ion-icon name="play-circle-outline"></ion-icon>
             </div>

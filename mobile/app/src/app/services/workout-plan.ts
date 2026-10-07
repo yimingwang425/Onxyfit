@@ -286,6 +286,11 @@ export class WorkoutPlanService {
     return this.planService.isSyncedToday();
   }
 
+  /** Changes whenever the stored plan is replaced. */
+  get planVersion(): number {
+    return this.planService.version;
+  }
+
   getWeeklyPlan(): Observable<WeeklyWorkoutPlan[]> {
     if (this.useMock) {
       return of([
@@ -300,10 +305,25 @@ export class WorkoutPlanService {
     }
   }
 
+  private sessionTitles: Record<string, string> = {
+    Push: 'Push Day', Pull: 'Pull Day', Legs: 'Leg Day', Upper: 'Upper Body', Lower: 'Lower Body', FullBody: 'Full Body', Rest: 'Rest',
+  };
+
+  /**
+   * The session of a day of the week. The plan's own schedule is used when it has one (it reflects
+   * anything the user asked for this week); older plans fall back to the schedule of their type.
+   */
+  private sessionOf(aiPlan: AIPlan, dayOfWeek: number): { title: string; session: string } {
+    const session = aiPlan.details?.days?.[dayOfWeek]?.session;
+    if (session && this.sessionTitles[session]) {
+      return { title: this.sessionTitles[session], session };
+    }
+    const schedule = this.schedules[aiPlan.workoutType ?? 'FBW'] ?? this.schedules['FBW'];
+    return schedule[dayOfWeek];
+  }
+
   private buildPlanFromAI(aiPlan: AIPlan, dayOfWeek: number): DailyWorkoutPlan {
-    const wt = aiPlan.workoutType ?? 'FBW';
-    const schedule = this.schedules[wt] ?? this.schedules['FBW'];
-    const dayInfo = schedule[dayOfWeek];
+    const dayInfo = this.sessionOf(aiPlan, dayOfWeek);
 
     if (dayInfo.session === 'Rest') {
       return { isRestDay: true, warmUp: null, exercises: [], coolDown: null, aiData: aiPlan };
@@ -317,14 +337,12 @@ export class WorkoutPlanService {
     const today = new Date().getDay();
     const dayLabels: ('Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun')[] =
       ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const wt = aiPlan.workoutType ?? 'FBW';
-    const schedule = this.schedules[wt] ?? this.schedules['FBW'];
     const week: WeeklyWorkoutPlan[] = [];
 
     const remaining = today === 0 ? 1 : 8 - today;
     for (let offset = 0; offset < remaining; offset++) {
       const i = (today + offset) % 7;
-      week.push({ day: dayLabels[i], dayShort: dayLabels[i], planTitle: schedule[i].title, plan: this.buildPlanFromAI(aiPlan, i) });
+      week.push({ day: dayLabels[i], dayShort: dayLabels[i], planTitle: this.sessionOf(aiPlan, i).title, plan: this.buildPlanFromAI(aiPlan, i) });
     }
     return week;
   }

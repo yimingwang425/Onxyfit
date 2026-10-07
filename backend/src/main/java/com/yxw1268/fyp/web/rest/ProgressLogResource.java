@@ -49,6 +49,7 @@ public class ProgressLogResource {
     private static final BigDecimal MIN_WEIGHT_KG = BigDecimal.valueOf(20);
     private static final BigDecimal MAX_WEIGHT_KG = BigDecimal.valueOf(400);
     private static final int MAX_RECENT_DAYS = 180;
+    private static final java.util.Set<String> MOODS = java.util.Set.of("Energetic", "Neutral", "Tired", "Stressed");
 
     @Value("${jhipster.clientApp.name}")
     private String applicationName;
@@ -186,12 +187,15 @@ public class ProgressLogResource {
 
     /**
      * {@code PUT  /progress-logs/today} : record today's check-in for the current user.
-     * Send only what changed: a weight, whether the workout was completed, or both.
+     * Send only what changed: a weight, whether the workout was completed, how the user feels.
      */
     @PutMapping("/today")
     public ResponseEntity<ProgressLogDTO> checkInToday(@RequestBody CheckInVM checkIn) {
-        if (checkIn.weightKg() == null && checkIn.completedWorkout() == null) {
+        if (checkIn.weightKg() == null && checkIn.completedWorkout() == null && checkIn.mood() == null) {
             throw new BadRequestAlertException("Nothing to log", ENTITY_NAME, "emptycheckin");
+        }
+        if (checkIn.mood() != null && !MOODS.contains(checkIn.mood())) {
+            throw new BadRequestAlertException("Unknown mood", ENTITY_NAME, "mood");
         }
         if (
             checkIn.weightKg() != null &&
@@ -207,7 +211,7 @@ public class ProgressLogResource {
             throw new BadRequestAlertException("Check-ins are for today only", ENTITY_NAME, "daterange");
         }
 
-        return ResponseEntity.ok(progressLogService.checkIn(currentProfile(), date, checkIn.weightKg(), checkIn.completedWorkout()));
+        return ResponseEntity.ok(progressLogService.checkIn(currentProfile(), date, checkIn.weightKg(), checkIn.completedWorkout(), checkIn.mood()));
     }
 
     /**
@@ -222,7 +226,7 @@ public class ProgressLogResource {
             .orElse(List.of());
     }
 
-    public record CheckInVM(LocalDate logDate, BigDecimal weightKg, Boolean completedWorkout) {}
+    public record CheckInVM(LocalDate logDate, BigDecimal weightKg, Boolean completedWorkout, String mood) {}
 
     /**
      * {@code GET  /progress-logs/:id} : get the "id" progressLog.

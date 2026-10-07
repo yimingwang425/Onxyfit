@@ -56,6 +56,15 @@ public class ProgressLog implements Serializable {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    /** "Energetic", "Neutral", "Tired" or "Stressed". */
+    @Size(max = 16)
+    @Column(name = "mood", length = 16)
+    private String mood;
+
+    /** True when the mood was logged after the day's workout had already been checked in. */
+    @Column(name = "mood_after_workout")
+    private Boolean moodAfterWorkout;
+
     @ManyToOne(optional = false)
     @NotNull
     @JsonIgnoreProperties(value = { "user" }, allowSetters = true)
@@ -195,6 +204,22 @@ public class ProgressLog implements Serializable {
     public ProgressLog plan(Plan plan) {
         this.setPlan(plan);
         return this;
+    }
+
+    public Boolean getMoodAfterWorkout() {
+        return this.moodAfterWorkout;
+    }
+
+    public void setMoodAfterWorkout(Boolean moodAfterWorkout) {
+        this.moodAfterWorkout = moodAfterWorkout;
+    }
+
+    public String getMood() {
+        return this.mood;
+    }
+
+    public void setMood(String mood) {
+        this.mood = mood;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here

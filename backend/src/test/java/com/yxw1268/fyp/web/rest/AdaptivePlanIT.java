@@ -2,6 +2,8 @@ package com.yxw1268.fyp.web.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -26,6 +28,7 @@ import com.yxw1268.fyp.repository.UserProfileRepository;
 import com.yxw1268.fyp.repository.UserRepository;
 import com.yxw1268.fyp.security.AuthoritiesConstants;
 import com.yxw1268.fyp.service.MlServiceClient;
+import com.yxw1268.fyp.service.PlanService;
 import com.yxw1268.fyp.service.UserService;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -76,6 +79,9 @@ class AdaptivePlanIT {
 
     @Autowired
     private ProgressLogRepository progressLogRepository;
+
+    @Autowired
+    private PlanService planService;
 
     @MockBean
     private MlServiceClient mlServiceClient;
@@ -390,5 +396,251 @@ class AdaptivePlanIT {
         assertThat(plan.get("caloriesKcal").asInt()).isEqualTo(2740);
         assertThat(planRepository.existsById(legacy.getId())).isFalse();
         assertThat(progressLogRepository.existsById(attached.getId())).isTrue();
+    }
+
+    @Test
+    void feelingRunDownIsLoggedAndMakesNextWeekLighter() throws Exception {
+        User alice = createUser();
+        UserProfile profile = createProfile(alice, Goal.MAINTAIN);
+        mealsAvailable();
+
+        double normal = generate(alice).get("workoutIntensity").asDouble();
+        ageCurrentPlan(profile);
+
+        // today's mood goes through the check-in endpoint, the earlier days are already there
+        assertThat(checkIn(alice, Map.of("mood", "Tired")).get("mood").asText()).isEqualTo("Tired");
+        for (int daysAgo = 1; daysAgo <= 2; daysAgo++) {
+            ProgressLog log = new ProgressLog().logDate(TODAY.minusDays(daysAgo)).completedWorkout(false).createdAt(Instant.now());
+            log.setMood("Stressed");
+            log.setProfile(profile);
+            progressLogRepository.saveAndFlush(log);
+        }
+        mockMvc
+            .perform(put("/api/progress-logs/today").contentType(MediaType.APPLICATION_JSON).content("{\"mood\":\"Furious\"}").with(as(alice)))
+            .andExpect(status().isBadRequest());
+
+        JsonNode second = generate(alice);
+
+        assertThat(second.get("details").get("recoveryWeek").asBoolean()).isTrue();
+        assertThat(second.get("workoutIntensity").asDouble()).isLessThan(normal);
+        assertThat(second.get("weeklyReport").asText()).contains("tired or stressed on 3 days");
+    }
+
+    @Test
+    void theUserCanTurnDownALighterWeek() throws Exception {
+        User alice = createUser();
+        UserProfile profile = createProfile(alice, Goal.MAINTAIN);
+        mealsAvailable();
+        double normal = generate(alice).get("workoutIntensity").asDouble();
+
+        // nothing to turn down yet: the plan comes back as it is
+        mockMvc
+            .perform(post("/api/plans/current/keep-usual-volume").with(as(alice)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.workoutIntensity").value(normal));
+
+        ageCurrentPlan(profile);
+        for (int daysAgo = 0; daysAgo <= 2; daysAgo++) {
+            ProgressLog log = new ProgressLog().logDate(TODAY.minusDays(daysAgo)).completedWorkout(false).createdAt(Instant.now());
+            log.setMood("Tired");
+            log.setProfile(profile);
+            progressLogRepository.saveAndFlush(log);
+        }
+        JsonNode lighter = generate(alice);
+        assertThat(lighter.get("details").get("recoveryWeek").asBoolean()).isTrue();
+
+        JsonNode kept = om.readTree(
+            mockMvc
+                .perform(post("/api/plans/current/keep-usual-volume").with(as(alice)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString()
+        );
+
+        assertThat(kept.get("details").get("recoveryWeek").asBoolean()).isFalse();
+        assertThat(kept.get("workoutIntensity").asDouble()).isEqualTo(normal);
+        // same plan, same calories and meals; the report says what happened and what the user chose
+        assertThat(kept.get("id").asLong()).isEqualTo(lighter.get("id").asLong());
+        assertThat(kept.get("caloriesKcal").asInt()).isEqualTo(lighter.get("caloriesKcal").asInt());
+        assertThat(kept.get("mealPlanJson").asText()).isEqualTo(lighter.get("mealPlanJson").asText());
+        assertThat(kept.get("weeklyReport").asText())
+            .contains("tired or stressed on 3 days")
+            .endsWith("You chose to keep your usual training volume this week.");
+
+        // the choice holds if the plan is regenerated during the week
+        assertThat(generate(alice).get("details").get("recoveryWeek").asBoolean()).isFalse();
+    }
+
+    @Test
+    void keepingUsualVolumeNeedsAPlan() throws Exception {
+        User alice = createUser();
+        createProfile(alice, Goal.MAINTAIN);
+        mockMvc.perform(post("/api/plans/current/keep-usual-volume").with(as(alice))).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void moodLoggedAfterTheWorkoutIsKeptButNotReadAsFatigue() throws Exception {
+        User alice = createUser();
+        UserProfile profile = createProfile(alice, Goal.MAINTAIN);
+        mealsAvailable();
+        double normal = generate(alice).get("workoutIntensity").asDouble();
+        ageCurrentPlan(profile);
+
+        // two earlier days: trained first, said "tired" afterwards
+        for (int daysAgo = 1; daysAgo <= 2; daysAgo++) {
+            ProgressLog log = new ProgressLog().logDate(TODAY.minusDays(daysAgo)).completedWorkout(true).createdAt(Instant.now());
+            log.setMood("Tired");
+            log.setMoodAfterWorkout(true);
+            log.setProfile(profile);
+            progressLogRepository.saveAndFlush(log);
+        }
+        // today, through the API: workout first, then the mood
+        checkIn(alice, Map.of("completedWorkout", true));
+        JsonNode after = checkIn(alice, Map.of("mood", "Tired"));
+        assertThat(after.get("mood").asText()).isEqualTo("Tired");
+        assertThat(after.get("moodAfterWorkout").asBoolean()).isTrue();
+
+        JsonNode second = generate(alice);
+
+        // three "tired" days, none of them before training: no lighter week
+        assertThat(second.get("details").get("recoveryWeek").asBoolean()).isFalse();
+        assertThat(second.get("workoutIntensity").asDouble()).isEqualTo(normal);
+        assertThat(second.get("weeklyReport").asText()).doesNotContain("tired or stressed");
+    }
+
+    @Test
+    void moodLoggedBeforeTheWorkoutStaysASignalEvenOnceTheWorkoutIsDone() throws Exception {
+        User alice = createUser();
+        createProfile(alice, Goal.MAINTAIN);
+
+        assertThat(checkIn(alice, Map.of("mood", "Stressed")).get("moodAfterWorkout").asBoolean()).isFalse();
+        // training afterwards doesn't rewrite when the mood was given
+        assertThat(checkIn(alice, Map.of("completedWorkout", true)).get("moodAfterWorkout").asBoolean()).isFalse();
+    }
+
+    // ---------------------------------------------------------------- weekly report
+
+    @Test
+    void weeklyReportSaysWhatHappenedAndWhatChanged() throws Exception {
+        User alice = createUser();
+        UserProfile profile = createProfile(alice, Goal.LOSE);
+        mealsAvailable();
+
+        // the first plan has nothing to report on
+        assertThat(generate(alice).hasNonNull("weeklyReport")).isFalse();
+
+        ageCurrentPlan(profile);
+        for (int daysAgo = 20; daysAgo >= 0; daysAgo -= 2) {
+            log(profile, daysAgo, 80.0, daysAgo == 2 || daysAgo == 4 || daysAgo == 6);
+        }
+
+        String report = generate(alice).get("weeklyReport").asText();
+        assertThat(report)
+            .contains("Last week you completed 3 of 4 planned workouts.")
+            .contains("Your weight is holding steady.")
+            .contains("estimated maintenance was lowered by 150 kcal")
+            .contains("This week: about 2090 kcal a day and 4 workouts.");
+
+        // regenerating mid-week keeps the report rather than writing a misleading new one
+        assertThat(generate(alice).get("weeklyReport").asText()).isEqualTo(report);
+    }
+
+    @Test
+    void weeklyReportNudgesWhenNothingWasLogged() throws Exception {
+        User alice = createUser();
+        UserProfile profile = createProfile(alice, Goal.MAINTAIN);
+        mealsAvailable();
+        generate(alice);
+        ageCurrentPlan(profile);
+
+        String report = generate(alice).get("weeklyReport").asText();
+
+        assertThat(report).startsWith("No check-ins last week").contains("This week: about 2740 kcal a day and 4 workouts.");
+    }
+
+    // ---------------------------------------------------------------- when meals can't be made
+
+    @Test
+    void mealsCanBeGeneratedLaterWithoutTouchingThePlan() throws Exception {
+        User alice = createUser();
+        createProfile(alice, Goal.LOSE);
+        when(mlServiceClient.mealPlan(any())).thenReturn(new HashMap<>(Map.of("status", "invalid_response")));
+
+        JsonNode first = generate(alice);
+        assertThat(first.get("mealStatus").asText()).isEqualTo("invalid_response");
+        assertThat(first.hasNonNull("mealPlanJson")).isFalse();
+
+        mealsAvailable();
+        JsonNode retried = om.readTree(
+            mockMvc.perform(post("/api/plans/current/meals").with(as(alice))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString()
+        );
+
+        assertThat(retried.get("mealStatus").asText()).isEqualTo("ok");
+        assertThat(retried.get("mealPlan").get("0").get("breakfast").get("name").asText()).isEqualTo("Oats");
+        // same plan, same targets
+        assertThat(retried.get("id").asLong()).isEqualTo(first.get("id").asLong());
+        assertThat(retried.get("caloriesKcal").asInt()).isEqualTo(first.get("caloriesKcal").asInt());
+        assertThat(retried.get("details")).isEqualTo(first.get("details"));
+    }
+
+    @Test
+    void aFailedRetryKeepsTheMealsAlreadyThere() throws Exception {
+        User alice = createUser();
+        createProfile(alice, Goal.MAINTAIN);
+        mealsAvailable();
+        generate(alice);
+
+        when(mlServiceClient.mealPlan(any())).thenThrow(new IllegalStateException("down"));
+        mockMvc
+            .perform(post("/api/plans/current/meals").with(as(alice)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.mealStatus").value("llm_unavailable"))
+            .andExpect(jsonPath("$.mealPlan.0.breakfast.name").value("Oats"));
+    }
+
+    @Test
+    void mealsEndpointBuildsAFullPlanForSomeoneWithoutOne() throws Exception {
+        User alice = createUser();
+        createProfile(alice, Goal.MAINTAIN);
+        mealsAvailable();
+
+        mockMvc
+            .perform(post("/api/plans/current/meals").with(as(alice)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.caloriesKcal").value(2740))
+            .andExpect(jsonPath("$.details.days.length()").value(7));
+    }
+
+    // ---------------------------------------------------------------- the weekly run
+
+    @Test
+    void weeklyRunGeneratesMealsOnlyForPeopleWhoOpenedTheAppRecently() throws Exception {
+        User active = createUser();
+        User away = createUser();
+        UserProfile activeProfile = createProfile(active, Goal.MAINTAIN);
+        UserProfile awayProfile = createProfile(away, Goal.MAINTAIN);
+        mealsAvailable();
+        generate(active);
+        generate(away);
+
+        // only one of them comes back to look at their plan
+        mockMvc.perform(get("/api/plans/current").with(as(active))).andExpect(status().isOk());
+        assertThat(planRepository.findFirstByProfileIdOrderByCreatedAtDesc(activeProfile.getId()).orElseThrow().getLastViewedAt()).isNotNull();
+
+        planService.regenerateWeekly(userProfileRepository.findOneByUserLogin(active.getLogin()).orElseThrow());
+        planService.regenerateWeekly(userProfileRepository.findOneByUserLogin(away.getLogin()).orElseThrow());
+
+        // 2 calls for the first plans, then 1 more: the active user's
+        verify(mlServiceClient, times(3)).mealPlan(any());
+        Plan activePlan = planRepository.findFirstByProfileIdOrderByCreatedAtDesc(activeProfile.getId()).orElseThrow();
+        Plan awayPlan = planRepository.findFirstByProfileIdOrderByCreatedAtDesc(awayProfile.getId()).orElseThrow();
+        assertThat(activePlan.getMealPlanJson()).isNotNull();
+        // the one who is away still gets targets and training, just no meals yet
+        assertThat(awayPlan.getMealPlanJson()).isNull();
+        assertThat(awayPlan.getDetailsJson()).isNotNull();
+        // and having been seen carries over to the new plan, so staying away keeps counting
+        assertThat(activePlan.getLastViewedAt()).isNotNull();
+        assertThat(awayPlan.getLastViewedAt()).isNull();
     }
 }

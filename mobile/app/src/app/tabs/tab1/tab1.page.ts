@@ -1,7 +1,6 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 import {
   IonContent,
   IonIcon, 
@@ -21,13 +20,14 @@ import {
   scaleOutline,
   addOutline, 
   calendarOutline,
-  barbellOutline
+  barbellOutline,
+  chatbubbleEllipsesOutline
 } from 'ionicons/icons';
 import { Chart } from 'chart.js/auto';
-import { environment } from '../../../environments/environment';
 import { UserProfileService } from '../../services/user-profile';
 import { PlanService } from '../../services/plan.service';
-import { CheckIn, ProgressService, localDateString } from '../../services/progress.service';
+import { CheckIn, Mood, ProgressService, localDateString } from '../../services/progress.service';
+import { ASSISTANT_ABILITIES } from '../../services/assistant.service';
 
 @Component({
   selector: 'app-tab1',
@@ -50,7 +50,12 @@ export class Tab1Page {
 
   username = 'User';
   greeting = 'Hello';
-  aiTip = '';
+  /** What happened last week and what it changed; empty until a plan has run a week. */
+  weeklyReport = '';
+  hasPlan = false;
+  /** This week's sessions were made lighter because the user reported being run down. */
+  recoveryWeek = false;
+  restoringVolume = false;
   progressData = { completed: 0, total: 0 };
   currentMood: string | null = null;
   currentWater = 0;
@@ -58,7 +63,13 @@ export class Tab1Page {
   weightHistory: { date: string; weight: number }[] = [];
   weightHistoryReversed: { date: string; weight: number }[] = [];
   currentWeight = '';
+  /** Today's water target in glasses: by body weight, and more on a training day. */
+  waterTarget = 8;
   waterDots = new Array(8);
+
+  /** Shown once, the first time the user reaches the home screen. */
+  showAssistantIntro = false;
+  assistantAbilities = ASSISTANT_ABILITIES;
 
   /** Why this week's plan looks the way it does, from the server. */
   planReasons: string[] = [];
@@ -79,15 +90,8 @@ export class Tab1Page {
     'Energetic': '⚡', 'Neutral': '😊', 'Tired': '😴', 'Stressed': '😰',
   };
 
-  private fallbackTips = [
-    'Consistency beats intensity. Show up today and your future self will thank you.',
-    'Hydration fuels performance. Aim for at least 8 glasses of water today.',
-    'Recovery is where growth happens. Listen to your body and rest when needed.',
-  ];
-
   constructor(
     private alertCtrl: AlertController,
-    private http: HttpClient,
     private userProfileService: UserProfileService,
     private planService: PlanService,
     private progressService: ProgressService
@@ -102,7 +106,7 @@ export class Tab1Page {
       trendingUpOutline, 
       analyticsOutline, 
       scaleOutline,
-      calendarOutline, 'add': addOutline, barbellOutline
+      calendarOutline, 'add': addOutline, barbellOutline, chatbubbleEllipsesOutline
     });
   }
 
@@ -129,8 +133,11 @@ export class Tab1Page {
     this.checkAndResetDailyData();
     this.loadProgressFromAIPlan();
     this.loadWeightHistory();
-    this.loadAIInsight();
     this.loadPlanAndCheckIns();
+    this.updateWaterTarget();
+    if (!localStorage.getItem('assistant_intro_seen')) {
+      this.showAssistantIntro = true;
+    }
     if (this.currentMood) this.moodEmoji = this.moodEmojiMap[this.currentMood] || '';
   }
 
@@ -282,6 +289,11 @@ export class Tab1Page {
         const todays = logs.find(l => l.logDate === today);
         this.workoutDoneToday = !!todays?.completedWorkout;
         this.weightLoggedToday = todays?.weightKg != null;
+        if (todays?.mood) {
+          this.currentMood = todays.mood;
+          this.moodEmoji = this.moodEmojiMap[todays.mood] || '';
+          localStorage.setItem('today_mood', todays.mood);
+        }
         this.loadProgressFromAIPlan();
 
         const weights = logs.filter(l => l.weightKg != null).map(l => ({ date: l.logDate, weight: Number(l.weightKg) }));
@@ -290,17 +302,55 @@ export class Tab1Page {
           this.currentWeight = weights[weights.length - 1].weight.toFixed(1);
           localStorage.setItem('weight_history', JSON.stringify(this.weightHistory));
           setTimeout(() => this.drawSparkline(), 100);
+          this.updateWaterTarget();
         }
       },
       error: () => { }
     });
   }
 
+  /**
+   * About 33 ml per kg of body weight, plus half a litre on a training day, in 250 ml glasses.
+   * A guide for a healthy adult, not a prescription.
+   */
+  private updateWaterTarget() {
+    const weight = parseFloat(this.currentWeight);
+    const millilitres = (isNaN(weight) || weight <= 0 ? 60 : weight) * 33 + (this.todayIsTrainingDay ? 500 : 0);
+    this.waterTarget = Math.max(6, Math.min(16, Math.round(millilitres / 250)));
+    this.waterDots = new Array(this.waterTarget);
+  }
+
+  /** The user would rather train as usual than take the lighter week. */
+  keepUsualVolume() {
+    if (this.restoringVolume) return;
+    this.restoringVolume = true;
+    this.planService.keepUsualTrainingVolume().subscribe({
+      next: () => {
+        this.restoringVolume = false;
+        this.applyPlan();
+      },
+      error: () => {
+        this.restoringVolume = false;
+        this.showSaveError();
+      }
+    });
+  }
+
+  closeAssistantIntro() {
+    this.showAssistantIntro = false;
+    localStorage.setItem('assistant_intro_seen', '1');
+  }
+
   private applyPlan() {
     const plan = this.planService.getCurrentPlan();
-    this.planReasons = plan?.details?.reasons ?? [];
+    this.hasPlan = !!plan;
+    this.recoveryWeek = !!plan?.details?.recoveryWeek;
+    this.weeklyReport = plan?.weeklyReport ?? '';
+    // Changes already told in the report aren't repeated in the list of how the plan was built
+    this.planReasons = (plan?.details?.reasons ?? []).filter(reason => !this.weeklyReport.includes(reason));
     this.todayIsTrainingDay = this.trainingDays()[new Date().getDay()] ?? false;
     this.loadProgressFromAIPlan();
+    this.updateWaterTarget();
   }
 
   toggleWorkoutDone() {
@@ -354,7 +404,7 @@ export class Tab1Page {
   private async showSaveError() {
     const alert = await this.alertCtrl.create({
       header: 'Not saved',
-      message: 'Could not save your check-in. Please check your connection and try again.',
+      message: 'Could not save that. Please check your connection and try again.',
       buttons: ['OK']
     });
     await alert.present();
@@ -466,42 +516,10 @@ export class Tab1Page {
     this.progressData = { completed: this.weekDayDone.filter(d => d).length, total };
   }
 
-  private loadAIInsight() {
-    this.aiTip = this.fallbackTips[Math.floor(Math.random() * this.fallbackTips.length)];
-
-    const planStr = localStorage.getItem('current_ai_plan');
-    let context: any = { 
-      mood: this.currentMood || 'Not logged', 
-      water: this.currentWater 
-    };
-
-    if (planStr) {
-      try {
-        const plan = JSON.parse(planStr);
-        context.calories = plan.caloriesKcal;
-        context.workoutType = plan.workoutType;
-
-        const schedules: Record<string, string[]> = {
-          'PPL': ['Rest', 'Push Day', 'Pull Day', 'Leg Day', 'Push Day', 'Pull Day', 'Rest'],
-          'UPPER_LOWER': ['Rest', 'Upper Body', 'Lower Body', 'Rest', 'Upper Body', 'Lower Body', 'Rest'],
-          'FBW': ['Rest', 'Full Body', 'Rest', 'Full Body', 'Rest', 'Full Body', 'Rest'],
-        };
-        context.workout = plan.details?.days?.[new Date().getDay()]?.session
-          ?? (schedules[plan.workoutType] || schedules['FBW'])[new Date().getDay()];
-      } catch { }
-    }
-    this.http.post<{ insight: string }>(`${environment.apiUrl}/insight`, context)
-    .subscribe({
-      next: (res) => { 
-        if (res.insight) this.aiTip = res.insight; 
-      },
-      error: () => { }
-    });
-  }
-
   async logMood() {
     const alert = await this.alertCtrl.create({
       header: 'How are you feeling?',
+      message: 'If you feel tired or stressed before training, you\'ll be offered a lighter session today, and several such days make next week easier.',
       inputs: [
         { type: 'radio', label: '⚡ Energetic', value: 'Energetic' },
         { type: 'radio', label: '😊 Neutral', value: 'Neutral' },
@@ -516,7 +534,8 @@ export class Tab1Page {
               this.moodEmoji = this.moodEmojiMap[data] || '';
               localStorage.setItem('today_mood', data);
               localStorage.setItem('last_log_date', new Date().toISOString().split('T')[0]);
-              this.loadAIInsight();
+              // On the server it feeds the weekly plan: several tired or stressed days make next week lighter
+              this.progressService.checkIn({ mood: data as Mood }).subscribe({ error: () => this.showSaveError() });
             }
         }},
       ],
@@ -543,7 +562,6 @@ export class Tab1Page {
               this.currentWater += glasses;
               localStorage.setItem('today_water', this.currentWater.toString());
               localStorage.setItem('last_log_date', new Date().toISOString().split('T')[0]);
-              this.loadAIInsight();
             }
         }},
       ],

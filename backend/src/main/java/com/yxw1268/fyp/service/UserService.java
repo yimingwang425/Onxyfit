@@ -8,7 +8,6 @@ import com.yxw1268.fyp.repository.UserRepository;
 import com.yxw1268.fyp.security.AuthoritiesConstants;
 import com.yxw1268.fyp.security.SecurityUtils;
 import com.yxw1268.fyp.service.dto.AdminUserDTO;
-import com.yxw1268.fyp.service.dto.UserDTO;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -288,11 +287,6 @@ public class UserService {
     @Transactional(readOnly = true)
     public Page<AdminUserDTO> getAllManagedUsers(Pageable pageable) {
         return userRepository.findAll(pageable).map(AdminUserDTO::new);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<UserDTO> getAllPublicUsers(Pageable pageable) {
-        return userRepository.findAllByIdNotNullAndActivatedIsTrue(pageable).map(UserDTO::new);
     }
 
     @Transactional(readOnly = true)

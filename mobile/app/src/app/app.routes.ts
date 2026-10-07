@@ -1,6 +1,17 @@
 import { Routes } from '@angular/router';
+import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
+  {
+    path: 'assistant',
+    canActivate: [AuthGuard],
+    loadComponent: () => import('./assistant/assistant.page').then(m => m.AssistantPage)
+  },
+  {
+    path: 'progress',
+    canActivate: [AuthGuard],
+    loadComponent: () => import('./progress/progress.page').then(m => m.ProgressPage)
+  },
   {
     path: '',
     loadChildren: () => import('./tabs/tabs.routes').then((m) => m.routes),

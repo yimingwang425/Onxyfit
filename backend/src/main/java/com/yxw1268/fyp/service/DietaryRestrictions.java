@@ -37,14 +37,14 @@ public final class DietaryRestrictions {
     }
 
     /**
-     * Free-text foods to avoid, reduced to short plain words. The values are shown to an LLM,
-     * so anything other than letters, spaces and hyphens is removed.
+     * Free-text foods to avoid, reduced to short plain words in any language. The values are shown
+     * to an LLM, so anything other than letters, spaces and hyphens is removed.
      */
     public static List<String> parseDislikes(String raw) {
         if (raw == null) {
             return List.of();
         }
-        Set<String> items = Arrays.stream(raw.split("[,;\\n]"))
+        Set<String> items = Arrays.stream(raw.split("[,;\\n，、；]"))
             .map(value -> value.replaceAll("[^\\p{L} -]", " ").replaceAll("\\s+", " ").trim().toLowerCase(Locale.ROOT))
             .filter(value -> !value.isEmpty())
             .map(value -> value.length() > MAX_DISLIKE_LENGTH ? value.substring(0, MAX_DISLIKE_LENGTH).trim() : value)

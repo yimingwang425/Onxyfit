@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import { UserProfileService } from '../../services/user-profile'; 
 import { addIcons } from 'ionicons';
-import { settingsOutline, chevronForward, personOutline } from 'ionicons/icons';
+import { settingsOutline, chevronForward, personOutline, statsChartOutline, chatbubbleEllipsesOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-tab4',
@@ -28,7 +28,7 @@ export class Tab4Page implements OnInit, OnDestroy {
     private router: Router,
     private userProfileService: UserProfileService 
   ) {
-    addIcons({ settingsOutline, chevronForward, personOutline });
+    addIcons({ settingsOutline, chevronForward, personOutline, statsChartOutline, chatbubbleEllipsesOutline });
   }
 
   private profileUpdatedHandler = (ev: any) => {
@@ -116,6 +116,14 @@ export class Tab4Page implements OnInit, OnDestroy {
       h = (h * 31 + email.charCodeAt(i)) >>> 0;
     }
     return h % modulo;
+  }
+
+  goToAssistant() {
+    this.router.navigateByUrl('/assistant');
+  }
+
+  goToProgress() {
+    this.router.navigateByUrl('/progress');
   }
 
   goToSettings() {

@@ -15,7 +15,7 @@ import { barbellOutline, moonOutline, checkmarkCircle, checkmarkCircleOutline } 
 import { WorkoutPlanService, DailyWorkoutPlan, WeeklyWorkoutPlan, Exercise } from '../../services/workout-plan';
 import { WorkoutDetailComponent } from '../../components/workout-detail/workout-detail.component';
 import { UserProfileService } from '../../services/user-profile';
-import { ProgressService, localDateString } from '../../services/progress.service';
+import { ProgressService, isRunDown, localDateString } from '../../services/progress.service';
 
 @Component({
   selector: 'app-tab3',
@@ -40,6 +40,14 @@ export class Tab3Page implements OnInit {
   selectedDayIndex: number = 0;
   /** Whether today's workout has been checked in as done. */
   workoutDone = false;
+  /** The plan could not be loaded at all (offline, server error). */
+  loadError = false;
+  /** The version of the stored plan that is on screen. */
+  private shownPlanVersion = -1;
+  /** The user said, before training, that they feel tired or stressed today: a lighter session is on offer. */
+  easeOffered = false;
+  /** What they chose to do about it today; null until they choose. */
+  easeChoice: 'lighter' | 'full' | null = null;
   savingWorkout = false;
 
   constructor(
@@ -57,7 +65,7 @@ export class Tab3Page implements OnInit {
 
   ionViewWillEnter() {
     // This week's plan may have replaced the one on screen
-    if (!this.workoutPlanService.hasFreshPlan()) {
+    if (!this.workoutPlanService.hasFreshPlan() || this.shownPlanVersion !== this.workoutPlanService.planVersion) {
       this.todaysPlan = null;
       this.weeklyPlan = [];
     }
@@ -70,9 +78,28 @@ export class Tab3Page implements OnInit {
       next: (logs) => {
         const today = localDateString();
         this.workoutDone = logs.some(l => l.logDate === today && l.completedWorkout);
+        // A mood given after the workout doesn't change a session that has already happened
+        this.easeOffered = logs.some(l => l.logDate === today && isRunDown(l.mood) && !l.moodAfterWorkout);
+        const choice = localStorage.getItem(this.easeChoiceKey());
+        this.easeChoice = choice === 'lighter' || choice === 'full' ? choice : null;
       },
       error: () => { }
     });
+  }
+
+  /** Today's sets for an exercise: one fewer (but at least two) if the user chose a lighter session. */
+  setsToday(exercise: Exercise): number {
+    return this.easeOffered && this.easeChoice === 'lighter' && exercise.sets > 2 ? exercise.sets - 1 : exercise.sets;
+  }
+
+  /** The user decides whether feeling run down changes today's session; either way it counts as done. */
+  chooseEase(choice: 'lighter' | 'full') {
+    this.easeChoice = choice;
+    localStorage.setItem(this.easeChoiceKey(), choice);
+  }
+
+  private easeChoiceKey(): string {
+    return `ease_choice_${localDateString()}`;
   }
 
   /** Check today's workout in as done, or undo that. */
@@ -163,25 +190,41 @@ export class Tab3Page implements OnInit {
 
   loadTodaysPlan() {
     this.isLoadingToday = true;
-    this.workoutPlanService.getTodaysPlan().subscribe((data) => {
-      this.todaysPlan = data;
-      this.isLoadingToday = false;
+    this.loadError = false;
+    this.workoutPlanService.getTodaysPlan().subscribe({
+      next: (data) => {
+        this.todaysPlan = data;
+        this.shownPlanVersion = this.workoutPlanService.planVersion;
+        this.isLoadingToday = false;
+      },
+      error: () => {
+        this.isLoadingToday = false;
+        this.loadError = true;
+      }
     });
   }
 
   loadWeeklyPlan() {
     this.isLoadingWeek = true;
-    this.workoutPlanService.getWeeklyPlan().subscribe((data) => {
-      this.weeklyPlan = data;
-      const daysMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      const todayStr = daysMap[new Date().getDay()]; 
-      const foundIndex = data.findIndex(d => d.day === todayStr);
-      if (foundIndex !== -1) {
-        this.selectedDayIndex = foundIndex;
-      } else {
-        this.selectedDayIndex = 0;
+    this.loadError = false;
+    this.workoutPlanService.getWeeklyPlan().subscribe({
+      next: (data) => {
+        this.weeklyPlan = data;
+        this.shownPlanVersion = this.workoutPlanService.planVersion;
+        const daysMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const todayStr = daysMap[new Date().getDay()]; 
+        const foundIndex = data.findIndex(d => d.day === todayStr);
+        if (foundIndex !== -1) {
+          this.selectedDayIndex = foundIndex;
+        } else {
+          this.selectedDayIndex = 0;
+        }
+        this.isLoadingWeek = false;
+      },
+      error: () => {
+        this.isLoadingWeek = false;
+        this.loadError = true;
       }
-      this.isLoadingWeek = false;
     });
   }
 

@@ -64,6 +64,15 @@ public class PlanDTO implements Serializable {
     /** {@link #detailsJson} parsed, for clients. */
     private Object details;
 
+    @Lob
+    private String weeklyReport;
+
+    /**
+     * Set on the response of a request that tried to generate meals: "ok", or why there are none
+     * ("llm_unavailable", "invalid_response", "restrictions").
+     */
+    private String mealStatus;
+
     @NotNull
     private UserProfileDTO profile;
 
@@ -177,6 +186,22 @@ public class PlanDTO implements Serializable {
 
     public void setDetailsJson(String detailsJson) {
         this.detailsJson = detailsJson;
+    }
+
+    public String getWeeklyReport() {
+        return weeklyReport;
+    }
+
+    public void setWeeklyReport(String weeklyReport) {
+        this.weeklyReport = weeklyReport;
+    }
+
+    public String getMealStatus() {
+        return mealStatus;
+    }
+
+    public void setMealStatus(String mealStatus) {
+        this.mealStatus = mealStatus;
     }
 
     public Object getDetails() {

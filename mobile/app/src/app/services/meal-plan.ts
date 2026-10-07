@@ -21,6 +21,8 @@ export interface DailyPlan {
   aiSuggestedCalories?: number;
   /** True when no meals could be generated for this day; the meal slots are placeholders. */
   unavailable?: boolean;
+  /** Why, when unavailable: the user's restrictions could not be met, or the service failed. */
+  unavailableReason?: 'restrictions' | 'service';
 }
 
 export interface WeeklyPlan {
@@ -183,7 +185,8 @@ export class MealPlanService {
       snack: this.unavailableMeal,
       aiData: aiPlan,
       aiSuggestedCalories: aiPlan.details?.days?.[dayOfWeek]?.calories ?? aiPlan.caloriesKcal,
-      unavailable: true
+      unavailable: true,
+      unavailableReason: aiPlan.mealStatus === 'restrictions' ? 'restrictions' : 'service'
     };
   }
 
@@ -192,9 +195,14 @@ export class MealPlanService {
     return this.planService.isSyncedToday();
   }
 
-  /** Throw away the stored plan so the next load generates a new one. */
-  discardPlan(): void {
-    this.planService.clearPlan();
+  /** Changes whenever the stored plan is replaced. */
+  get planVersion(): number {
+    return this.planService.version;
+  }
+
+  /** Try again to generate meals for the current plan. */
+  retryMeals(): Observable<AIPlan> {
+    return this.planService.regenerateMeals();
   }
 
   private convertLlamaMeal(llamaMeal: any): Meal {

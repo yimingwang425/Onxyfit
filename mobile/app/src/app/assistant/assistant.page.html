@@ -1,0 +1,93 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/tab1" color="dark"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Assistant</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="thread">
+
+    <div class="intro">
+      <p class="intro-lead">I can do three things for you. Tell me in your own words:</p>
+      <button type="button" class="ability" *ngFor="let a of abilities" (click)="useExample(a.example)">
+        <span class="ability-title">{{ a.title }}</span>
+        <span class="ability-example">"{{ a.example }}"</span>
+      </button>
+      <p class="intro-note">
+        I show you every change before it happens. For your plan, progress and reports, use the app's own pages; I can point you to them.
+      </p>
+    </div>
+
+    <ng-container *ngFor="let m of messages">
+      <div class="bubble" [class.user]="m.from === 'user'" [class.assistant]="m.from === 'assistant'">
+        <p>{{ m.text }}</p>
+
+        <button type="button" class="link-btn" *ngIf="m.navigateTo" (click)="open(m.navigateTo)">
+          {{ m.navigateLabel }}
+          <ion-icon name="chevron-forward"></ion-icon>
+        </button>
+
+        <div class="proposal" *ngIf="m.proposal as p">
+          <div class="proposal-title">{{ p.title }}</div>
+          <ul *ngIf="p.lines.length > 0">
+            <li *ngFor="let line of p.lines">{{ line }}</li>
+          </ul>
+
+          <div class="meal" *ngIf="p.meal as meal">
+            <div class="meal-name">{{ meal.name }}</div>
+            <div class="meal-meta">
+              {{ meal.calories }} kcal<span *ngIf="meal.macros"> · P {{ meal.macros.p }}g · C {{ meal.macros.c }}g · F {{ meal.macros.f }}g</span>
+            </div>
+            <div class="meal-label">Ingredients</div>
+            <ul>
+              <li *ngFor="let i of meal.ingredients">{{ i }}</li>
+            </ul>
+            <div class="meal-label" *ngIf="meal.recipe.length > 0">Steps</div>
+            <ol *ngIf="meal.recipe.length > 0">
+              <li *ngFor="let step of meal.recipe">{{ step }}</li>
+            </ol>
+          </div>
+
+          <div class="proposal-actions" *ngIf="m.state === 'open' || m.state === 'applying'">
+            <button type="button" class="primary" [disabled]="m.state === 'applying'" (click)="confirm(m)">
+              {{ m.state === 'applying' ? 'Applying…' : 'Confirm' }}
+            </button>
+            <button type="button" class="secondary" [disabled]="m.state === 'applying'" (click)="decline(m)">Not this</button>
+          </div>
+          <div class="proposal-state" *ngIf="m.state === 'applied'">Applied</div>
+          <div class="proposal-state" *ngIf="m.state === 'declined'">Not applied</div>
+        </div>
+      </div>
+    </ng-container>
+
+    <div class="bubble assistant typing" *ngIf="sending">
+      <ion-spinner name="dots"></ion-spinner>
+    </div>
+
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <div class="focus-chip" *ngIf="focus">
+    <span>Changing: <strong>{{ focusLabel }}</strong><ng-container *ngIf="focus.name"> · {{ focus.name }}</ng-container></span>
+    <button type="button" aria-label="Stop changing this meal" (click)="clearFocus()"><ion-icon name="close-circle"></ion-icon></button>
+  </div>
+  <form class="composer" (ngSubmit)="send()">
+    <input
+      #input
+      type="text"
+      name="draft"
+      [(ngModel)]="draft"
+      [maxlength]="maxLength"
+      [placeholder]="focus ? 'What would you like instead?' : 'Change a meal, this week\'s training, or food preferences'"
+      autocomplete="off"
+      enterkeyhint="send"
+    />
+    <button type="submit" aria-label="Send" [disabled]="sending || !draft.trim()">
+      <ion-icon name="arrow-up"></ion-icon>
+    </button>
+  </form>
+</ion-footer>

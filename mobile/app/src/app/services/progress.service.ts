@@ -10,6 +10,16 @@ export interface CheckIn {
   logDate: string;
   weightKg?: number | null;
   completedWorkout: boolean;
+  mood?: Mood | null;
+  /** The mood was logged after the day's workout was already done, so it says nothing about readiness. */
+  moodAfterWorkout?: boolean | null;
+}
+
+export type Mood = 'Energetic' | 'Neutral' | 'Tired' | 'Stressed';
+
+/** Moods that call for taking it easier. */
+export function isRunDown(mood: string | null | undefined): boolean {
+  return mood === 'Tired' || mood === 'Stressed';
 }
 
 /** A date as yyyy-MM-dd in the device's own time zone (toISOString would give the UTC day). */
@@ -20,7 +30,7 @@ export function localDateString(date: Date = new Date()): string {
 }
 
 /**
- * Daily check-ins: body weight and whether the day's workout was done. The server uses them
+ * Daily check-ins: body weight, whether the day's workout was done, and mood. The server uses them
  * each week to adjust the next plan.
  */
 @Injectable({
@@ -31,8 +41,8 @@ export class ProgressService {
 
   constructor(private http: HttpClient) {}
 
-  /** Record today's weight and/or workout; whatever is left out keeps its stored value. */
-  checkIn(data: { weightKg?: number; completedWorkout?: boolean }): Observable<CheckIn> {
+  /** Record today's weight, workout and/or mood; whatever is left out keeps its stored value. */
+  checkIn(data: { weightKg?: number; completedWorkout?: boolean; mood?: Mood }): Observable<CheckIn> {
     return this.http.put<CheckIn>(`${this.endpoint}/today`, { ...data, logDate: localDateString() });
   }
 

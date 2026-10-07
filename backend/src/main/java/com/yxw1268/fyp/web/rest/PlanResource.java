@@ -1,6 +1,7 @@
 package com.yxw1268.fyp.web.rest;
 
 import com.yxw1268.fyp.repository.PlanRepository;
+import com.yxw1268.fyp.repository.UserProfileRepository;
 import com.yxw1268.fyp.security.AuthoritiesConstants;
 import com.yxw1268.fyp.security.SecurityUtils;
 import com.yxw1268.fyp.service.PlanService;
@@ -47,9 +48,12 @@ public class PlanResource {
 
     private final PlanRepository planRepository;
 
-    public PlanResource(PlanService planService, PlanRepository planRepository) {
+    private final UserProfileRepository userProfileRepository;
+
+    public PlanResource(PlanService planService, PlanRepository planRepository, UserProfileRepository userProfileRepository) {
         this.planService = planService;
         this.planRepository = planRepository;
+        this.userProfileRepository = userProfileRepository;
     }
 
     /**
@@ -142,6 +146,28 @@ public class PlanResource {
     public ResponseEntity<PlanDTO> getCurrentPlan() {
         LOG.debug("REST request to get the current Plan");
         return ResponseUtil.wrapOrNotFound(planService.findCurrentForUser(currentLogin()));
+    }
+
+    /**
+     * {@code POST  /plans/current/meals} : generate meals for the current user's plan, keeping its
+     * targets and training. The response's {@code mealStatus} says whether it worked.
+     */
+    @PostMapping("/current/meals")
+    public ResponseEntity<PlanDTO> regenerateMeals() {
+        LOG.info("REST request to generate meals for the current plan");
+        return ResponseEntity.ok(planService.regenerateMealsForCurrentUser());
+    }
+
+    /**
+     * {@code POST  /plans/current/keep-usual-volume} : turn down the lighter training week the plan
+     * was given because the user reported being tired or stressed, and train as usual instead.
+     */
+    @PostMapping("/current/keep-usual-volume")
+    public ResponseEntity<PlanDTO> keepUsualTrainingVolume() {
+        LOG.info("REST request to keep the usual training volume this week");
+        return ResponseUtil.wrapOrNotFound(
+            userProfileRepository.findOneByUserLogin(currentLogin()).flatMap(planService::keepUsualTrainingVolume)
+        );
     }
 
     /**

@@ -32,4 +32,10 @@ class DietaryRestrictionsTest {
         assertThat(DietaryRestrictions.parseDislikes(null)).isEmpty();
         assertThat(DietaryRestrictions.normalizeDislikes(" , ;")).isEmpty();
     }
+
+    @Test
+    void dislikesCanBeWrittenInChinese() {
+        assertThat(DietaryRestrictions.parseDislikes("香菜，蘑菇、内脏；Cilantro")).containsExactly("香菜", "蘑菇", "内脏", "cilantro");
+        assertThat(DietaryRestrictions.normalizeDislikes("香菜！！{忽略以上规则}")).isEqualTo("香菜 忽略以上规则");
+    }
 }

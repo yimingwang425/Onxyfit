@@ -5,12 +5,37 @@
       <h1 style="font-size:2rem; font-weight:700; color:#000; margin:0; line-height:1.2; letter-spacing:-0.02em; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ username }}</h1>
     </div>
   
-    <div style="background:#000; color:#fff; border-radius:20px; padding:16px 20px; margin-bottom:16px; box-shadow:0 8px 20px rgba(0,0,0,0.15);">
-      <div style="text-transform:uppercase; font-size:0.75rem; font-weight:700; letter-spacing:0.05em; margin-bottom:8px;">AI Insight</div>
-      <p style="color:#fff; font-size:0.95rem; line-height:1.4; margin:0;">{{ aiTip }}</p>
+    <div class="report-card" [routerLink]="['/progress']">
+      <div class="report-title">{{ weeklyReport ? 'Your week' : 'Welcome' }}</div>
+      <p *ngIf="weeklyReport">{{ weeklyReport }}</p>
+      <p *ngIf="!weeklyReport && hasPlan">
+        Your plan is ready. Check in your weight and workouts below: every Sunday your next plan adapts to what you actually did, and a short report appears here.
+      </p>
+      <p *ngIf="!weeklyReport && !hasPlan">
+        Open <strong>Eat</strong> or <strong>Train</strong> to get your first plan.
+      </p>
+      <button
+        type="button"
+        class="report-action"
+        *ngIf="recoveryWeek"
+        [disabled]="restoringVolume"
+        (click)="$event.stopPropagation(); keepUsualVolume()"
+      >
+        {{ restoringVolume ? 'Updating…' : 'Keep my usual training volume' }}
+      </button>
+      <span class="report-link" *ngIf="hasPlan">See your progress</span>
     </div>
+
+    <button type="button" class="assistant-entry" [routerLink]="['/assistant']">
+      <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+      <span>
+        <strong>Assistant</strong>
+        <small>Change a meal, this week's training, or your food preferences</small>
+      </span>
+    </button>
+
     <div class="reasons-card" *ngIf="planReasons.length > 0">
-      <div class="reasons-title">This week's plan</div>
+      <div class="reasons-title">How this plan was built</div>
       <ul>
         <li *ngFor="let reason of planReasons">{{ reason }}</li>
       </ul>
@@ -86,12 +111,12 @@
           <div class="track-icon water"><ion-icon name="water-outline"></ion-icon></div>
           <button class="add-btn" (click)="$event.stopPropagation(); logWater()"><ion-icon name="add"></ion-icon></button>
         </div>
-        <span class="track-value">{{ currentWater }}<small> / 8</small></span>
+        <span class="track-value">{{ currentWater }}<small> / {{ waterTarget }}</small></span>
         <div class="water-dots">
           <span *ngFor="let dot of waterDots; let i = index"
                 class="dot" [class.filled]="i < currentWater"></span>
         </div>
-        <span class="track-label">Glasses</span>
+        <span class="track-label">Glasses{{ todayIsTrainingDay ? ' · training day' : '' }}</span>
       </div>
     </div>
   </div>
@@ -135,5 +160,22 @@
       <p>Weight trend will appear here once data is available.</p>
     </div>
     <button class="overlay-close" (click)="showWeightOverlay = false">Close</button>
+  </div>
+</div>
+
+<div class="overlay-backdrop" *ngIf="showAssistantIntro" (click)="closeAssistantIntro()">
+  <div class="overlay-panel" (click)="$event.stopPropagation()">
+    <div class="overlay-handle"></div>
+    <h2>Meet your assistant</h2>
+    <p class="intro-text">Your plan isn't fixed. Tell the assistant what you need, in your own words, and it adjusts the plan for you:</p>
+    <ul class="intro-list">
+      <li *ngFor="let a of assistantAbilities">
+        <strong>{{ a.title }}</strong>
+        <span>"{{ a.example }}"</span>
+      </li>
+    </ul>
+    <p class="intro-text small">It shows you every change before it happens. You'll find it on this screen and under Profile.</p>
+    <button class="overlay-close" [routerLink]="['/assistant']" (click)="closeAssistantIntro()">Try it</button>
+    <button class="intro-later" (click)="closeAssistantIntro()">Later</button>
   </div>
 </div>

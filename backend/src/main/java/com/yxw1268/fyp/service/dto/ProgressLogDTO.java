@@ -37,10 +37,31 @@ public class ProgressLogDTO implements Serializable {
     @NotNull
     private Instant createdAt;
 
+    @Size(max = 16)
+    private String mood;
+
+    private Boolean moodAfterWorkout;
+
     @NotNull
     private UserProfileDTO profile;
 
     private PlanDTO plan;
+
+    public Boolean getMoodAfterWorkout() {
+        return moodAfterWorkout;
+    }
+
+    public void setMoodAfterWorkout(Boolean moodAfterWorkout) {
+        this.moodAfterWorkout = moodAfterWorkout;
+    }
+
+    public String getMood() {
+        return mood;
+    }
+
+    public void setMood(String mood) {
+        this.mood = mood;
+    }
 
     public Long getId() {
         return id;

@@ -36,6 +36,11 @@ export class Tab2Page implements OnInit {
   weeklyPlan: WeeklyPlan[] = [];
   selectedDayIndex: number = 0;
   disclaimer = `${HEALTH_DISCLAIMER_SHORT} ${ALLERGY_DISCLAIMER}`;
+  /** The plan could not be loaded at all (offline, server error). */
+  loadError = false;
+  /** The version of the stored plan that is on screen. */
+  private shownPlanVersion = -1;
+  todayDow = new Date().getDay();
 
   constructor(
     private mealPlanService: MealPlanService,
@@ -51,19 +56,24 @@ export class Tab2Page implements OnInit {
   ionViewWillEnter() {
     // The stored plan was dropped (e.g. allergies changed) or may have been replaced by this
     // week's plan on the server: forget what is on screen so it is loaded again
-    if (!this.mealPlanService.hasFreshPlan()) {
+    if (!this.mealPlanService.hasFreshPlan() || this.shownPlanVersion !== this.mealPlanService.planVersion) {
       this.todaysPlan = null;
       this.weeklyPlan = [];
     }
     this.checkProfileAndLoad();
   }
 
-  /** Ask for a fresh plan after a generation that produced no meals. */
-  regenerate() {
-    this.mealPlanService.discardPlan();
+  /** Try again after meals could not be generated, or after the plan failed to load. */
+  retry() {
+    this.loadError = false;
     this.todaysPlan = null;
     this.weeklyPlan = [];
-    this.loadData();
+    if (this.currentSegment === 'today') { this.isLoadingToday = true; } else { this.isLoadingWeek = true; }
+    this.mealPlanService.retryMeals().subscribe({
+      next: () => this.loadData(),
+      // loadData() surfaces the error state itself if the plan still can't be had
+      error: () => this.loadData()
+    });
   }
 
   async checkProfileAndLoad() {
@@ -133,25 +143,41 @@ export class Tab2Page implements OnInit {
 
   loadTodaysPlan() {
     this.isLoadingToday = true;
-    this.mealPlanService.getTodaysPlan().subscribe((data) => {
-      this.todaysPlan = data;
-      this.isLoadingToday = false;
+    this.loadError = false;
+    this.mealPlanService.getTodaysPlan().subscribe({
+      next: (data) => {
+        this.todaysPlan = data;
+        this.shownPlanVersion = this.mealPlanService.planVersion;
+        this.isLoadingToday = false;
+      },
+      error: () => {
+        this.isLoadingToday = false;
+        this.loadError = true;
+      }
     });
   }
 
   loadWeeklyPlan() {
     this.isLoadingWeek = true;
-    this.mealPlanService.getWeeklyPlan().subscribe((data) => {
-      this.weeklyPlan = data;
-      const daysMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      const todayStr = daysMap[new Date().getDay()]; 
-      const foundIndex = data.findIndex(d => d.day === todayStr);
-      if (foundIndex !== -1) {
-        this.selectedDayIndex = foundIndex;
-      } else {
-        this.selectedDayIndex = 0;
+    this.loadError = false;
+    this.mealPlanService.getWeeklyPlan().subscribe({
+      next: (data) => {
+        this.weeklyPlan = data;
+        this.shownPlanVersion = this.mealPlanService.planVersion;
+        const daysMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const todayStr = daysMap[new Date().getDay()]; 
+        const foundIndex = data.findIndex(d => d.day === todayStr);
+        if (foundIndex !== -1) {
+          this.selectedDayIndex = foundIndex;
+        } else {
+          this.selectedDayIndex = 0;
+        }
+        this.isLoadingWeek = false;
+      },
+      error: () => {
+        this.isLoadingWeek = false;
+        this.loadError = true;
       }
-      this.isLoadingWeek = false;
     });
   }
 
@@ -159,11 +185,20 @@ export class Tab2Page implements OnInit {
     this.selectedDayIndex = index;
   }
 
-  async openMealDetails(meal: Meal | null) {
+  /** The day of the week (0 = Sunday) selected in the weekly view. */
+  get selectedDow(): number {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return days.indexOf(this.weeklyPlan[this.selectedDayIndex]?.day ?? '');
+  }
+
+  /**
+   * @param slot and day say which meal of the plan this is, so the assistant can be asked to change it
+   */
+  async openMealDetails(meal: Meal | null, slot?: string, day?: number) {
     if (!meal) return;
     const modal = await this.modalCtrl.create({
       component: MealDetailComponent,
-      componentProps: { meal: meal },
+      componentProps: { meal: meal, slot: slot, day: day },
     });
     await modal.present();
   }

@@ -39,6 +39,11 @@
     </ion-item>
   </ion-list>
 
+  <ion-button *ngIf="canAskToChange" (click)="askToChange()" expand="block" color="dark" class="ion-margin-top">
+    <ion-icon slot="start" name="chatbubble-ellipses-outline"></ion-icon>
+    Ask the assistant to change this meal
+  </ion-button>
+
   <p style="font-size: 0.75rem; line-height: 1.45; color: #999; margin: 16px 16px 8px 16px;">{{ allergyDisclaimer }}</p>
 
   <ion-button

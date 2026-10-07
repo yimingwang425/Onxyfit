@@ -299,4 +299,127 @@ class PlanEngineTest {
         AdaptiveState state = PlanEngine.adapt(prev, prev.maintenanceKcal(), WEEK_AGO, weighIns(80, 0), NOW);
         assertThat(state.trainingOffset()).isZero();
     }
+
+    // ------------------------------------------------------------------ feeling run down
+
+    private static List<LogEntry> moods(String... lastDays) {
+        List<LogEntry> logs = new ArrayList<>();
+        for (int i = 0; i < lastDays.length; i++) {
+            logs.add(new LogEntry(TODAY.minusDays(i + 1), null, false, lastDays[i]));
+        }
+        return logs;
+    }
+
+    @Test
+    void severalRunDownDaysMakeALighterWeek() {
+        PlanDetails prev = previous(Goal.MAINTAIN);
+        AdaptiveState state = PlanEngine.adapt(prev, prev.maintenanceKcal(), WEEK_AGO, moods("Tired", "Neutral", "Stressed", "Tired"), NOW);
+        assertThat(state.recoveryWeek()).isTrue();
+        assertThat(state.reasons()).singleElement().asString().contains("tired or stressed on 3 days");
+
+        PlanInput input = person(Goal.MAINTAIN, ActivityLevel.MODERATE);
+        PlanTargets lighter = PlanEngine.build(input, state);
+        assertThat(lighter.workoutIntensity()).isLessThan(PlanEngine.build(input, AdaptiveState.INITIAL).workoutIntensity());
+        assertThat(lighter.details().recoveryWeek()).isTrue();
+        // only volume changes: same programme, same calories
+        assertThat(lighter.workoutType()).isEqualTo(WorkoutType.UPPER_LOWER);
+        assertThat(lighter.caloriesKcal()).isEqualTo(2740);
+    }
+
+    @Test
+    void aCoupleOfRunDownDaysOrOldOnesDoNot() {
+        PlanDetails prev = previous(Goal.MAINTAIN);
+        assertThat(PlanEngine.adapt(prev, prev.maintenanceKcal(), WEEK_AGO, moods("Tired", "Energetic", "Stressed"), NOW).recoveryWeek()).isFalse();
+
+        List<LogEntry> old = List.of(
+            new LogEntry(TODAY.minusDays(8), null, false, "Tired"),
+            new LogEntry(TODAY.minusDays(9), null, false, "Tired"),
+            new LogEntry(TODAY.minusDays(10), null, false, "Tired")
+        );
+        assertThat(PlanEngine.adapt(prev, prev.maintenanceKcal(), WEEK_AGO, old, NOW).recoveryWeek()).isFalse();
+    }
+
+    @Test
+    void recoveryWeekEndsWhenTheUserFeelsBetterAndSurvivesAMidWeekRegeneration() {
+        PlanDetails recovering = PlanEngine.build(
+            person(Goal.MAINTAIN, ActivityLevel.MODERATE),
+            new AdaptiveState(0, 0, true, List.of())
+        ).details();
+
+        assertThat(PlanEngine.adapt(recovering, recovering.maintenanceKcal(), NOW.minus(2, ChronoUnit.DAYS), List.of(), NOW).recoveryWeek()).isTrue();
+        assertThat(PlanEngine.adapt(recovering, recovering.maintenanceKcal(), WEEK_AGO, moods("Energetic", "Neutral"), NOW).recoveryWeek()).isFalse();
+    }
+
+    // ------------------------------------------------------------------ this week only
+
+    private static List<String> sessions(PlanTargets plan) {
+        return plan.details().days().stream().map(DayTarget::session).toList();
+    }
+
+    private static PlanTargets constrained(ActivityLevel activity, Integer maxSessions, String avoid) {
+        return PlanEngine.build(person(Goal.MAINTAIN, activity), AdaptiveState.INITIAL, new WeekConstraint(maxSessions, avoid));
+    }
+
+    @Test
+    void sessionCapKeepsTheFirstSessionsOfTheSplit() {
+        assertThat(sessions(constrained(ActivityLevel.ACTIVE, 3, null))).containsExactly("Rest", "Push", "Pull", "Legs", "Rest", "Rest", "Rest");
+        assertThat(sessions(constrained(ActivityLevel.MODERATE, 2, null))).containsExactly("Rest", "Upper", "Lower", "Rest", "Rest", "Rest", "Rest");
+
+        PlanTargets two = constrained(ActivityLevel.MODERATE, 2, null);
+        assertThat(two.details().sessionsPerWeek()).isEqualTo(2);
+        assertThat(two.details().weekConstraint()).isEqualTo(new WeekConstraint(2, null));
+        assertThat(two.details().reasons()).anyMatch(r -> r.contains("This week only") && r.contains("2 training sessions"));
+    }
+
+    @Test
+    void sessionCapAboveThePlanChangesNothing() {
+        PlanTargets capped = constrained(ActivityLevel.MODERATE, 6, null);
+        assertThat(sessions(capped)).isEqualTo(sessions(build(Goal.MAINTAIN, ActivityLevel.MODERATE)));
+        assertThat(capped.details().reasons()).noneMatch(r -> r.contains("This week only"));
+    }
+
+    @Test
+    void avoidingABodyAreaRemovesOrReplacesItsSessions() {
+        assertThat(sessions(constrained(ActivityLevel.ACTIVE, null, WeekConstraint.LOWER))).containsExactly("Rest", "Push", "Pull", "Rest", "Push", "Pull", "Rest");
+        assertThat(sessions(constrained(ActivityLevel.ACTIVE, null, WeekConstraint.UPPER))).containsExactly("Rest", "Rest", "Rest", "Legs", "Rest", "Rest", "Rest");
+        assertThat(sessions(constrained(ActivityLevel.MODERATE, null, WeekConstraint.LOWER))).containsExactly("Rest", "Upper", "Rest", "Upper", "Rest", "Rest", "Rest");
+        // full-body sessions become sessions for the other half
+        assertThat(sessions(constrained(ActivityLevel.LIGHT, null, WeekConstraint.LOWER))).containsExactly("Rest", "Upper", "Rest", "Upper", "Rest", "Upper", "Rest");
+        assertThat(sessions(constrained(ActivityLevel.LIGHT, null, WeekConstraint.UPPER))).containsExactly("Rest", "Lower", "Rest", "Lower", "Rest", "Lower", "Rest");
+    }
+
+    @Test
+    void bothConstraintsCombine() {
+        assertThat(sessions(constrained(ActivityLevel.ACTIVE, 2, WeekConstraint.LOWER))).containsExactly("Rest", "Push", "Pull", "Rest", "Rest", "Rest", "Rest");
+    }
+
+    @Test
+    void nutritionFollowsTheConstrainedWeek() {
+        PlanTargets normal = build(Goal.MAINTAIN, ActivityLevel.ACTIVE);
+        PlanTargets two = constrained(ActivityLevel.ACTIVE, 2, null);
+
+        // same weekly average, spread over 2 training days instead of 5, and less protein for less training
+        assertThat(two.caloriesKcal()).isEqualTo(normal.caloriesKcal());
+        double mean = two.details().days().stream().mapToInt(DayTarget::calories).average().orElseThrow();
+        assertThat(mean).isCloseTo(two.caloriesKcal(), within(10.0));
+        assertThat(two.details().days().stream().filter(DayTarget::training)).hasSize(2);
+        assertThat(two.proteinG()).isLessThan(normal.proteinG());
+    }
+
+    @Test
+    void aWeekWithNoSessionsIsAllRestDaysAtTheTarget() {
+        PlanTargets none = constrained(ActivityLevel.ACTIVE, 0, null);
+        assertThat(none.details().sessionsPerWeek()).isZero();
+        assertThat(none.details().days()).allSatisfy(day -> {
+            assertThat(day.training()).isFalse();
+            assertThat(day.calories()).isEqualTo(none.caloriesKcal());
+        });
+    }
+
+    @Test
+    void anEmptyConstraintIsNoConstraint() {
+        PlanTargets plan = PlanEngine.build(person(Goal.MAINTAIN, ActivityLevel.MODERATE), AdaptiveState.INITIAL, new WeekConstraint(null, null));
+        assertThat(plan.details().weekConstraint()).isNull();
+        assertThat(sessions(plan)).isEqualTo(sessions(build(Goal.MAINTAIN, ActivityLevel.MODERATE)));
+    }
 }

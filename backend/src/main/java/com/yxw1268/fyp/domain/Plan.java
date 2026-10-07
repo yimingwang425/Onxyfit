@@ -78,6 +78,14 @@ public class Plan implements Serializable {
     @Column(name = "details_json", columnDefinition = "TEXT")
     private String detailsJson;
 
+    /** The report on last week shown with this plan. */
+    @Column(name = "weekly_report", columnDefinition = "TEXT")
+    private String weeklyReport;
+
+    /** When the user last opened this plan (or the one it replaced) in the app. */
+    @Column(name = "last_viewed_at")
+    private Instant lastViewedAt;
+
     @ManyToOne(optional = false)
     @NotNull
     @JsonIgnoreProperties(value = { "user" }, allowSetters = true)
@@ -226,6 +234,22 @@ public class Plan implements Serializable {
 
     public void setMealPlanJson(String mealPlanJson) {
         this.mealPlanJson = mealPlanJson;
+    }
+
+    public String getWeeklyReport() {
+        return this.weeklyReport;
+    }
+
+    public void setWeeklyReport(String weeklyReport) {
+        this.weeklyReport = weeklyReport;
+    }
+
+    public Instant getLastViewedAt() {
+        return this.lastViewedAt;
+    }
+
+    public void setLastViewedAt(Instant lastViewedAt) {
+        this.lastViewedAt = lastViewedAt;
     }
 
     public String getDetailsJson() {

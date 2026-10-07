@@ -25,4 +25,33 @@
             <column name="log_date"/>
         </createIndex>
     </changeSet>
+
+    <!--
+        Plan: the weekly report shown with it, and when the user last opened it in the app.
+    -->
+    <changeSet id="20261007020000-2" author="yxw1268">
+        <addColumn tableName="plan">
+            <column name="weekly_report" type="${clobType}">
+                <constraints nullable="true" />
+            </column>
+            <column name="last_viewed_at" type="${datetimeType}">
+                <constraints nullable="true" />
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <!--
+        ProgressLog: how the user said they felt that day, and whether they said so only after
+        that day's workout was already done (being tired then is normal and tells us nothing).
+    -->
+    <changeSet id="20261007020000-3" author="yxw1268">
+        <addColumn tableName="progress_log">
+            <column name="mood" type="varchar(16)">
+                <constraints nullable="true" />
+            </column>
+            <column name="mood_after_workout" type="boolean">
+                <constraints nullable="true" />
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

@@ -1,0 +1,86 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/tab1" color="dark"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Progress</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="loading" *ngIf="loading">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <div class="notice" *ngIf="loadError">
+    <p>Your check-ins couldn't be loaded. Check your connection and try again.</p>
+    <button type="button" (click)="load()">Try again</button>
+  </div>
+
+  <div class="page" *ngIf="!loading && !loadError">
+
+    <section class="card">
+      <div class="card-head">
+        <ion-icon name="scale-outline"></ion-icon>
+        <h2>Weight</h2>
+      </div>
+
+      <div *ngIf="latestWeight !== null">
+        <div class="headline">
+          <span class="big">{{ latestWeight }}<small> kg</small></span>
+          <span class="delta" *ngIf="weightChange !== null">
+            {{ weightChange > 0 ? '+' : '' }}{{ weightChange }} kg since {{ weights[0].date }}
+          </span>
+        </div>
+        <div class="chart" *ngIf="weights.length > 1">
+          <canvas #weightCanvas></canvas>
+        </div>
+        <p class="hint" *ngIf="weights.length === 1">Log your weight a few more times to see a trend.</p>
+      </div>
+
+      <p class="hint" *ngIf="latestWeight === null">
+        No weigh-ins yet. Log your weight from the home screen a few times a week and your calories will adapt to your trend.
+      </p>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <ion-icon name="barbell-outline"></ion-icon>
+        <h2>Workouts</h2>
+      </div>
+
+      <div class="week" *ngFor="let week of weeks; let first = first">
+        <div class="week-top">
+          <span class="week-label">{{ week.label }}</span>
+          <span class="week-count">
+            {{ week.completed }}<ng-container *ngIf="first && sessionsPerWeek > 0"> of {{ sessionsPerWeek }}</ng-container>
+            done
+          </span>
+        </div>
+        <div class="day-row">
+          <div
+            *ngFor="let day of week.days; let i = index"
+            class="day"
+            [class.done]="day === true"
+            [class.future]="day === null"
+          >{{ dayLabels[i] }}</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" *ngIf="entries.length > 0">
+      <div class="card-head">
+        <h2>Check-ins</h2>
+      </div>
+      <div class="entry" *ngFor="let entry of entries">
+        <span class="entry-date">{{ entry.logDate }}</span>
+        <span class="entry-weight">{{ entry.weightKg != null ? entry.weightKg + ' kg' : '' }}</span>
+        <span class="entry-workout">
+          <ion-icon name="checkmark-circle" *ngIf="entry.completedWorkout"></ion-icon>
+          {{ entry.completedWorkout ? 'Workout' : '' }}
+        </span>
+      </div>
+    </section>
+
+  </div>
+</ion-content>

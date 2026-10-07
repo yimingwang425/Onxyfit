@@ -48,6 +48,9 @@ public final class PlanEngine {
 
     static final int MIN_TRAINING_OFFSET = -3;
 
+    /** This many tired or stressed days in a week make the next week a lighter one. */
+    static final int RUN_DOWN_DAYS_FOR_RECOVERY = 3;
+
     private static final String REST = "Rest";
 
     // Index 0 = Sunday. These must stay in step with the session routines in the app.
@@ -63,6 +66,13 @@ public final class PlanEngine {
     // ------------------------------------------------------------------ building a plan
 
     public static PlanTargets build(PlanInput input, AdaptiveState state) {
+        return build(input, state, null);
+    }
+
+    /**
+     * @param constraint what the user asked for this week only, or null
+     */
+    public static PlanTargets build(PlanInput input, AdaptiveState state, WeekConstraint constraint) {
         List<String> reasons = new ArrayList<>(state.reasons());
 
         // --- energy
@@ -97,7 +107,7 @@ public final class PlanEngine {
         }
         int offset = clamp(state.trainingOffset(), MIN_TRAINING_OFFSET, 0);
         int level = Math.max(0, baseLevel + offset);
-        String[] schedule = SCHEDULES[level];
+        String[] schedule = applyConstraint(SCHEDULES[level], constraint, reasons);
         int sessions = (int) java.util.Arrays.stream(schedule).filter(s -> !REST.equals(s)).count();
 
         // nutrition -> training: energy availability sets how much volume can be recovered from
@@ -115,6 +125,9 @@ public final class PlanEngine {
         if (baseLevel + offset < 0) {
             intensity -= 0.2;
         }
+        if (state.recoveryWeek()) {
+            intensity -= 0.2;
+        }
         intensity = Math.max(0.1, Math.min(0.9, intensity));
 
         // --- training -> nutrition: a training day gets what its session costs, taken from rest days
@@ -122,18 +135,20 @@ public final class PlanEngine {
         int restDays = 7 - sessions;
         double trainingCalories = target + sessionKcal * restDays / 7.0;
         double restCalories = target - sessionKcal * sessions / 7.0;
-        if (restCalories < floor) {
+        if (sessions > 0 && restCalories < floor) {
             restCalories = floor;
             trainingCalories = (7 * target - restDays * restCalories) / sessions;
         }
-        int dayDifference = (int) Math.round(trainingCalories - restCalories);
-        reasons.add(
-            String.format(
-                Locale.ROOT,
-                "Training days have about %d kcal more than rest days, as carbohydrate, to fuel and recover from the session.",
-                roundTo(dayDifference, 10)
-            )
-        );
+        if (sessions > 0) {
+            int dayDifference = (int) Math.round(trainingCalories - restCalories);
+            reasons.add(
+                String.format(
+                    Locale.ROOT,
+                    "Training days have about %d kcal more than rest days, as carbohydrate, to fuel and recover from the session.",
+                    roundTo(dayDifference, 10)
+                )
+            );
+        }
 
         // --- macros
         double referenceWeight = Math.min(input.weightKg(), 27 * Math.pow(input.heightCm() / 100, 2));
@@ -192,7 +207,9 @@ public final class PlanEngine {
             sessions,
             sessionKcal,
             List.copyOf(days),
-            List.copyOf(reasons)
+            List.copyOf(reasons),
+            state.recoveryWeek(),
+            constraint == null || constraint.isEmpty() ? null : constraint
         );
         return new PlanTargets(
             roundTo((int) Math.round(target), 10),
@@ -203,6 +220,44 @@ public final class PlanEngine {
             Math.round(intensity * 100) / 100.0,
             details
         );
+    }
+
+    /**
+     * The week's schedule after leaving out a body area and capping the number of sessions.
+     * Sessions are dropped from the end of the week, which keeps a split's sessions in order.
+     */
+    private static String[] applyConstraint(String[] base, WeekConstraint constraint, List<String> reasons) {
+        String[] schedule = base.clone();
+        if (constraint == null || constraint.isEmpty()) {
+            return schedule;
+        }
+
+        if (WeekConstraint.LOWER.equals(constraint.avoid()) || WeekConstraint.UPPER.equals(constraint.avoid())) {
+            boolean avoidLower = WeekConstraint.LOWER.equals(constraint.avoid());
+            List<String> dropped = avoidLower ? List.of("Legs", "Lower") : List.of("Push", "Pull", "Upper");
+            for (int day = 0; day < schedule.length; day++) {
+                if (dropped.contains(schedule[day])) {
+                    schedule[day] = REST;
+                } else if ("FullBody".equals(schedule[day])) {
+                    schedule[day] = avoidLower ? "Upper" : "Lower";
+                }
+            }
+            reasons.add(String.format(Locale.ROOT, "This week only, as you asked: no %s-body training.", avoidLower ? "lower" : "upper"));
+        }
+
+        if (constraint.maxSessions() != null) {
+            int allowed = Math.max(0, constraint.maxSessions());
+            int kept = 0;
+            for (int day = 0; day < schedule.length; day++) {
+                if (!REST.equals(schedule[day]) && ++kept > allowed) {
+                    schedule[day] = REST;
+                }
+            }
+            if (kept > allowed) {
+                reasons.add(String.format(Locale.ROOT, "This week only, as you asked: %d training session%s.", allowed, allowed == 1 ? "" : "s"));
+            }
+        }
+        return schedule;
     }
 
     /** Mifflin-St Jeor resting energy expenditure. */
@@ -234,9 +289,9 @@ public final class PlanEngine {
         int adjustment = previous.calorieAdjustmentKcal();
         int offset = previous.trainingOffset();
 
-        if (Duration.between(previousCreatedAt, now).compareTo(MIN_PLAN_AGE) < 0) {
+        if (!hasRunItsWeek(previousCreatedAt, now)) {
             // Regenerated mid-week: nothing new to learn yet, keep what we know.
-            return new AdaptiveState(adjustment, offset, List.of());
+            return new AdaptiveState(adjustment, offset, previous.recoveryWeek(), List.of());
         }
 
         List<String> reasons = new ArrayList<>();
@@ -294,7 +349,41 @@ public final class PlanEngine {
             }
         }
 
-        return new AdaptiveState(adjustment, offset, List.copyOf(reasons));
+        // --- feeling run down on several days calls for a lighter week
+        long runDownDays = logs.stream().filter(l -> l.runDown() && l.date().isAfter(today.minusDays(7)) && !l.date().isAfter(today)).count();
+        boolean recoveryWeek = runDownDays >= RUN_DOWN_DAYS_FOR_RECOVERY;
+        if (recoveryWeek) {
+            reasons.add(
+                String.format(
+                    Locale.ROOT,
+                    "You felt tired or stressed on %d days last week, so this week's sessions have fewer sets to help you recover.",
+                    runDownDays
+                )
+            );
+        }
+
+        return new AdaptiveState(adjustment, offset, recoveryWeek, List.copyOf(reasons));
+    }
+
+    /**
+     * Whether a plan has been followed long enough for its results to mean something.
+     */
+    public static boolean hasRunItsWeek(Instant createdAt, Instant now) {
+        return Duration.between(createdAt, now).compareTo(MIN_PLAN_AGE) >= 0;
+    }
+
+    /**
+     * What the user logged over the last seven days, against what the plan asked for.
+     */
+    public static WeekSummary summarize(PlanDetails previous, List<LogEntry> logs, Instant now) {
+        LocalDate today = LocalDate.ofInstant(now, java.time.ZoneOffset.UTC);
+        List<LogEntry> lastWeek = logs.stream().filter(l -> l.date().isAfter(today.minusDays(7)) && !l.date().isAfter(today)).toList();
+        return new WeekSummary(
+            (int) lastWeek.stream().filter(LogEntry::completedWorkout).count(),
+            previous.sessionsPerWeek(),
+            (int) lastWeek.stream().filter(l -> l.weightKg() != null).count(),
+            weeklyWeightTrend(logs, today)
+        );
     }
 
     /**

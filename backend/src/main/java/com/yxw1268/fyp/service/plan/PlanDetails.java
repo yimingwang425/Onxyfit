@@ -12,6 +12,8 @@ import java.util.List;
  * @param calorieAdjustmentKcal the learned correction to the formula
  * @param trainingOffset steps the training load was moved down from the default because sessions were missed
  * @param reasons plain-language explanations of how the plan was derived and why it changed
+ * @param recoveryWeek whether volume is reduced this week because the user reported being run down
+ * @param weekConstraint what the user asked for this week only, or null
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record PlanDetails(
@@ -22,5 +24,7 @@ public record PlanDetails(
     int sessionsPerWeek,
     int sessionKcal,
     List<DayTarget> days,
-    List<String> reasons
+    List<String> reasons,
+    boolean recoveryWeek,
+    WeekConstraint weekConstraint
 ) {}

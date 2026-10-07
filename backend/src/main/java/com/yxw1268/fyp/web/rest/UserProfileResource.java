@@ -12,7 +12,9 @@ import com.yxw1268.fyp.service.dto.UserDTO;
 import com.yxw1268.fyp.service.dto.UserProfileDTO;
 import com.yxw1268.fyp.service.mapper.UserProfileMapper;
 import com.yxw1268.fyp.web.rest.errors.BadRequestAlertException;
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -57,11 +59,15 @@ public class UserProfileResource {
 
     private final com.yxw1268.fyp.service.mapper.UserProfileMapper userProfileMapper;
 
+    private final Validator validator;
+
     public UserProfileResource(
         UserProfileService userProfileService,
         UserProfileRepository userProfileRepository,
         UserRepository userRepository,
-        UserProfileMapper userProfileMapper) {
+        UserProfileMapper userProfileMapper,
+        Validator validator) {
+        this.validator = validator;
         this.userProfileService = userProfileService;
         this.userProfileRepository = userProfileRepository;
         this.userRepository = userRepository;
@@ -95,6 +101,7 @@ public class UserProfileResource {
                 userProfileDTO.setCreatedAt(existingProfile.getCreatedAt());
             }
             applyDietaryRestrictions(userProfileDTO, existingProfile);
+            requireValid(userProfileDTO);
             userProfileDTO = userProfileService.update(userProfileDTO);
             return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, userProfileDTO.getId().toString()))
@@ -109,6 +116,7 @@ public class UserProfileResource {
             userProfileDTO.setCreatedAt(java.time.Instant.now());
         }
         applyDietaryRestrictions(userProfileDTO, null);
+        requireValid(userProfileDTO);
         try {
             userProfileDTO = userProfileService.save(userProfileDTO);
             return ResponseEntity.created(new URI("/api/user-profiles/" + userProfileDTO.getId()))
@@ -161,6 +169,7 @@ public class UserProfileResource {
             userProfileDTO.setCreatedAt(existing.getCreatedAt());
         }
         applyDietaryRestrictions(userProfileDTO, existing);
+        requireValid(userProfileDTO);
 
         userProfileDTO = userProfileService.update(userProfileDTO);
         return ResponseEntity.ok()
@@ -280,6 +289,23 @@ public class UserProfileResource {
         } else if (existing != null) {
             dto.setFoodDislikes(existing.getFoodDislikes());
         }
+    }
+
+    /**
+     * Reject a profile with missing or out-of-range fields. This runs after the owner and creation
+     * time have been filled in here, which is why the request body isn't simply declared @Valid.
+     */
+    private void requireValid(UserProfileDTO dto) {
+        validator
+            .validate(dto)
+            .stream()
+            .map(ConstraintViolation::getPropertyPath)
+            .map(Object::toString)
+            .sorted()
+            .findFirst()
+            .ifPresent(field -> {
+                throw new BadRequestAlertException("Missing or invalid field: " + field, ENTITY_NAME, "invalid" + field);
+            });
     }
 
     private User currentUser() {

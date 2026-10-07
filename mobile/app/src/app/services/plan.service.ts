@@ -26,6 +26,10 @@ export interface PlanDetails {
   sessionKcal: number;
   days: PlanDay[];
   reasons: string[];
+  /** Volume is reduced this week because the user reported being run down. */
+  recoveryWeek?: boolean;
+  /** What the user asked for this week only. */
+  weekConstraint?: { maxSessions?: number | null; avoid?: 'UPPER' | 'LOWER' | null } | null;
 }
 
 export interface AIPlan {
@@ -42,6 +46,10 @@ export interface AIPlan {
   workoutPlanJson?: string;
   weekStartDate?: string;
   details?: PlanDetails;
+  /** What happened last week and what it changed, written by the server. */
+  weeklyReport?: string;
+  /** After a request that tried to generate meals: 'ok', or why there are none. */
+  mealStatus?: 'ok' | 'llm_unavailable' | 'invalid_response' | 'restrictions';
 }
 
 const PLAN_KEY = 'current_ai_plan';
@@ -57,6 +65,9 @@ const MAX_PLAN_AGE_DAYS = 8;
 })
 export class PlanService {
   private readonly endpoint = `${environment.apiUrl}/plans`;
+
+  /** Goes up every time the stored plan is replaced; pages compare it to know theirs is stale. */
+  version = 0;
 
   /** A load or generation already under way, shared so tabs don't each start their own. */
   private inFlight: Observable<AIPlan> | null = null;
@@ -81,7 +92,14 @@ export class PlanService {
     const source = localStorage.getItem(REGENERATE_KEY)
       ? this.generatePlan()
       : this.http.get<AIPlan>(`${this.endpoint}/current`, { headers: this.authHeaders() }).pipe(
-          switchMap(plan => (this.isOutdated(plan) ? this.generatePlan() : of(plan).pipe(tap(p => this.store(p))))),
+          switchMap(plan => {
+            if (this.isOutdated(plan)) {
+              return this.generatePlan();
+            }
+            this.store(plan);
+            // Plans made by the weekly run for someone who was away come without meals
+            return plan.mealPlanJson ? of(plan) : this.regenerateMeals().pipe(catchError(() => of(plan)));
+          }),
           catchError(err => {
             if (err.status === 404) {
               return this.generatePlan();
@@ -122,6 +140,20 @@ export class PlanService {
     );
   }
 
+  /** Generate meals for the current plan, leaving its targets and training untouched. */
+  regenerateMeals(): Observable<AIPlan> {
+    return this.http.post<AIPlan>(`${this.endpoint}/current/meals`, {}, { headers: this.authHeaders() }).pipe(
+      tap(plan => this.store(plan))
+    );
+  }
+
+  /** Turn down the lighter training week given for feeling run down, and train as usual. */
+  keepUsualTrainingVolume(): Observable<AIPlan> {
+    return this.http.post<AIPlan>(`${this.endpoint}/current/keep-usual-volume`, {}, { headers: this.authHeaders() }).pipe(
+      tap(plan => this.store(plan))
+    );
+  }
+
   getCurrentPlan(): AIPlan | null {
     try {
       const plan = localStorage.getItem(PLAN_KEY);
@@ -143,7 +175,13 @@ export class PlanService {
     localStorage.setItem(REGENERATE_KEY, '1');
   }
 
+  /** Take a plan the server just returned (for example after the assistant changed it) as the current one. */
+  adopt(plan: AIPlan): void {
+    this.store(plan);
+  }
+
   private store(plan: AIPlan): void {
+    this.version++;
     localStorage.setItem(PLAN_KEY, JSON.stringify(plan));
     localStorage.setItem(SYNCED_KEY, localDateString());
     localStorage.removeItem(REGENERATE_KEY);

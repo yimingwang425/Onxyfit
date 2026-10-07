@@ -1,0 +1,259 @@
+ion-content {
+  --background: #f8f9fa;
+}
+
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+}
+
+.intro {
+  background: #fff;
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  margin-bottom: 6px;
+
+  .intro-lead {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+  }
+
+  .intro-note {
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: #777;
+    margin: 12px 0 0 0;
+  }
+}
+
+.ability {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: #f4f5f8;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  cursor: pointer;
+
+  .ability-title {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #000;
+  }
+
+  .ability-example {
+    display: block;
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 2px;
+  }
+}
+
+.bubble {
+  max-width: 88%;
+  border-radius: 18px;
+  padding: 12px 14px;
+  font-size: 0.92rem;
+  line-height: 1.45;
+
+  p {
+    margin: 0;
+    white-space: pre-wrap;
+  }
+
+  &.user {
+    align-self: flex-end;
+    background: #000;
+    color: #fff;
+    border-bottom-right-radius: 6px;
+  }
+
+  &.assistant {
+    align-self: flex-start;
+    background: #fff;
+    color: #000;
+    border-bottom-left-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  }
+
+  &.typing {
+    padding: 8px 14px;
+  }
+}
+
+.link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.proposal {
+  margin-top: 10px;
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+
+  .proposal-title {
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+
+  ul,
+  ol {
+    margin: 0 0 8px 0;
+    padding-left: 18px;
+    color: #444;
+    font-size: 0.87rem;
+  }
+
+  .meal {
+    background: #f8f9fa;
+    border-radius: 14px;
+    padding: 12px;
+    margin: 8px 0;
+
+    .meal-name {
+      font-weight: 700;
+    }
+
+    .meal-meta {
+      font-size: 0.8rem;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .meal-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #999;
+      margin: 6px 0 2px 0;
+    }
+  }
+
+  .proposal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+
+    button {
+      flex: 1;
+      border-radius: 999px;
+      padding: 11px 0;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.6;
+      }
+    }
+
+    .primary {
+      background: #000;
+      color: #fff;
+      border: 2px solid #000;
+    }
+
+    .secondary {
+      background: #fff;
+      color: #000;
+      border: 2px solid #ddd;
+    }
+  }
+
+  .proposal-state {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #888;
+  }
+}
+
+ion-footer {
+  background: #fff;
+  padding: 8px 12px calc(8px + var(--ion-safe-area-bottom)) 12px;
+  border-top: 1px solid #eee;
+}
+
+.focus-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: #f4f5f8;
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  font-size: 0.82rem;
+  color: #444;
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-transform: capitalize;
+  }
+
+  button {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #999;
+    font-size: 1.2rem;
+    line-height: 0;
+    cursor: pointer;
+  }
+}
+
+.composer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  input {
+    flex: 1;
+    min-width: 0;
+    background: #f4f5f8;
+    color: #000;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+  }
+
+  button {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: none;
+    background: #000;
+    color: #fff;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    &:disabled {
+      background: #ccc;
+    }
+  }
+}

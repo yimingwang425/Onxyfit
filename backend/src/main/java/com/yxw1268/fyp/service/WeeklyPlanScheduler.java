@@ -39,7 +39,7 @@ public class WeeklyPlanScheduler {
             }
 
             try {
-                planService.generatePlanForProfile(profile);
+                planService.regenerateWeekly(profile);
                 success++;
             } catch (Exception e) {
                 failed++;

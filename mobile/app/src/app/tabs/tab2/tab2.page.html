@@ -21,6 +21,11 @@
     <p class="loading-hint">The model is generating your plan based on your profile, please don't leave this page...</p>
   </div>
 
+  <div class="unavailable-box load-error" *ngIf="loadError && !isLoadingToday && !isLoadingWeek">
+    <p>Your plan couldn't be loaded. Check your connection and try again.</p>
+    <button type="button" class="retry-btn" (click)="loadData()">Try again</button>
+  </div>
+
   <div [ngSwitch]="currentSegment" class="content-container">
 
     <div *ngSwitchCase="'today'">
@@ -29,14 +34,18 @@
         <div class="date-header">
           <span class="sub-label">Today's Menu</span>
         </div>
-
         <div class="unavailable-box" *ngIf="todaysPlan.unavailable">
-          <p>We couldn't generate meals that fit your profile this time, so no meals are shown.</p>
-          <button type="button" class="retry-btn" (click)="regenerate()">Try again</button>
+          <p *ngIf="todaysPlan.unavailableReason === 'restrictions'">
+            We couldn't put together meals that respect your allergies and foods to avoid this time, so none are shown.
+          </p>
+          <p *ngIf="todaysPlan.unavailableReason !== 'restrictions'">
+            Your meals couldn't be generated right now. Your calorie targets and training plan are not affected.
+          </p>
+          <button type="button" class="retry-btn" (click)="retry()">Try again</button>
         </div>
 
 
-        <div class="meal-card" (click)="openMealDetails(todaysPlan!.breakfast)">
+        <div class="meal-card" (click)="openMealDetails(todaysPlan!.breakfast, 'breakfast', todayDow)">
           <div class="meal-icon-box">
             <ion-icon name="sunny-outline"></ion-icon>
           </div>
@@ -48,7 +57,7 @@
           <ion-icon name="chevron-forward" class="arrow-icon"></ion-icon>
         </div>
 
-        <div class="meal-card" (click)="openMealDetails(todaysPlan!.lunch)">
+        <div class="meal-card" (click)="openMealDetails(todaysPlan!.lunch, 'lunch', todayDow)">
           <div class="meal-icon-box">
             <ion-icon name="restaurant-outline"></ion-icon>
           </div>
@@ -60,7 +69,7 @@
           <ion-icon name="chevron-forward" class="arrow-icon"></ion-icon>
         </div>
 
-        <div class="meal-card" (click)="openMealDetails(todaysPlan!.dinner)">
+        <div class="meal-card" (click)="openMealDetails(todaysPlan!.dinner, 'dinner', todayDow)">
           <div class="meal-icon-box">
             <ion-icon name="moon-outline"></ion-icon>
           </div>
@@ -72,7 +81,7 @@
           <ion-icon name="chevron-forward" class="arrow-icon"></ion-icon>
         </div>
 
-        <div class="meal-card" (click)="openMealDetails(todaysPlan!.snack)">
+        <div class="meal-card" (click)="openMealDetails(todaysPlan!.snack, 'snack', todayDow)">
           <div class="meal-icon-box">
             <ion-icon name="cafe-outline"></ion-icon>
           </div>
@@ -105,14 +114,18 @@
           <div class="date-header">
             <span class="sub-label">Plan for {{ weeklyPlan[selectedDayIndex].day }}</span>
           </div>
-
           <div class="unavailable-box" *ngIf="selectedDayPlan.unavailable">
-            <p>We couldn't generate meals that fit your profile this time, so no meals are shown.</p>
-            <button type="button" class="retry-btn" (click)="regenerate()">Try again</button>
+            <p *ngIf="selectedDayPlan.unavailableReason === 'restrictions'">
+              We couldn't put together meals that respect your allergies and foods to avoid this time, so none are shown.
+            </p>
+            <p *ngIf="selectedDayPlan.unavailableReason !== 'restrictions'">
+              Your meals couldn't be generated right now. Your calorie targets and training plan are not affected.
+            </p>
+            <button type="button" class="retry-btn" (click)="retry()">Try again</button>
           </div>
 
 
-          <div class="meal-card" (click)="openMealDetails(selectedDayPlan.breakfast)">
+          <div class="meal-card" (click)="openMealDetails(selectedDayPlan.breakfast, 'breakfast', selectedDow)">
             <div class="meal-icon-box">
               <ion-icon name="sunny-outline"></ion-icon>
             </div>
@@ -124,7 +137,7 @@
             <ion-icon name="chevron-forward" class="arrow-icon" *ngIf="!selectedDayPlan.breakfast.amazonLink"></ion-icon>
           </div>
 
-          <div class="meal-card" (click)="openMealDetails(selectedDayPlan.lunch)">
+          <div class="meal-card" (click)="openMealDetails(selectedDayPlan.lunch, 'lunch', selectedDow)">
              <div class="meal-icon-box">
               <ion-icon name="restaurant-outline"></ion-icon>
             </div>
@@ -136,7 +149,7 @@
             <ion-icon name="chevron-forward" class="arrow-icon" *ngIf="!selectedDayPlan.lunch.amazonLink"></ion-icon>
           </div>
 
-          <div class="meal-card" (click)="openMealDetails(selectedDayPlan.dinner)">
+          <div class="meal-card" (click)="openMealDetails(selectedDayPlan.dinner, 'dinner', selectedDow)">
              <div class="meal-icon-box">
               <ion-icon name="moon-outline"></ion-icon>
             </div>
@@ -148,7 +161,7 @@
             <ion-icon name="chevron-forward" class="arrow-icon" *ngIf="!selectedDayPlan.dinner.amazonLink"></ion-icon>
           </div>
 
-          <div class="meal-card" (click)="openMealDetails(selectedDayPlan.snack)">
+          <div class="meal-card" (click)="openMealDetails(selectedDayPlan.snack, 'snack', selectedDow)">
              <div class="meal-icon-box">
               <ion-icon name="cafe-outline"></ion-icon>
             </div>

@@ -337,41 +337,27 @@ class UserProfileResourceIT {
 
     @Test
     @Transactional
-    void checkCreatedAtIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
-        // set the field null
+    void createdAtIsFilledInWhenTheClientLeavesItOut() throws Exception {
         userProfile.setCreatedAt(null);
-
-        // Create the UserProfile, which fails.
         UserProfileDTO userProfileDTO = userProfileMapper.toDto(userProfile);
 
         restUserProfileMockMvc
             .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(userProfileDTO)))
-            .andExpect(status().isBadRequest());
-
-        assertSameRepositoryCount(databaseSizeBeforeTest);
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.createdAt").isNotEmpty());
     }
 
     @Test
     @Transactional
-    void getAllUserProfiles() throws Exception {
-        // Initialize the database
+    void listingProfilesReturnsOnlyTheCallersOwn() throws Exception {
+        // a profile that belongs to somebody else
         insertedUserProfile = userProfileRepository.saveAndFlush(userProfile);
 
-        // Get all the userProfileList
         restUserProfileMockMvc
             .perform(get(ENTITY_API_URL + "?sort=id,desc"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(userProfile.getId().intValue())))
-            .andExpect(jsonPath("$.[*].age").value(hasItem(DEFAULT_AGE)))
-            .andExpect(jsonPath("$.[*].heightCm").value(hasItem(sameNumber(DEFAULT_HEIGHT_CM))))
-            .andExpect(jsonPath("$.[*].weightKg").value(hasItem(sameNumber(DEFAULT_WEIGHT_KG))))
-            .andExpect(jsonPath("$.[*].activityLevel").value(hasItem(DEFAULT_ACTIVITY_LEVEL.toString())))
-            .andExpect(jsonPath("$.[*].goal").value(hasItem(DEFAULT_GOAL.toString())))
-            .andExpect(jsonPath("$.[*].dietPref").value(hasItem(DEFAULT_DIET_PREF.toString())))
-            .andExpect(jsonPath("$.[*].metabolicProfile").value(hasItem(DEFAULT_METABOLIC_PROFILE.toString())))
-            .andExpect(jsonPath("$.[*].createdAt").value(hasItem(DEFAULT_CREATED_AT.toString())));
+            .andExpect(jsonPath("$.[*].id").value(org.hamcrest.Matchers.not(hasItem(userProfile.getId().intValue()))));
     }
 
     @SuppressWarnings({ "unchecked" })

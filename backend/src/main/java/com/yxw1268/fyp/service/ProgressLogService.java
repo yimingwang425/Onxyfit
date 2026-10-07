@@ -116,9 +116,10 @@ public class ProgressLogService {
 
     /**
      * Record a check-in for one day, creating that day's log or updating it. Fields left null keep
-     * their stored value. A logged weight also becomes the profile's current weight.
+     * their stored value. A logged weight also becomes the profile's current weight. A mood logged
+     * once the day's workout is already done is kept, but marked so it isn't read as a sign of fatigue.
      */
-    public ProgressLogDTO checkIn(UserProfile profile, LocalDate date, BigDecimal weightKg, Boolean completedWorkout) {
+    public ProgressLogDTO checkIn(UserProfile profile, LocalDate date, BigDecimal weightKg, Boolean completedWorkout, String mood) {
         ProgressLog log = progressLogRepository
             .findFirstByProfileIdAndLogDateOrderByIdAsc(profile.getId(), date)
             .orElseGet(() -> {
@@ -130,6 +131,9 @@ public class ProgressLogService {
                 return created;
             });
 
+        // Judged before this check-in is applied: was the workout already done when the mood came in?
+        boolean workoutAlreadyDone = Boolean.TRUE.equals(log.getCompletedWorkout());
+
         if (weightKg != null) {
             log.setWeightKg(weightKg);
             profile.setWeightKg(weightKg);
@@ -137,6 +141,10 @@ public class ProgressLogService {
         }
         if (completedWorkout != null) {
             log.setCompletedWorkout(completedWorkout);
+        }
+        if (mood != null) {
+            log.setMood(mood);
+            log.setMoodAfterWorkout(workoutAlreadyDone);
         }
         return progressLogMapper.toDto(progressLogRepository.save(log));
     }

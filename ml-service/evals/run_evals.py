@@ -8,6 +8,10 @@ Evaluate the LLM-facing parts of the meal service against a real model.
     python evals/run_evals.py --only intent   # or: --only meals
     python evals/run_evals.py --pause 2       # seconds between calls, for rate-limited keys
     python evals/run_evals.py --self-test     # no API calls: checks the harness itself with a scripted model
+    python evals/run_evals.py --only intent --cases intent_cases_holdout.json
+
+intent_cases.json was used while writing the classifier prompt, so its score flatters the prompt.
+intent_cases_holdout.json was written separately and must not be used for tuning: quote that one.
 
 Two things are measured:
 
@@ -17,8 +21,9 @@ Two things are measured:
 
   meals   Across a set of user profiles: how often a week of meals is produced, how many LLM calls
           it takes, how often the model's FIRST answer breaks the user's allergies (which the
-          checker then catches), how far the meals' calories are from target, and whether the
-          lowest cooking effort really gets short ingredient lists.
+          checker then catches), whether meals stay within the ingredient limit of the user's
+          cooking effort, and how far the calories the model states are from target (it tends
+          to echo the target, so that last one is a weak signal).
 
 Results are printed and written to evals/results-<model>.json. They describe one model on one run;
 meal generation is sampled at temperature 0.7, so expect some variation between runs.
@@ -71,8 +76,8 @@ def field_matches(field, expected, actual):
     return actual == expected
 
 
-def run_intent(pause):
-    with open(os.path.join(HERE, 'intent_cases.json'), encoding='utf-8') as f:
+def run_intent(pause, cases_file='intent_cases.json'):
+    with open(os.path.join(HERE, cases_file), encoding='utf-8') as f:
         cases = json.load(f)['cases']
     client = service.app.test_client()
     headers = {'X-Internal-Token': os.environ['ML_SERVICE_TOKEN']}
@@ -185,13 +190,13 @@ def run_meals(pause):
             row['distinct_meals'] = len(seen)
             row['median_calorie_deviation'] = round(statistics.median(deviations), 3) if deviations else None
             row['max_ingredients'] = max(ingredient_counts) if ingredient_counts else None
+            row['ingredient_limit'] = service.COOKING_EFFORTS[profile['effort']]['max_ingredients']
             row['final_violations'] = len(real_violations(plan, profile['allergies'], profile['dislikes']))
         rows.append(row)
         print(f"  {profile['name']:38} {status:16} calls={row['llm_calls']} first-answer violations={row['first_answer_violations']} {row['seconds']}s")
 
     produced = [r for r in rows if r['produced']]
     restricted = [r for r in rows if r['restricted'] and r['first_answer_violations'] is not None]
-    minimal = [r for r in produced if 'barely cooks' in r['profile'] or 'rest week' in r['profile']]
     deviations = [r['median_calorie_deviation'] for r in produced if r.get('median_calorie_deviation') is not None]
     summary = {
         'profiles': len(rows),
@@ -200,8 +205,10 @@ def run_meals(pause):
         'mean_llm_calls': round(statistics.mean(r['llm_calls'] for r in rows), 2),
         'restricted_profiles_where_first_answer_broke_a_restriction': f"{sum(1 for r in restricted if r['first_answer_violations'] > 0)}/{len(restricted)}",
         'restriction_violations_in_delivered_plans': sum(r.get('final_violations', 0) for r in produced),
-        'median_calorie_deviation_from_target': f"{100 * statistics.median(deviations):.0f}%" if deviations else 'n/a',
-        'minimal_effort_plans_within_5_ingredients': f"{sum(1 for r in minimal if (r.get('max_ingredients') or 99) <= 5)}/{len(minimal)}",
+        # the calories the model STATES for its meals; it tends to echo the target, so this says
+        # little about what the listed ingredients really add up to
+        'median_stated_calorie_deviation_from_target': f"{100 * statistics.median(deviations):.0f}%" if deviations else 'n/a',
+        'plans_within_their_ingredient_limit': f"{sum(1 for r in produced if (r.get('max_ingredients') or 99) <= r['ingredient_limit'])}/{len(produced)}",
         'median_seconds': round(statistics.median(r['seconds'] for r in rows), 1),
     }
     print('\n=== Meal generation ===')
@@ -214,8 +221,10 @@ def run_meals(pause):
 
 def install_scripted_model():
     """A stand-in model that answers the labelled cases correctly and returns well-formed meals."""
-    with open(os.path.join(HERE, 'intent_cases.json'), encoding='utf-8') as f:
-        by_text = {c['text']: c['expect'] for c in json.load(f)['cases']}
+    by_text = {}
+    for name in ('intent_cases.json', 'intent_cases_holdout.json'):
+        with open(os.path.join(HERE, name), encoding='utf-8') as f:
+            by_text.update({c['text']: c['expect'] for c in json.load(f)['cases']})
 
     def item(name, kcal, n=3):
         return {'name': name, 'calories': kcal, 'macros': {'p': 30, 'c': 50, 'f': 15},
@@ -243,6 +252,8 @@ def install_scripted_model():
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--only', choices=['intent', 'meals'])
+    parser.add_argument('--cases', default='intent_cases.json',
+                        help='intent cases to use, a file in evals/ (intent_cases_holdout.json has not been used to tune the prompt)')
     parser.add_argument('--pause', type=float, default=0.0, help='seconds to wait between LLM calls')
     parser.add_argument('--self-test', action='store_true', help='run against a scripted model, without any API call')
     args = parser.parse_args()
@@ -258,13 +269,15 @@ def main():
 
     results = {'model': label, 'base_url': None if args.self_test else service.LLM_BASE_URL, 'ran_at': time.strftime('%Y-%m-%d %H:%M:%S')}
     if args.only in (None, 'intent'):
-        results['intent'] = run_intent(args.pause)
+        results['intent'] = run_intent(args.pause, args.cases)
+        results['intent']['cases_file'] = args.cases
     if args.only in (None, 'meals'):
         print('\nGenerating meal plans...')
         results['meals'] = run_meals(args.pause)
 
     if not args.self_test:
-        path = os.path.join(HERE, f"results-{label.replace('/', '_')}.json")
+        suffix = '' if args.cases == 'intent_cases.json' else '-' + os.path.splitext(args.cases)[0]
+        path = os.path.join(HERE, f"results-{label.replace('/', '_')}{suffix}.json")
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(results, f, ensure_ascii=False, indent=2)
         print(f'\nFull results written to {path}')

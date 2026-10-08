@@ -17,7 +17,7 @@ Many fitness applications either provide generic, one-size-fits-all plans or req
 - **A weekly report** telling the user what they did last week, how their weight is trending, and what changed in their plan as a result, plus a progress page with their check-in history.
 - **An assistant that changes the plan on request.** The user says what they need in their own words: swap a meal for something specific, train fewer times or skip upper or lower body this week, or update food preferences. An LLM only sorts the message into one of these intents; the backend does the rest with the plan engine, shows the change for confirmation, and refuses anything else.
 
-The LLM is reached through an OpenAI-compatible API and is configured with the `LLM_BASE_URL`, `LLM_API_KEY` and `LLM_MODEL` environment variables of the meal service (default: Llama 3.1 on Groq, using `GROQ_API_KEY`).
+The LLM is reached through an OpenAI-compatible API and is configured with the `LLM_BASE_URL`, `LLM_API_KEY` and `LLM_MODEL` environment variables of the meal service (default: `openai/gpt-oss-20b` on Groq, using `GROQ_API_KEY`). For reasoning models `LLM_REASONING_EFFORT` sets how much the model thinks before answering (default `low`); only the answer text is ever used, never the reasoning.
 
 An earlier version predicted the targets with a cascade neural network trained on synthetic data; its notebooks and model files are kept in `ml-service/` for reference and are no longer used at runtime.
 

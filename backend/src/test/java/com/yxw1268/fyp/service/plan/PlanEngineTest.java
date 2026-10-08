@@ -214,9 +214,9 @@ class PlanEngineTest {
     void losingSlowerThanPlannedLowersTheMaintenanceEstimate() {
         PlanDetails prev = previous(Goal.LOSE);
         int calories = prev.maintenanceKcal() - 500;
-        // expected -0.45, observed -0.25: +0.20 kg/week error = 220 kcal/day, half corrected per week
+        // expected -0.45, observed -0.25: +0.20 kg/week error = 225 kcal/day, a quarter corrected per week
         AdaptiveState state = PlanEngine.adapt(prev, calories, WEEK_AGO, weighIns(80, -0.25), NOW);
-        assertThat(state.calorieAdjustmentKcal()).isCloseTo(-112, within(3));
+        assertThat(state.calorieAdjustmentKcal()).isCloseTo(-56, within(2));
         assertThat(state.reasons()).singleElement().asString().contains("lowered");
     }
 
@@ -224,7 +224,8 @@ class PlanEngineTest {
     void losingFasterThanPlannedRaisesIt() {
         PlanDetails prev = previous(Goal.MAINTAIN);
         AdaptiveState state = PlanEngine.adapt(prev, prev.maintenanceKcal(), WEEK_AGO, weighIns(80, -0.2), NOW);
-        assertThat(state.calorieAdjustmentKcal()).isCloseTo(110, within(3));
+        // -0.2 kg/week where none was expected = 220 kcal/day, a quarter corrected
+        assertThat(state.calorieAdjustmentKcal()).isCloseTo(55, within(2));
         assertThat(state.reasons()).singleElement().asString().contains("raised");
     }
 

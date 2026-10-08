@@ -29,8 +29,12 @@ public final class PlanEngine {
 
     static final double KCAL_PER_KG = 7700;
 
-    /** How much of an observed weight-trend error is corrected per week. */
-    static final double ADAPTATION_GAIN = 0.5;
+    /**
+     * How much of an observed weight-trend error is corrected per week. A quarter reaches the right
+     * level within a couple of months without chasing the noise in body weight once there; in
+     * simulation it left half the error that correcting half did (see AdaptationSimulationTest).
+     */
+    static final double ADAPTATION_GAIN = 0.25;
     static final int MAX_WEEKLY_CALORIE_STEP = 150;
     static final int MAX_CALORIE_ADJUSTMENT = 500;
     /** Corrections smaller than this are measurement noise. */
@@ -286,6 +290,14 @@ public final class PlanEngine {
      * @param logs the user's tracking entries, any order
      */
     public static AdaptiveState adapt(PlanDetails previous, int previousCalories, Instant previousCreatedAt, List<LogEntry> logs, Instant now) {
+        return adapt(previous, previousCalories, previousCreatedAt, logs, now, ADAPTATION_GAIN);
+    }
+
+    /**
+     * As {@link #adapt(PlanDetails, int, Instant, List, Instant)}, with the share of the weight-trend
+     * error corrected per week given explicitly. Exists so simulations can compare settings.
+     */
+    static AdaptiveState adapt(PlanDetails previous, int previousCalories, Instant previousCreatedAt, List<LogEntry> logs, Instant now, double gain) {
         int adjustment = previous.calorieAdjustmentKcal();
         int offset = previous.trainingOffset();
 
@@ -304,7 +316,7 @@ public final class PlanEngine {
             double error = observed - expected;
             // Losing faster than the plan predicts means real maintenance is higher than assumed, and vice versa.
             int step = clamp(
-                (int) Math.round(-error * KCAL_PER_KG / 7 * ADAPTATION_GAIN),
+                (int) Math.round(-error * KCAL_PER_KG / 7 * gain),
                 -MAX_WEEKLY_CALORIE_STEP,
                 MAX_WEEKLY_CALORIE_STEP
             );

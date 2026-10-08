@@ -324,15 +324,16 @@ class AdaptivePlanIT {
 
         JsonNode second = generate(alice);
 
-        assertThat(second.get("details").get("calorieAdjustmentKcal").asInt()).isEqualTo(-150);
-        assertThat(second.get("details").get("maintenanceKcal").asInt()).isEqualTo(2590);
-        assertThat(second.get("caloriesKcal").asInt()).isEqualTo(firstCalories - 150);
-        assertThat(second.get("details").get("reasons").toString()).contains("estimated maintenance was lowered by 150 kcal");
+        // the 0.45 kg/week shortfall is worth 500 kcal a day; a quarter of it is corrected this week
+        assertThat(second.get("details").get("calorieAdjustmentKcal").asInt()).isEqualTo(-125);
+        assertThat(second.get("details").get("maintenanceKcal").asInt()).isEqualTo(2615);
+        assertThat(second.get("caloriesKcal").asInt()).isEqualTo(firstCalories - 120);
+        assertThat(second.get("details").get("reasons").toString()).contains("estimated maintenance was lowered by 125 kcal");
 
         // the correction is remembered: with nothing new to learn, a third plan keeps it
         JsonNode third = generate(alice);
-        assertThat(third.get("details").get("calorieAdjustmentKcal").asInt()).isEqualTo(-150);
-        assertThat(third.get("caloriesKcal").asInt()).isEqualTo(firstCalories - 150);
+        assertThat(third.get("details").get("calorieAdjustmentKcal").asInt()).isEqualTo(-125);
+        assertThat(third.get("caloriesKcal").asInt()).isEqualTo(firstCalories - 120);
     }
 
     @Test
@@ -539,8 +540,8 @@ class AdaptivePlanIT {
         assertThat(report)
             .contains("Last week you completed 3 of 4 planned workouts.")
             .contains("Your weight is holding steady.")
-            .contains("estimated maintenance was lowered by 150 kcal")
-            .contains("This week: about 2090 kcal a day and 4 workouts.");
+            .contains("estimated maintenance was lowered by 125 kcal")
+            .contains("This week: about 2120 kcal a day and 4 workouts.");
 
         // regenerating mid-week keeps the report rather than writing a misleading new one
         assertThat(generate(alice).get("weeklyReport").asText()).isEqualTo(report);

@@ -31,7 +31,11 @@ def require_internal_token():
 # switching provider is a matter of setting these three variables.
 LLM_BASE_URL = os.environ.get('LLM_BASE_URL', 'https://api.groq.com/openai/v1').rstrip('/')
 LLM_API_KEY = os.environ.get('LLM_API_KEY') or os.environ.get('GROQ_API_KEY', '')
-LLM_MODEL = os.environ.get('LLM_MODEL', 'llama-3.1-8b-instant')
+LLM_MODEL = os.environ.get('LLM_MODEL', 'openai/gpt-oss-20b')
+# For reasoning models: how much the model thinks before answering ("low", "medium", "high").
+# These tasks are simple, so little is needed and answers come back faster. Set it to an empty
+# string for a model or provider that does not accept the parameter.
+LLM_REASONING_EFFORT = os.environ.get('LLM_REASONING_EFFORT', 'low').strip()
 # Set to 0 for providers or models that reject response_format={"type": "json_object"}.
 LLM_JSON_MODE = os.environ.get('LLM_JSON_MODE', '1') != '0'
 
@@ -39,8 +43,34 @@ LLM_JSON_MODE = os.environ.get('LLM_JSON_MODE', '1') != '0'
 RATE_LIMIT_PAUSE_SECONDS = 3
 
 
+_THINK_BLOCK = re.compile(r'<think>.*?</think>', re.DOTALL | re.IGNORECASE)
+
+# Turned off for the rest of the process if the provider turns out not to accept reasoning_effort.
+_send_reasoning_effort = bool(LLM_REASONING_EFFORT)
+
+
+def answer_text(message):
+    """
+    The model's answer and nothing else. Reasoning models return their thinking separately (in
+    message["reasoning"] or message["reasoning_content"]), which is deliberately never read here;
+    some providers instead put it inline in <think> tags, which are removed. Returns None when
+    there is no answer, for instance when the token budget went entirely on reasoning.
+    """
+    content = message.get('content') if isinstance(message, dict) else None
+    if not isinstance(content, str):
+        return None
+    content = _THINK_BLOCK.sub('', content).strip()
+    return content or None
+
+
 def chat_completion(messages, max_tokens, temperature, timeout, json_mode=False):
-    """Call the configured LLM and return the reply text, or None if the call failed."""
+    """
+    Call the configured LLM and return the reply text, or None if the call failed.
+
+    max_tokens has to leave room for a reasoning model's thinking as well as its answer.
+    """
+    global _send_reasoning_effort
+
     payload = {
         'model': LLM_MODEL,
         'messages': messages,
@@ -49,14 +79,25 @@ def chat_completion(messages, max_tokens, temperature, timeout, json_mode=False)
     }
     if json_mode and LLM_JSON_MODE:
         payload['response_format'] = {'type': 'json_object'}
+    if _send_reasoning_effort:
+        payload['reasoning_effort'] = LLM_REASONING_EFFORT
 
-    try:
-        response = requests.post(
+    def post():
+        return requests.post(
             f'{LLM_BASE_URL}/chat/completions',
             headers={'Authorization': f'Bearer {LLM_API_KEY}', 'Content-Type': 'application/json'},
             json=payload,
             timeout=timeout
         )
+
+    try:
+        response = post()
+        if response.status_code == 400 and 'reasoning_effort' in payload and 'reasoning_effort' in response.text:
+            # This model or provider doesn't take the parameter: carry on without it
+            print(f"{LLM_MODEL} rejected reasoning_effort; continuing without it")
+            _send_reasoning_effort = False
+            del payload['reasoning_effort']
+            response = post()
     except requests.exceptions.Timeout:
         print(f"LLM call timed out ({timeout}s)")
         return None
@@ -71,10 +112,15 @@ def chat_completion(messages, max_tokens, temperature, timeout, json_mode=False)
             time.sleep(RATE_LIMIT_PAUSE_SECONDS)
         return None
     try:
-        return response.json()['choices'][0]['message']['content']
+        choice = response.json()['choices'][0]
     except (ValueError, KeyError, IndexError, TypeError) as e:
         print(f"Unexpected LLM response shape: {e}")
         return None
+
+    text = answer_text(choice.get('message') if isinstance(choice, dict) else None)
+    if text is None:
+        print(f"LLM returned no answer text (finish_reason: {choice.get('finish_reason') if isinstance(choice, dict) else '?'})")
+    return text
 
 
 # Ingredient words that reveal each allergen. A plan mentioning any of them for a declared
@@ -477,7 +523,7 @@ def generate_weekly_meal_plan(rest_day, fuel_kcal, training_days, diet_pref, eff
                     ),
                 },
             ],
-            max_tokens=4096,
+            max_tokens=8192,
             temperature=0.7,
             timeout=min(LLM_CALL_TIMEOUT_SECONDS, remaining - 5),
             json_mode=True,
@@ -638,7 +684,7 @@ def assistant_intent():
             {'role': 'system', 'content': INTENT_SYSTEM_PROMPT},
             {'role': 'user', 'content': f"{context}Message to classify:\n<message>\n{text}\n</message>"},
         ],
-        max_tokens=200,
+        max_tokens=1024,
         temperature=0,
         timeout=15,
         json_mode=True,
@@ -709,7 +755,7 @@ def generate_replacement_meal(calories, protein, user_request, avoid_names, diet
                     ),
                 },
             ],
-            max_tokens=700,
+            max_tokens=2048,
             temperature=0.8,
             timeout=20,
             json_mode=True,

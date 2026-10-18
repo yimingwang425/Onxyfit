@@ -8,6 +8,7 @@ import com.yxw1268.fyp.repository.ProgressLogRepository;
 import com.yxw1268.fyp.repository.OtpRecordRepository;
 import com.yxw1268.fyp.security.SecurityUtils;
 import com.yxw1268.fyp.service.MailService;
+import com.yxw1268.fyp.service.MlServiceWarmUp;
 import com.yxw1268.fyp.service.OtpService;
 import com.yxw1268.fyp.service.OtpService.Purpose;
 import com.yxw1268.fyp.service.UserService;
@@ -52,6 +53,7 @@ public class AccountResource {
     private final ProgressLogRepository progressLogRepository;
     private final OtpRecordRepository otpRecordRepository;
     private final OtpService otpService;
+    private final MlServiceWarmUp mlServiceWarmUp;
 
     public AccountResource(
         UserRepository userRepository,
@@ -61,7 +63,8 @@ public class AccountResource {
         PlanRepository planRepository,
         ProgressLogRepository progressLogRepository,
         OtpRecordRepository otpRecordRepository,
-        OtpService otpService
+        OtpService otpService,
+        MlServiceWarmUp mlServiceWarmUp
     ) {
         this.userRepository = userRepository;
         this.userService = userService;
@@ -71,6 +74,7 @@ public class AccountResource {
         this.progressLogRepository = progressLogRepository;
         this.otpRecordRepository = otpRecordRepository;
         this.otpService = otpService;
+        this.mlServiceWarmUp = mlServiceWarmUp;
     }
 
     /**
@@ -92,6 +96,8 @@ public class AccountResource {
         }
         userService.registerUser(managedUserVM, managedUserVM.getPassword());
         otpService.consumeToken(email, Purpose.REGISTER_TOKEN, managedUserVM.getTempToken());
+        // the new user is about to try the app, so get the ML service out of sleep now
+        mlServiceWarmUp.wakeUp();
     }
 
     /**

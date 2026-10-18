@@ -53,6 +53,11 @@ public class MlServiceClient {
         return post(swapTemplate, "/api/meal-swap", request);
     }
 
+    /** Call the service's health check, which needs no token. Throws if it does not answer. */
+    public void ping() {
+        quickTemplate.getForEntity(baseUrl + "/health", String.class);
+    }
+
     @SuppressWarnings("unchecked")
     private Map<String, Object> post(RestTemplate template, String path, Map<String, Object> request) {
         HttpHeaders headers = new HttpHeaders();
